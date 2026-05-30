@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import TeamCodeCard from "./TeamCodeCard";
 
 // Primary destinations — shown in the mobile bottom bar and the sidebar.
 const PRIMARY = [
@@ -57,6 +58,7 @@ export default function NavShell({ user, children }) {
             </Link>
           ))}
         </nav>
+        {user.role === "coach" && <TeamCodeCard />}
         <UserCard user={user} onLogout={logout} />
       </aside>
 

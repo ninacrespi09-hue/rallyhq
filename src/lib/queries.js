@@ -1,63 +1,68 @@
 import { getDb } from "./db";
 import { wellnessLevel, levelRank } from "./wellness";
 
-/** Aggregate season stat totals + averages for one player. */
+/** Aggregate season stat totals for one player. */
 export function playerStatTotals(userId) {
-  const db = getDb();
-  const row = db
+  return getDb()
     .prepare(
-      `SELECT
-         COUNT(*) AS games,
-         COALESCE(SUM(kills),0) AS kills,
-         COALESCE(SUM(assists),0) AS assists,
-         COALESCE(SUM(aces),0) AS aces,
-         COALESCE(SUM(digs),0) AS digs,
-         COALESCE(SUM(blocks),0) AS blocks,
+      `SELECT COUNT(*) AS games,
+         COALESCE(SUM(kills),0) AS kills, COALESCE(SUM(hits),0) AS hits,
+         COALESCE(SUM(assists),0) AS assists, COALESCE(SUM(aces),0) AS aces,
+         COALESCE(SUM(digs),0) AS digs, COALESCE(SUM(blocks),0) AS blocks,
          COALESCE(SUM(errors),0) AS errors
        FROM player_stats WHERE user_id = ?`
     )
     .get(userId);
-  return row;
 }
 
-/** Team leaderboard for a given stat column. */
-export function leaderboard(column, limit = 5) {
+/** Team leaderboard for a given stat column — scoped to a team. */
+export function leaderboard(column, limit = 5, teamId) {
   const allowed = ["kills", "assists", "aces", "digs", "blocks"];
   if (!allowed.includes(column)) return [];
   const db = getDb();
+  const where = teamId ? "WHERE u.role = 'player' AND u.team_id = ?" : "WHERE u.role = 'player'";
+  const args = teamId ? [limit, teamId] : [limit];
   return db
     .prepare(
       `SELECT u.id, u.name, u.position, COALESCE(SUM(ps.${column}),0) AS total
        FROM users u LEFT JOIN player_stats ps ON ps.user_id = u.id
-       WHERE u.role = 'player'
-       GROUP BY u.id HAVING total > 0
+       ${where} GROUP BY u.id HAVING total > 0
        ORDER BY total DESC LIMIT ?`
     )
-    .all(limit);
+    .all(teamId ? [teamId, limit] : [limit]);
 }
 
-/** Team win/loss record. */
-export function teamRecord() {
+/** Team win/loss record — scoped to a team. */
+export function teamRecord(teamId) {
   const db = getDb();
-  const row = db
-    .prepare(
-      `SELECT
-         SUM(CASE WHEN result='W' THEN 1 ELSE 0 END) AS wins,
-         SUM(CASE WHEN result='L' THEN 1 ELSE 0 END) AS losses
-       FROM game_results`
-    )
-    .get();
-  return { wins: row.wins || 0, losses: row.losses || 0 };
+  const row = teamId
+    ? db.prepare(
+        `SELECT SUM(CASE WHEN r.result='W' THEN 1 ELSE 0 END) AS wins,
+                SUM(CASE WHEN r.result='L' THEN 1 ELSE 0 END) AS losses
+         FROM game_results r JOIN events e ON e.id = r.event_id
+         JOIN users u ON u.id = e.created_by WHERE u.team_id = ?`
+      ).get(teamId)
+    : db.prepare(
+        `SELECT SUM(CASE WHEN result='W' THEN 1 ELSE 0 END) AS wins,
+                SUM(CASE WHEN result='L' THEN 1 ELSE 0 END) AS losses FROM game_results`
+      ).get();
+  return { wins: row?.wins || 0, losses: row?.losses || 0 };
 }
 
-/** Upcoming events (today onward). */
-export function upcomingEvents(limit = 10) {
+/** Upcoming events scoped to a team. */
+export function upcomingEvents(limit = 10, teamId) {
+  if (!teamId) {
+    return getDb()
+      .prepare("SELECT * FROM events WHERE date(start_time) >= date('now') ORDER BY start_time ASC LIMIT ?")
+      .all(limit);
+  }
   return getDb()
     .prepare(
-      `SELECT * FROM events WHERE date(start_time) >= date('now')
-       ORDER BY start_time ASC LIMIT ?`
+      `SELECT e.* FROM events e JOIN users u ON u.id = e.created_by
+       WHERE u.team_id = ? AND date(e.start_time) >= date('now')
+       ORDER BY e.start_time ASC LIMIT ?`
     )
-    .all(limit);
+    .all(teamId, limit);
 }
 
 /** Today's check-in for a user, if any. */
@@ -67,11 +72,8 @@ export function todaysCheckin(userId) {
     .get(userId);
 }
 
-/**
- * Each player's most recent post-game wellness submission, scored for attention.
- * Used by the coach dashboard summary.
- */
-export function teamWellness() {
+/** Post-game wellness, scoped to a team. */
+export function teamWellness(teamId) {
   const db = getDb();
   const rows = db
     .prepare(
@@ -79,12 +81,11 @@ export function teamWellness() {
        FROM post_game_checkins w
        JOIN users u ON u.id = w.user_id
        JOIN events e ON e.id = w.event_id
-       WHERE w.id IN (
-         SELECT MAX(id) FROM post_game_checkins GROUP BY user_id
-       )
+       WHERE w.id IN (SELECT MAX(id) FROM post_game_checkins GROUP BY user_id)
+       ${teamId ? "AND u.team_id = ?" : ""}
        ORDER BY u.name`
     )
-    .all();
+    .all(...(teamId ? [teamId] : []));
 
   const scored = rows
     .map((r) => ({ ...r, ...wellnessLevel(r) }))
@@ -104,8 +105,14 @@ export function recentMedia(limit = 3) {
     .all(limit);
 }
 
-export function allPlayers() {
+/** All players on a team. */
+export function allPlayers(teamId) {
+  if (!teamId) {
+    return getDb()
+      .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' ORDER BY name")
+      .all();
+  }
   return getDb()
-    .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' ORDER BY name")
-    .all();
+    .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' AND team_id = ? ORDER BY name")
+    .all(teamId);
 }

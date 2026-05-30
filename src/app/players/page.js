@@ -21,7 +21,7 @@ export default async function PlayersPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const players = teamLeaderboard();
+  const players = teamLeaderboard(user.team_id);
 
   // Group into rows of four (4 on top, 4 on the bottom for an 8-player roster).
   const rows = [];

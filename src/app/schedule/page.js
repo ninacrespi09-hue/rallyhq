@@ -6,13 +6,15 @@ import { getDb } from "@/lib/db";
 import { fmtDateTime, EVENT_STYLES } from "@/lib/format";
 import EventCreator from "@/components/EventCreator";
 import PageHeader from "@/components/PageHeader";
+import QuickDelete from "@/components/QuickDelete";
 
 const VIEWS = [
-  { key: "upcoming", label: "Upcoming", type: null },
-  { key: "practices", label: "Practices", type: "practice" },
-  { key: "tournaments", label: "Tournaments", type: "tournament" },
-  { key: "bonding", label: "Team Bonding", type: "bonding" },
-  { key: "calendar", label: "Calendar", type: null },
+  { key: "upcoming",      label: "Upcoming",      type: null },
+  { key: "practices",     label: "Practices",     type: "practice" },
+  { key: "conditioning",  label: "Conditioning",  type: "conditioning" },
+  { key: "tournaments",   label: "Tournaments",   type: "tournament" },
+  { key: "bonding",       label: "Team Bonding",  type: "bonding" },
+  { key: "calendar",      label: "Calendar",      type: null },
 ];
 
 export default async function SchedulePage({ searchParams }) {
@@ -39,9 +41,9 @@ export default async function SchedulePage({ searchParams }) {
         {view === "calendar" ? (
           <CalendarView monthParam={sp.month} />
         ) : activeView.type ? (
-          <TypeView type={activeView.type} label={activeView.label} />
+          <TypeView type={activeView.type} label={activeView.label} isCoach={user.role === "coach"} />
         ) : (
-          <UpcomingView />
+          <UpcomingView isCoach={user.role === "coach"} />
         )}
       </div>
     </NavShell>
@@ -50,7 +52,7 @@ export default async function SchedulePage({ searchParams }) {
 
 /* -------------------------------- Sub views -------------------------------- */
 
-function UpcomingView() {
+function UpcomingView({ isCoach }) {
   const db = getDb();
   const upcoming = db
     .prepare("SELECT * FROM events WHERE date(start_time) >= date('now') ORDER BY start_time ASC")
@@ -69,7 +71,7 @@ function UpcomingView() {
       <div className="space-y-2">
         {upcoming.length === 0 && <p className="text-sm text-navy-400">No upcoming events.</p>}
         {upcoming.map((e) => (
-          <EventRow key={e.id} e={e} />
+          <EventRow key={e.id} e={e} isCoach={isCoach} />
         ))}
       </div>
 
@@ -77,14 +79,14 @@ function UpcomingView() {
       <div className="space-y-2">
         {past.length === 0 && <p className="text-sm text-navy-400">No past events.</p>}
         {past.map((e) => (
-          <EventRow key={e.id} e={e} past />
+          <EventRow key={e.id} e={e} past isCoach={isCoach} />
         ))}
       </div>
     </>
   );
 }
 
-function TypeView({ type, label }) {
+function TypeView({ type, label, isCoach }) {
   const db = getDb();
   const upcoming = db
     .prepare("SELECT * FROM events WHERE type = ? AND date(start_time) >= date('now') ORDER BY start_time ASC")
@@ -111,7 +113,7 @@ function TypeView({ type, label }) {
           <h2 className="h-section mb-2">Upcoming {label.toLowerCase()}</h2>
           <div className="space-y-2">
             {upcoming.map((e) => (
-              <EventRow key={e.id} e={e} />
+              <EventRow key={e.id} e={e} isCoach={isCoach} />
             ))}
           </div>
         </>
@@ -121,7 +123,7 @@ function TypeView({ type, label }) {
           <h2 className="h-section mb-2 mt-8">Past {label.toLowerCase()}</h2>
           <div className="space-y-2">
             {past.map((e) => (
-              <EventRow key={e.id} e={e} past />
+              <EventRow key={e.id} e={e} past isCoach={isCoach} />
             ))}
           </div>
         </>
@@ -284,28 +286,29 @@ function Legend() {
   );
 }
 
-function EventRow({ e, past }) {
+function EventRow({ e, past, isCoach }) {
   const s = EVENT_STYLES[e.type] || EVENT_STYLES.practice;
   return (
-    <Link href={`/schedule/${e.id}`} className={`card flex items-center gap-3 ${s.ring} ${s.bg}`}>
-      <span className={`h-10 w-1.5 shrink-0 rounded-full ${s.bar}`} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate font-semibold text-navy-800">{e.title}</span>
-          <span className={`chip ${s.chip}`}>{s.label}</span>
+    <div className={`card flex items-center gap-3 ${s.ring} ${s.bg}`}>
+      <Link href={`/schedule/${e.id}`} className="flex flex-1 items-center gap-3 min-w-0">
+        <span className={`h-10 w-1.5 shrink-0 rounded-full ${s.bar}`} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate font-semibold text-navy-800">{e.title}</span>
+            <span className={`chip ${s.chip}`}>{s.label}</span>
+          </div>
+          <div className="text-xs text-navy-400">
+            {fmtDateTime(e.start_time)}
+            {e.location ? ` · ${e.location}` : ""}
+          </div>
         </div>
-        <div className="text-xs text-navy-400">
-          {fmtDateTime(e.start_time)}
-          {e.location ? ` · ${e.location}` : ""}
-        </div>
-      </div>
-      {past && e.result && (
-        <span
-          className={`chip ${e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}
-        >
-          {e.result} {e.our_score}-{e.opp_score}
-        </span>
-      )}
-    </Link>
+        {past && e.result && (
+          <span className={`chip ${e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+            {e.result} {e.our_score}-{e.opp_score}
+          </span>
+        )}
+      </Link>
+      {isCoach && <QuickDelete id={e.id} />}
+    </div>
   );
 }

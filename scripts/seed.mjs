@@ -23,10 +23,14 @@ for (const t of [
   "announcements",
   "events",
   "users",
+  "teams",
 ]) {
   db.prepare(`DELETE FROM ${t}`).run();
 }
 db.prepare("DELETE FROM sqlite_sequence").run();
+
+// ---- demo team ----
+const teamId = db.prepare("INSERT INTO teams (name, code) VALUES (?, ?)").run("RallyHQ Demo", "DEMO01").lastInsertRowid;
 
 const hash = bcrypt.hashSync("password123", 10);
 const iso = (d) => d.toISOString();
@@ -44,8 +48,8 @@ const at = (offset, hour, min = 0) => {
 
 // ---- users ----
 const insertUser = db.prepare(
-  `INSERT INTO users (name, email, password_hash, role, position, jersey_number, height_cm, bio)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  `INSERT INTO users (name, email, password_hash, role, team_id, position, jersey_number, height_cm, bio)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 );
 
 const coachId = insertUser.run(
@@ -53,6 +57,7 @@ const coachId = insertUser.run(
   "coach@rallyhq.dev",
   hash,
   "coach",
+  teamId,
   null,
   null,
   null,
@@ -71,7 +76,7 @@ const players = [
 ];
 
 const playerIds = players.map((p) =>
-  insertUser.run(p[0], p[1], hash, "player", p[2], p[3], p[4], p[5]).lastInsertRowid
+  insertUser.run(p[0], p[1], hash, "player", teamId, p[2], p[3], p[4], p[5]).lastInsertRowid
 );
 
 // ---- events ----

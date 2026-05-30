@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { fmtDateTime, EVENT_STYLES, isCompetitive } from "@/lib/format";
 import EventDetail from "@/components/EventDetail";
 import PostGameWellness from "@/components/PostGameWellness";
+import EventEditor from "@/components/EventEditor";
 
 export default async function EventPage({ params }) {
   const user = await getCurrentUser();
@@ -45,13 +46,18 @@ export default async function EventPage({ params }) {
   return (
     <NavShell user={user}>
       <div className="mb-4">
-        <span className={`chip ${s.chip}`}>{s.label}</span>
-        <h1 className="mt-2 text-2xl font-extrabold text-navy-900">{event.title}</h1>
-        <p className="text-sm text-navy-500">
-          {fmtDateTime(event.start_time)}
-          {event.location ? ` · ${event.location}` : ""}
-        </p>
-        {event.notes && <p className="mt-2 text-sm text-navy-600">{event.notes}</p>}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <span className={`chip ${s.chip}`}>{s.label}</span>
+            <h1 className="mt-2 text-2xl font-extrabold text-navy-900">{event.title}</h1>
+            <p className="text-sm text-navy-500">
+              {fmtDateTime(event.start_time)}
+              {event.location ? ` · ${event.location}` : ""}
+            </p>
+            {event.notes && <p className="mt-2 text-sm text-navy-600">{event.notes}</p>}
+          </div>
+          {user.role === "coach" && <EventEditor event={event} />}
+        </div>
       </div>
 
       {isGame && (

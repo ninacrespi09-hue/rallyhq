@@ -16,17 +16,17 @@ export function statTotals(userId) {
     .get(userId);
 }
 
-/** Every player with season totals for the 5 statistics (for the leaderboard). */
-export function teamLeaderboard() {
+/** Every player with season totals — optionally scoped to a team. */
+export function teamLeaderboard(teamId) {
+  const where = teamId ? "WHERE u.role = 'player' AND u.team_id = ?" : "WHERE u.role = 'player'";
   return getDb()
     .prepare(
       `SELECT u.id, u.name, u.position, u.jersey_number, u.photo_url,
               COUNT(ps.id) AS games, ${SUMS}
        FROM users u LEFT JOIN player_stats ps ON ps.user_id = u.id
-       WHERE u.role = 'player'
-       GROUP BY u.id ORDER BY u.name`
+       ${where} GROUP BY u.id ORDER BY u.name`
     )
-    .all();
+    .all(...(teamId ? [teamId] : []));
 }
 
 /** Attendance percentage (present or late counts as attended). */

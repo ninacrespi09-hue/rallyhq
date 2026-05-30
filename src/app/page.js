@@ -10,7 +10,7 @@ const CARDS = [
   {
     href: "/schedule",
     title: "Schedule",
-    subtitle: "Practices, games, tournaments & bonding",
+    subtitle: "Practices, conditioning, tournaments & bonding",
     icon: "📅",
     gradient: "from-sky-400 to-blue-600",
   },
@@ -62,8 +62,8 @@ export default async function Landing() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const nextEvent = upcomingEvents(1)[0];
-  const wellness = user.role === "coach" ? teamWellness() : null;
+  const nextEvent = upcomingEvents(1, user.team_id)[0];
+  const wellness = user.role === "coach" ? teamWellness(user.team_id) : null;
   const checkin = user.role === "player" ? todaysCheckin(user.id) : null;
 
   // Role-aware "for you" featured action.

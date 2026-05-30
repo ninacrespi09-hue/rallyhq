@@ -6,9 +6,9 @@ import { useRef, useState } from "react";
 const MOMENTS = ["Serving", "Setting", "Hitting", "Digging"];
 const TAB_META = {
   Serving: { icon: "🏐", gradient: "from-sky-400 to-blue-600" },
-  Setting: { icon: "🎯", gradient: "from-blue-500 to-indigo-600" },
+  Setting: { icon: "⭐", gradient: "from-blue-500 to-indigo-600" },
   Hitting: { icon: "💥", gradient: "from-cyan-500 to-blue-600" },
-  Digging: { icon: "🤿", gradient: "from-blue-600 to-navy-800" },
+  Digging: { icon: "🏅", gradient: "from-blue-600 to-navy-800" },
 };
 
 export default function Gallery({ user, media, events }) {

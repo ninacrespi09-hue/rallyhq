@@ -19,7 +19,7 @@ export default async function Dashboard() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const events = upcomingEvents(4);
+  const events = upcomingEvents(4, user.team_id);
   const pinned = getDb()
     .prepare("SELECT * FROM announcements ORDER BY pinned DESC, created_at DESC LIMIT 3")
     .all();
@@ -139,16 +139,16 @@ function PlayerHome({ user }) {
 }
 
 function CoachHome() {
-  const rec = teamRecord();
-  const players = allPlayers();
-  const wellness = teamWellness();
+  const rec = teamRecord(user.team_id);
+  const players = allPlayers(user.team_id);
+  const wellness = teamWellness(user.team_id);
   const checkedInToday = getDb()
     .prepare("SELECT COUNT(*) AS n FROM checkins WHERE date = date('now')")
     .get().n;
   const injuries = getDb()
     .prepare("SELECT COUNT(*) AS n FROM checkins WHERE date >= date('now','-7 days') AND injury = 1")
     .get().n;
-  const topScorer = leaderboard("kills", 1)[0];
+  const topScorer = leaderboard("kills", 1, user.team_id)[0];
 
   return (
     <div className="space-y-4">

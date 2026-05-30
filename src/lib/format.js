@@ -17,10 +17,12 @@ export function fmtDateTime(iso) {
 
 // Four distinct blue-family shades for each event type.
 export const EVENT_STYLES = {
-  practice:   { label: "Practice",     chip: "bg-sky-200 text-sky-900 font-bold",    dot: "bg-sky-300",    bar: "bg-sky-300",    ring: "ring-2 ring-sky-300",    bg: "bg-sky-100/70" },
-  game:       { label: "Game",         chip: "bg-blue-600 text-white font-bold",      dot: "bg-blue-600",   bar: "bg-blue-600",   ring: "ring-2 ring-blue-600",   bg: "bg-blue-200/70" },
-  tournament: { label: "Tournament",   chip: "bg-indigo-800 text-white font-bold",    dot: "bg-indigo-800", bar: "bg-indigo-800", ring: "ring-2 ring-indigo-800", bg: "bg-indigo-200/70" },
-  bonding:    { label: "Team Bonding", chip: "bg-cyan-300 text-cyan-950 font-bold",   dot: "bg-cyan-400",   bar: "bg-cyan-400",   ring: "ring-2 ring-cyan-400",   bg: "bg-cyan-100/70" },
+  practice:      { label: "Practice",      chip: "bg-sky-200 text-sky-900 font-bold",    dot: "bg-sky-300",    bar: "bg-sky-300",    ring: "ring-2 ring-sky-300",    bg: "bg-sky-100/70" },
+  conditioning:  { label: "Conditioning",  chip: "bg-blue-600 text-white font-bold",     dot: "bg-blue-600",   bar: "bg-blue-600",   ring: "ring-2 ring-blue-600",   bg: "bg-blue-200/70" },
+  tournament:    { label: "Tournament",    chip: "bg-indigo-800 text-white font-bold",   dot: "bg-indigo-800", bar: "bg-indigo-800", ring: "ring-2 ring-indigo-800", bg: "bg-indigo-200/70" },
+  bonding:       { label: "Team Bonding",  chip: "bg-cyan-300 text-cyan-950 font-bold",  dot: "bg-cyan-400",   bar: "bg-cyan-400",   ring: "ring-2 ring-cyan-400",   bg: "bg-cyan-100/70" },
+  // keep "game" for any existing stored events
+  game:          { label: "Game",          chip: "bg-blue-600 text-white font-bold",     dot: "bg-blue-600",   bar: "bg-blue-600",   ring: "ring-2 ring-blue-600",   bg: "bg-blue-200/70" },
 };
 
 // Events that have results / stats / post-game wellness.
@@ -28,6 +30,14 @@ export const COMPETITIVE_TYPES = ["game", "tournament"];
 export function isCompetitive(type) {
   return COMPETITIVE_TYPES.includes(type);
 }
+
+export const CONDITIONING_KINDS = [
+  "Cardio Session",
+  "Weight Training",
+  "Agility Drills",
+  "Sprint Training",
+  "Recovery Session",
+];
 
 // Quick-pick ideas for team bonding events.
 export const BONDING_KINDS = [

@@ -11,7 +11,7 @@ export default async function StatsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const rec = teamRecord();
+  const rec = teamRecord(user.team_id);
   const totals = teamStatTotals();
   const trends = teamTrends();
   const board = teamLeaderboard();

@@ -48,7 +48,7 @@ export async function getCurrentUser() {
     const db = getDb();
     const user = db
       .prepare(
-        "SELECT id, name, email, role, position, jersey_number, height_cm, bio FROM users WHERE id = ?"
+        "SELECT id, name, email, role, team_id, position, jersey_number, height_cm, bio FROM users WHERE id = ?"
       )
       .get(payload.uid);
     return user || null;

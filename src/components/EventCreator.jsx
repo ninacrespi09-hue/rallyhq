@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { isCompetitive, BONDING_KINDS } from "@/lib/format";
+import { isCompetitive, BONDING_KINDS, CONDITIONING_KINDS } from "@/lib/format";
 
 const TYPES = [
-  { key: "practice", label: "Practice" },
-  { key: "game", label: "Game" },
-  { key: "tournament", label: "Tournament" },
-  { key: "bonding", label: "Team Bonding" },
+  { key: "practice",     label: "Practice" },
+  { key: "conditioning", label: "Conditioning" },
+  { key: "tournament",   label: "Tournament" },
+  { key: "bonding",      label: "Team Bonding" },
 ];
 
 export default function EventCreator({ defaultType = "practice" }) {
@@ -82,12 +82,21 @@ export default function EventCreator({ defaultType = "practice" }) {
               <label className="label">Quick ideas</label>
               <div className="flex flex-wrap gap-2">
                 {BONDING_KINDS.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setTitle(k)}
-                    className="chip bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
-                  >
+                  <button key={k} type="button" onClick={() => setTitle(k)}
+                    className="chip bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200 hover:bg-cyan-100">
+                    {k}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {type === "conditioning" && (
+            <div>
+              <label className="label">Quick ideas</label>
+              <div className="flex flex-wrap gap-2">
+                {CONDITIONING_KINDS.map((k) => (
+                  <button key={k} type="button" onClick={() => setTitle(k)}
+                    className="chip bg-blue-50 text-blue-700 ring-1 ring-blue-200 hover:bg-blue-100">
                     {k}
                   </button>
                 ))}
@@ -105,6 +114,8 @@ export default function EventCreator({ defaultType = "practice" }) {
               placeholder={
                 type === "bonding"
                   ? "Beach day at Cove Park"
+                  : type === "conditioning"
+                  ? "Cardio Session"
                   : type === "practice"
                   ? "Team Practice"
                   : "vs. Lincoln High"
