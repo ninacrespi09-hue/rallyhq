@@ -11,7 +11,7 @@ let db;
 export function getDb() {
   if (db) return db;
 
-  const dataDir = path.join(process.cwd(), "data");
+  const dataDir = process.env.DB_PATH || path.join(process.cwd(), "data");
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
   db = new Database(path.join(dataDir, "rallyhq.db"));
@@ -23,11 +23,19 @@ export function getDb() {
 
 function initSchema(db) {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS teams (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      name       TEXT NOT NULL,
+      code       TEXT NOT NULL UNIQUE,   -- 6-char join code players use
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
       name          TEXT NOT NULL,
       email         TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      team_id       INTEGER REFERENCES teams(id),
       role          TEXT NOT NULL DEFAULT 'player', -- 'coach' | 'player'
       position      TEXT,                            -- setter, libero, outside hitter, etc.
       jersey_number INTEGER,
@@ -192,4 +200,8 @@ function initSchema(db) {
   if (!has("users", "photo_url")) {
     db.exec("ALTER TABLE users ADD COLUMN photo_url TEXT");
   }
+  if (!has("users", "team_id")) {
+    db.exec("ALTER TABLE users ADD COLUMN team_id INTEGER REFERENCES teams(id)");
+  }
+  // Events, announcements, exercises, media are scoped through their creator's team_id via JOIN.
 }
