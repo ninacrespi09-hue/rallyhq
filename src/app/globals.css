@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply text-navy-800 antialiased;
+  /* Baby-blue background. */
+  background-color: #cfe8fb;
+}
+
+/* Reusable component classes */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn text-white shadow-glow;
+    background-image: linear-gradient(135deg, #2563eb, #1e3a8a);
+  }
+  .btn-primary:hover {
+    background-image: linear-gradient(135deg, #1d4ed8, #142141);
+  }
+  .btn-ghost {
+    @apply btn bg-white text-navy-700 ring-1 ring-navy-100 hover:bg-navy-50;
+  }
+  .card {
+    @apply rounded-2xl bg-white p-5 shadow-soft ring-1 ring-navy-100/70;
+  }
+  .label {
+    @apply block text-sm font-medium text-navy-600 mb-1;
+  }
+  .input {
+    @apply w-full rounded-xl border border-navy-100 bg-white px-3.5 py-2.5 text-sm text-navy-800 outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+  /* Section heading helper */
+  .h-section {
+    @apply text-sm font-bold uppercase tracking-wide text-navy-400;
+  }
+}
+
+/* Gallery card entrance animation */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-pop-in {
+  animation: pop-in 0.35s ease both;
+}
