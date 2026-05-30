@@ -75,7 +75,7 @@ export default function NavShell({ user, children }) {
           </div>
         </header>
 
-        <main className="flex-1 w-auto md:w-full max-w-5xl mx-3 md:mx-auto my-3 md:my-6 rounded-[2rem] border-2 border-dotted border-[#1e3a8a] px-4 py-5 md:px-8 md:py-8 pb-24 md:pb-8">
+        <main className="relative flex-1 w-auto md:w-full max-w-5xl mx-3 md:mx-auto my-3 md:my-6 rounded-[2rem] px-5 py-6 md:px-9 md:py-9 pb-24 md:pb-9">
           {children}
         </main>
 

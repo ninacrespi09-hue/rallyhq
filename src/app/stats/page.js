@@ -32,7 +32,7 @@ export default async function StatsPage() {
           <h2 className="font-bold text-navy-900">Season Record</h2>
           <div className="flex gap-3">
             <Stat big value={rec.wins} label="Wins" tone="text-emerald-600" />
-            <Stat big value={rec.losses} label="Losses" tone="text-red-500" />
+            <Stat big value={rec.losses} label="Losses" tone="text-blue-500" />
             <Stat big value={rec.wins + rec.losses} label="Games" tone="text-navy-900" />
           </div>
           {/* Recent results */}
@@ -41,7 +41,7 @@ export default async function StatsPage() {
               <span
                 key={i}
                 className={`chip ${
-                  t.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                  t.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                 }`}
                 title={`${t.label} ${t.score}`}
               >
@@ -75,7 +75,7 @@ export default async function StatsPage() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-bold text-navy-900">Category Leaders</h2>
           <Link href="/players" className="text-sm font-medium text-brand-600">
-            Full leaderboard →
+            All players →
           </Link>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

@@ -134,7 +134,7 @@ function PlayerForm({ event, mine }) {
                 onClick={() => toggle(setAreas)(a)}
                 className={`chip ring-1 transition ${
                   areas.includes(a)
-                    ? "bg-red-100 text-red-700 ring-red-200"
+                    ? "bg-blue-100 text-blue-700 ring-blue-200"
                     : "bg-white text-navy-400 ring-navy-100"
                 }`}
               >
@@ -201,7 +201,7 @@ function CoachSummary({ submissions, players }) {
   return (
     <div className="mt-3 space-y-3">
       {needRest.length > 0 && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-100">
+        <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700 ring-1 ring-blue-100">
           ⚠️ <b>{needRest.length}</b> player{needRest.length > 1 ? "s" : ""} may need rest:{" "}
           {needRest.map((p) => p.name).join(", ")}
         </div>
@@ -231,7 +231,7 @@ function CoachSummary({ submissions, players }) {
               )}
               {(s.injury || s.note) && (
                 <p className="mt-2 text-sm text-navy-600">
-                  {s.injury ? <span className="font-semibold text-red-600">Injury{ s.sore_areas ? ` (${s.sore_areas})` : ""}. </span> : null}
+                  {s.injury ? <span className="font-semibold text-blue-600">Injury{ s.sore_areas ? ` (${s.sore_areas})` : ""}. </span> : null}
                   {s.note}
                 </p>
               )}

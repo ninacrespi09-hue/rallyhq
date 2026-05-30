@@ -270,9 +270,9 @@ function Stat({ label, value }) {
 
 function KpiCard({ label, value, hint, accent }) {
   return (
-    <div className={`card ${accent ? "ring-amber-200" : ""}`}>
+    <div className={`card ${accent ? "ring-blue-200" : ""}`}>
       <div className="text-xs font-medium uppercase tracking-wide text-navy-400">{label}</div>
-      <div className={`mt-1 text-2xl font-extrabold ${accent ? "text-amber-600" : "text-navy-900"}`}>
+      <div className={`mt-1 text-2xl font-extrabold ${accent ? "text-blue-600" : "text-navy-900"}`}>
         {value}
       </div>
       <div className="text-xs text-navy-400">{hint}</div>

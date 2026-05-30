@@ -75,7 +75,7 @@ export default async function Landing() {
             icon: "🩺",
             title: `${wellness.needRest.length} player${wellness.needRest.length > 1 ? "s" : ""} may need rest`,
             sub: "Open the team wellness summary",
-            gradient: "from-rose-500 to-red-700",
+            gradient: "from-blue-500 to-blue-700",
           }
         : {
             href: "/insights",
@@ -161,7 +161,7 @@ export default async function Landing() {
             key={c.href}
             href={c.href}
             style={{ animationDelay: `${i * 45}ms` }}
-            className={`group relative flex min-h-[150px] animate-rise flex-col justify-between overflow-hidden rounded-3xl border-2 border-dotted border-[#1e3a8a] bg-gradient-to-br ${c.gradient} p-5 text-white shadow-soft transition duration-200 hover:-translate-y-1 hover:shadow-glow sm:min-h-[170px]`}
+            className={`group relative flex min-h-[150px] animate-rise flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br ${c.gradient} p-5 text-white shadow-soft transition duration-200 hover:-translate-y-1 hover:shadow-glow sm:min-h-[170px]`}
           >
             <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-2xl ring-1 ring-white/25 backdrop-blur-sm transition group-hover:scale-105">
               {c.icon}

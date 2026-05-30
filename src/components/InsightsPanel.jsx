@@ -24,7 +24,7 @@ export default function InsightsPanel({ initial, scope }) {
         {loading ? "Analyzing check-ins…" : data ? "Re-run analysis" : "Generate insights"}
       </button>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-blue-600">{error}</p>}
 
       {!data && !loading && (
         <div className="card text-sm text-navy-400">

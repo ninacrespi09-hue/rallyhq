@@ -287,7 +287,7 @@ function Legend() {
 function EventRow({ e, past }) {
   const s = EVENT_STYLES[e.type] || EVENT_STYLES.practice;
   return (
-    <Link href={`/schedule/${e.id}`} className="card flex items-center gap-3 hover:ring-brand-200">
+    <Link href={`/schedule/${e.id}`} className={`card flex items-center gap-3 ${s.ring} ${s.bg}`}>
       <span className={`h-10 w-1.5 shrink-0 rounded-full ${s.bar}`} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -301,7 +301,7 @@ function EventRow({ e, past }) {
       </div>
       {past && e.result && (
         <span
-          className={`chip ${e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+          className={`chip ${e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}
         >
           {e.result} {e.our_score}-{e.opp_score}
         </span>

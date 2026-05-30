@@ -4,15 +4,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: [
-          "var(--font-jakarta)",
-          "ui-sans-serif",
-          "system-ui",
-          "-apple-system",
-          "Segoe UI",
-          "Roboto",
-          "sans-serif",
-        ],
+        sans: ["Verdana", "Geneva", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         // Primary brand scale = blue

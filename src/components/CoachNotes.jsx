@@ -60,7 +60,7 @@ export default function CoachNotes({ playerId, notes, canEdit }) {
                 <span>·</span>
                 <span>{fmtDate(n.created_at)}</span>
                 {canEdit && (
-                  <button onClick={() => remove(n.id)} className="ml-auto text-red-400 hover:text-red-600">
+                  <button onClick={() => remove(n.id)} className="ml-auto text-blue-400 hover:text-blue-600">
                     Delete
                   </button>
                 )}

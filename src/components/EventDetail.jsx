@@ -8,8 +8,8 @@ import { STATS } from "@/lib/statDefs";
 const STATUSES = ["present", "late", "absent", "excused"];
 const STATUS_STYLE = {
   present: "bg-emerald-600 text-white ring-emerald-600",
-  late: "bg-amber-500 text-white ring-amber-500",
-  absent: "bg-red-500 text-white ring-red-500",
+  late: "bg-blue-500 text-white ring-blue-500",
+  absent: "bg-blue-500 text-white ring-blue-500",
   excused: "bg-navy-400 text-white ring-navy-400",
 };
 
@@ -122,7 +122,7 @@ function ResultPanel({ event, isCoach, initial }) {
           <ScoreBox label={event.opponent || "Them"} value={opp} onChange={setOpp} editable={isCoach} />
           {(our || opp) ? (
             <span
-              className={`chip ${result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+              className={`chip ${result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}
             >
               {result === "W" ? "Win" : "Loss"}
             </span>

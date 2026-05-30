@@ -7,8 +7,8 @@ const CATEGORIES = ["Skills", "Strength", "Conditioning", "Recovery", "Injury Pr
 const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"];
 const DIFF_STYLE = {
   Beginner: "bg-emerald-100 text-emerald-700",
-  Intermediate: "bg-amber-100 text-amber-700",
-  Advanced: "bg-red-100 text-red-700",
+  Intermediate: "bg-blue-100 text-blue-700",
+  Advanced: "bg-blue-100 text-blue-700",
 };
 const CAT_ICON = {
   Skills: "🏐",
@@ -138,7 +138,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
             </div>
 
             {ex.coach_notes && (
-              <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+              <p className="mt-2 rounded-lg bg-blue-50 p-2 text-xs text-blue-800">
                 📋 Coach note: {ex.coach_notes}
               </p>
             )}
@@ -180,7 +180,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
                   </button>
                   <button
                     onClick={() => remove(ex)}
-                    className="btn bg-red-50 text-red-600 hover:bg-red-100"
+                    className="btn bg-blue-50 text-blue-600 hover:bg-blue-100"
                   >
                     Delete
                   </button>
@@ -268,7 +268,7 @@ function ExerciseEditor({ exercise, onClose, onSaved }) {
             <input value={form.coach_notes} onChange={set("coach_notes")} className="input" placeholder="Focus on platform angle" />
           </div>
         </div>
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-2 text-sm text-blue-600">{error}</p>}
         <div className="mt-4 flex gap-2">
           <button onClick={onClose} className="btn-ghost flex-1">
             Cancel

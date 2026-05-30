@@ -54,7 +54,11 @@
     background-image: linear-gradient(135deg, #1d4ed8, #142141);
   }
   .btn-ghost {
-    @apply btn bg-white text-navy-700 ring-1 ring-navy-100 hover:bg-navy-50 hover:ring-navy-200;
+    @apply btn text-navy-700 ring-1 ring-blue-400 hover:ring-blue-500;
+    background: rgba(59, 130, 246, 0.38);
+  }
+  .btn-ghost:hover {
+    background: rgba(59, 130, 246, 0.48);
   }
   .btn-soft {
     @apply btn bg-brand-50 text-brand-700 ring-1 ring-brand-100 hover:bg-brand-100;
@@ -62,13 +66,16 @@
 
   /* ---- Surfaces ----------------------------------------------------------- */
   .card {
-    @apply rounded-2xl bg-white p-5 shadow-soft ring-1 ring-navy-100/70;
+    @apply rounded-2xl p-5 shadow-soft ring-1 ring-blue-400/50;
+    background: rgba(59, 130, 246, 0.38); /* blue-500/38 */
+    backdrop-filter: blur(8px);
   }
   .card-interactive {
     @apply transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift;
   }
   .panel {
-    @apply rounded-3xl bg-white/70 p-5 ring-1 ring-white/60 backdrop-blur;
+    @apply rounded-3xl p-5 ring-1 ring-blue-400/50 backdrop-blur;
+    background: rgba(59, 130, 246, 0.32);
   }
 
   /* ---- Chips / badges ----------------------------------------------------- */
@@ -113,7 +120,7 @@
 
   /* ---- Signature "court line" dotted frame -------------------------------- */
   .court-dotted {
-    @apply rounded-[2rem] border-2 border-dotted;
+    @apply rounded-[2rem] border-4 border-dotted;
     border-color: rgba(30, 58, 138, 0.85);
   }
 }

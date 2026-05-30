@@ -103,7 +103,7 @@ export default function AuthForm({ mode }) {
             <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
           </div>
 
-          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+          {error && <p className="text-sm font-medium text-blue-600">{error}</p>}
 
           <button disabled={loading} className="btn-primary w-full">
             {loading ? "Please wait…" : isSignup ? "Create account" : "Sign in"}

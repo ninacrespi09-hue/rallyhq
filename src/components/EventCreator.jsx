@@ -139,7 +139,7 @@ export default function EventCreator({ defaultType = "practice" }) {
           </div>
         </div>
 
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-2 text-sm text-blue-600">{error}</p>}
 
         <div className="mt-4 flex gap-2">
           <button type="button" onClick={() => setOpen(false)} className="btn-ghost flex-1">

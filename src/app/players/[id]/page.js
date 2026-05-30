@@ -115,7 +115,7 @@ export default async function PlayerProfile({ params }) {
           </ul>
         </section>
         <section className="card">
-          <h2 className="mb-2 font-bold text-amber-700">🎯 Areas for Improvement</h2>
+          <h2 className="mb-2 font-bold text-blue-700">🎯 Areas for Improvement</h2>
           <ul className="space-y-1.5 text-sm text-navy-700">
             {improvements.map((s, i) => (
               <li key={i} className="flex gap-2"><span>↗</span>{s}</li>
@@ -168,7 +168,7 @@ export default async function PlayerProfile({ params }) {
                 <div key={w.date} className="flex items-center gap-2 rounded-lg bg-navy-50/60 px-3 py-1.5 text-xs">
                   <span className="w-20 font-medium text-navy-600">{w.date}</span>
                   <span className="text-navy-500">Energy {w.energy} · Soreness {w.soreness} · Mood {w.mood}</span>
-                  {w.injury ? <span className="ml-auto chip bg-red-100 text-red-700">injury</span> : null}
+                  {w.injury ? <span className="ml-auto chip bg-blue-100 text-blue-700">injury</span> : null}
                 </div>
               ))}
             </div>
@@ -181,9 +181,9 @@ export default async function PlayerProfile({ params }) {
           ) : (
             <div className="space-y-2">
               {injuries.map((inj, i) => (
-                <div key={i} className="rounded-lg bg-red-50 px-3 py-2 text-sm ring-1 ring-red-100">
+                <div key={i} className="rounded-lg bg-blue-50 px-3 py-2 text-sm ring-1 ring-blue-100">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-red-700">{inj.areas || "Injury"}</span>
+                    <span className="font-semibold text-blue-700">{inj.areas || "Injury"}</span>
                     <span className="ml-auto text-xs text-navy-400">{inj.date}</span>
                   </div>
                   {inj.note && <p className="mt-0.5 text-xs text-navy-600">{inj.note}</p>}
