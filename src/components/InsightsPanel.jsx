@@ -27,8 +27,8 @@ export default function InsightsPanel({ initial, scope }) {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!data && !loading && (
-        <div className="card text-sm text-slate-400">
-          No analysis yet. Tap <b className="text-slate-600">Generate insights</b> to analyze recent check-ins.
+        <div className="card text-sm text-navy-400">
+          No analysis yet. Tap <b className="text-navy-600">Generate insights</b> to analyze recent check-ins.
         </div>
       )}
 
@@ -36,21 +36,21 @@ export default function InsightsPanel({ initial, scope }) {
         <>
           <div className="card border-l-4 border-brand-500">
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-slate-900">Summary</h2>
+              <h2 className="font-bold text-navy-900">Summary</h2>
               <span
                 className={`chip ${
-                  data.source === "claude" ? "bg-violet-100 text-violet-700" : "bg-slate-100 text-slate-500"
+                  data.source === "claude" ? "bg-violet-100 text-violet-700" : "bg-navy-50 text-navy-500"
                 }`}
               >
                 {data.source === "claude" ? "✦ Claude" : "rule-based"}
               </span>
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-700">{data.summary}</p>
+            <p className="mt-2 text-sm leading-relaxed text-navy-700">{data.summary}</p>
           </div>
 
           {data.flags?.length > 0 ? (
             <div className="space-y-2">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-navy-400">
                 Flags ({data.flags.length})
               </h2>
               {data.flags.map((f, i) => (
@@ -59,12 +59,12 @@ export default function InsightsPanel({ initial, scope }) {
                     <span className={`chip capitalize ${SEVERITY_STYLES[f.severity] || SEVERITY_STYLES.low}`}>
                       {f.severity}
                     </span>
-                    <span className="font-semibold text-slate-800">{f.title}</span>
+                    <span className="font-semibold text-navy-800">{f.title}</span>
                     {f.player && scope === "team" && (
-                      <span className="ml-auto text-xs font-medium text-slate-400">{f.player}</span>
+                      <span className="ml-auto text-xs font-medium text-navy-400">{f.player}</span>
                     )}
                   </div>
-                  <p className="mt-1.5 text-sm text-slate-600">{f.detail}</p>
+                  <p className="mt-1.5 text-sm text-navy-600">{f.detail}</p>
                 </div>
               ))}
             </div>

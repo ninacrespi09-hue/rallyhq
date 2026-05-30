@@ -46,12 +46,12 @@ export default async function EventPage({ params }) {
     <NavShell user={user}>
       <div className="mb-4">
         <span className={`chip ${s.chip}`}>{s.label}</span>
-        <h1 className="mt-2 text-2xl font-extrabold text-slate-900">{event.title}</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="mt-2 text-2xl font-extrabold text-navy-900">{event.title}</h1>
+        <p className="text-sm text-navy-500">
           {fmtDateTime(event.start_time)}
           {event.location ? ` · ${event.location}` : ""}
         </p>
-        {event.notes && <p className="mt-2 text-sm text-slate-600">{event.notes}</p>}
+        {event.notes && <p className="mt-2 text-sm text-navy-600">{event.notes}</p>}
       </div>
 
       {isGame && (

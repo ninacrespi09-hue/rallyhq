@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import { BarChart, LineChart, RecordDonut } from "@/components/Charts";
+import PageHeader from "@/components/PageHeader";
 import { teamRecord } from "@/lib/queries";
 import { STATS, teamStatTotals, teamTrends, teamLeaderboard } from "@/lib/stats";
 
@@ -20,8 +21,7 @@ export default async function StatsPage() {
 
   return (
     <NavShell user={user}>
-      <h1 className="text-2xl font-extrabold text-navy-900">Team Stats</h1>
-      <p className="mb-5 mt-1 text-sm text-navy-500">Season performance dashboard &amp; analytics.</p>
+      <PageHeader eyebrow="Analytics" title="Team Stats" subtitle="Season performance dashboard and analytics." />
 
       {/* Record dashboard */}
       <div className="grid gap-4 md:grid-cols-3">

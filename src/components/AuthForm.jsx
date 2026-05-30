@@ -32,17 +32,17 @@ export default function AuthForm({ mode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-50 to-slate-50 flex flex-col items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-gradient-to-b from-brand-50 to-navy-50 flex flex-col items-center justify-center px-4 py-10">
       <div className="mb-6 flex items-center gap-2">
         <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-600 text-2xl">🏐</span>
-        <span className="text-2xl font-extrabold tracking-tight text-slate-900">RallyHQ</span>
+        <span className="text-2xl font-extrabold tracking-tight text-navy-900">RallyHQ</span>
       </div>
 
       <div className="w-full max-w-sm card">
-        <h1 className="text-lg font-bold text-slate-900">
+        <h1 className="text-lg font-bold text-navy-900">
           {isSignup ? "Create your account" : "Welcome back"}
         </h1>
-        <p className="mb-5 mt-1 text-sm text-slate-500">
+        <p className="mb-5 mt-1 text-sm text-navy-500">
           {isSignup ? "Join your volleyball team in seconds." : "Sign in to your team."}
         </p>
 
@@ -65,7 +65,7 @@ export default function AuthForm({ mode }) {
                       className={`rounded-xl px-3 py-2.5 text-sm font-semibold capitalize ring-1 transition ${
                         role === r
                           ? "bg-brand-600 text-white ring-brand-600"
-                          : "bg-white text-slate-600 ring-slate-200"
+                          : "bg-white text-navy-600 ring-navy-100"
                       }`}
                     >
                       {r}
@@ -110,7 +110,7 @@ export default function AuthForm({ mode }) {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-500">
+        <p className="mt-4 text-center text-sm text-navy-500">
           {isSignup ? "Already have an account? " : "New here? "}
           <Link href={isSignup ? "/login" : "/signup"} className="font-semibold text-brand-600">
             {isSignup ? "Sign in" : "Create one"}
@@ -119,7 +119,7 @@ export default function AuthForm({ mode }) {
       </div>
 
       {!isSignup && (
-        <p className="mt-5 max-w-sm text-center text-xs text-slate-400">
+        <p className="mt-5 max-w-sm text-center text-xs text-navy-400">
           Demo logins · coach: <b>coach@rallyhq.dev</b> · player: <b>maya@rallyhq.dev</b> · password{" "}
           <b>password123</b>
         </p>

@@ -4,6 +4,7 @@ import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import { fmtDateTime } from "@/lib/format";
 import Announcer from "@/components/Announcer";
+import PageHeader from "@/components/PageHeader";
 
 const CAT_STYLE = {
   announcement: { chip: "bg-brand-100 text-brand-700", icon: "📣", label: "Announcement" },
@@ -24,16 +25,15 @@ export default async function AnnouncementsPage() {
 
   return (
     <NavShell user={user}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-slate-900">Team board</h1>
-        {user.role === "coach" && <Announcer />}
-      </div>
-      <p className="mb-5 mt-1 text-sm text-slate-500">
-        Announcements, drills, and important info from your coaches.
-      </p>
+      <PageHeader
+        eyebrow="Team board"
+        title="Announcements"
+        subtitle="Updates, drills, and important info from your coaches."
+        action={user.role === "coach" ? <Announcer /> : null}
+      />
 
       <div className="space-y-3">
-        {posts.length === 0 && <p className="text-sm text-slate-400">Nothing posted yet.</p>}
+        {posts.length === 0 && <p className="text-sm text-navy-400">Nothing posted yet.</p>}
         {posts.map((p) => {
           const c = CAT_STYLE[p.category] || CAT_STYLE.announcement;
           return (
@@ -43,11 +43,11 @@ export default async function AnnouncementsPage() {
                 <span className={`chip ${c.chip}`}>
                   {c.icon} {c.label}
                 </span>
-                <span className="ml-auto text-xs text-slate-400">{fmtDateTime(p.created_at)}</span>
+                <span className="ml-auto text-xs text-navy-400">{fmtDateTime(p.created_at)}</span>
               </div>
-              <h2 className="mt-2 font-bold text-slate-900">{p.title}</h2>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{p.body}</p>
-              <p className="mt-2 text-xs text-slate-400">— {p.author}</p>
+              <h2 className="mt-2 font-bold text-navy-900">{p.title}</h2>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-navy-600">{p.body}</p>
+              <p className="mt-2 text-xs text-navy-400">— {p.author}</p>
             </article>
           );
         })}

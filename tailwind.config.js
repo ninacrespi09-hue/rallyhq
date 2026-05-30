@@ -3,6 +3,17 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx,mdx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          "var(--font-jakarta)",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
+        ],
+      },
       colors: {
         // Primary brand scale = blue
         brand: {
@@ -36,9 +47,34 @@ module.exports = {
           900: "#0d1730",
         },
       },
+      borderRadius: {
+        "4xl": "2rem",
+        "5xl": "2.5rem",
+      },
       boxShadow: {
-        soft: "0 1px 2px rgba(13, 23, 48, 0.04), 0 6px 20px -8px rgba(13, 23, 48, 0.12)",
-        glow: "0 10px 30px -10px rgba(37, 99, 235, 0.45)",
+        soft: "0 1px 2px rgba(13, 23, 48, 0.04), 0 8px 24px -12px rgba(13, 23, 48, 0.16)",
+        lift: "0 2px 6px rgba(13, 23, 48, 0.06), 0 18px 40px -18px rgba(13, 23, 48, 0.30)",
+        glow: "0 12px 34px -12px rgba(37, 99, 235, 0.50)",
+        inset: "inset 0 1px 0 rgba(255,255,255,0.6)",
+      },
+      keyframes: {
+        "pop-in": {
+          from: { opacity: "0", transform: "translateY(10px) scale(0.98)" },
+          to: { opacity: "1", transform: "none" },
+        },
+        rise: {
+          from: { opacity: "0", transform: "translateY(14px)" },
+          to: { opacity: "1", transform: "none" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
+      },
+      animation: {
+        "pop-in": "pop-in 0.35s ease both",
+        rise: "rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+        float: "float 6s ease-in-out infinite",
       },
     },
   },

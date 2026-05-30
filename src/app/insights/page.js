@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import InsightsPanel from "@/components/InsightsPanel";
+import PageHeader from "@/components/PageHeader";
 
 export default async function InsightsPage() {
   const user = await getCurrentUser();
@@ -27,12 +28,15 @@ export default async function InsightsPage() {
 
   return (
     <NavShell user={user}>
-      <h1 className="text-2xl font-extrabold text-slate-900">🤖 AI insights</h1>
-      <p className="mb-5 mt-1 text-sm text-slate-500">
-        {scope === "team"
-          ? "Trends across your team's recent check-ins — soreness, energy, mood, and injury risk."
-          : "A look at your own recent check-in trends."}
-      </p>
+      <PageHeader
+        eyebrow="Intelligence"
+        title="🤖 AI insights"
+        subtitle={
+          scope === "team"
+            ? "Trends across your team's recent check-ins: soreness, energy, mood, and injury risk."
+            : "A look at your own recent check-in trends."
+        }
+      />
       <InsightsPanel initial={initial} scope={scope} />
     </NavShell>
   );

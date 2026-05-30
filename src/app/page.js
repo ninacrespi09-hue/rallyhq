@@ -66,73 +66,104 @@ export default async function Landing() {
   const wellness = user.role === "coach" ? teamWellness() : null;
   const checkin = user.role === "player" ? todaysCheckin(user.id) : null;
 
+  // Role-aware "for you" featured action.
+  const featured =
+    user.role === "coach"
+      ? wellness?.needRest?.length
+        ? {
+            href: "/dashboard",
+            icon: "🩺",
+            title: `${wellness.needRest.length} player${wellness.needRest.length > 1 ? "s" : ""} may need rest`,
+            sub: "Open the team wellness summary",
+            gradient: "from-rose-500 to-red-700",
+          }
+        : {
+            href: "/insights",
+            icon: "🤖",
+            title: "Run AI player insights",
+            sub: "Spot soreness, energy and injury trends",
+            gradient: "from-blue-600 to-navy-900",
+          }
+      : checkin
+        ? {
+            href: "/exercises",
+            icon: "💪",
+            title: "Today's training",
+            sub: "Mark your recommended exercises complete",
+            gradient: "from-blue-600 to-navy-900",
+          }
+        : {
+            href: "/checkin",
+            icon: "📝",
+            title: "How are you feeling today?",
+            sub: "Your 30-second daily wellness check-in",
+            gradient: "from-blue-600 to-cyan-600",
+          };
+
   return (
     <NavShell user={user}>
-      {/* ---------- Hero with volleyball-net background ---------- */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-200 via-blue-100 to-white p-7 ring-1 ring-blue-200/60 shadow-soft sm:p-10">
+      {/* ---------- Hero ---------- */}
+      <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-sky-200 via-blue-100 to-white p-7 ring-1 ring-blue-200/60 shadow-soft sm:p-10">
         <NetBackground />
+        <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-blue-300/30 blur-3xl animate-float" />
 
-        {/* one soft accent, kept quiet */}
-        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-blue-300/30 blur-3xl" />
-
-        <div className="relative">
-          <span className="chip bg-white/70 text-blue-700 ring-1 ring-blue-200 backdrop-blur">
-            🏐 Team Hub
-          </span>
-          <h1 className="mt-4 text-4xl font-black leading-[1.05] tracking-tight text-navy-900 sm:text-5xl lg:text-6xl">
-            Welcome to{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              RallyHQ
-            </span>
+        <div className="relative animate-rise">
+          <span className="eyebrow">Team Hub</span>
+          <h1 className="mt-2 text-4xl font-extrabold leading-[1.04] text-navy-900 sm:text-5xl lg:text-[3.75rem]">
+            Welcome to <span className="title-gradient">RallyHQ</span>
           </h1>
           <p className="mt-3 max-w-md text-base text-navy-600 sm:text-lg">
             Hi {user.name.split(" ")[0]} 👋 Everything your team needs, in one place.
           </p>
 
-          {/* live quick chips */}
           <div className="mt-5 flex flex-wrap gap-2">
             {nextEvent && (
               <Link
                 href={`/schedule/${nextEvent.id}`}
-                className="chip bg-white/80 text-navy-700 ring-1 ring-blue-200 backdrop-blur hover:bg-white"
+                className="chip bg-white/80 text-navy-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white"
               >
                 <span className={`mr-1.5 h-2 w-2 rounded-full ${EVENT_STYLES[nextEvent.type].dot}`} />
                 Next: {nextEvent.title} · {fmtDate(nextEvent.start_time)}
               </Link>
             )}
-            {user.role === "coach" && wellness && wellness.needRest.length > 0 && (
-              <Link
-                href="/dashboard"
-                className="chip bg-red-50 text-red-700 ring-1 ring-red-200 hover:bg-red-100"
-              >
-                ⚠️ {wellness.needRest.length} player{wellness.needRest.length > 1 ? "s" : ""} may need rest
-              </Link>
-            )}
-            {user.role === "player" && (
-              <Link
-                href="/checkin"
-                className={`chip ring-1 backdrop-blur ${
-                  checkin
-                    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                    : "bg-white/80 text-blue-700 ring-blue-200 hover:bg-white"
-                }`}
-              >
-                {checkin ? "✅ Checked in today" : "📝 Daily check-in pending"}
-              </Link>
-            )}
+            <Link
+              href="/schedule"
+              className="chip bg-white/70 text-blue-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white"
+            >
+              📅 Full schedule
+            </Link>
           </div>
         </div>
       </section>
 
+      {/* ---------- Featured "for you" action ---------- */}
+      <Link
+        href={featured.href}
+        className={`group relative mt-5 flex items-center gap-4 overflow-hidden rounded-[2rem] bg-gradient-to-br ${featured.gradient} p-5 text-white shadow-lift sm:p-6`}
+      >
+        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-xl" />
+        <div className="relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/20 text-2xl ring-1 ring-white/25 backdrop-blur-sm">
+          {featured.icon}
+        </div>
+        <div className="relative min-w-0 flex-1">
+          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">For you</div>
+          <div className="truncate text-lg font-extrabold sm:text-xl">{featured.title}</div>
+          <div className="truncate text-sm text-white/80">{featured.sub}</div>
+        </div>
+        <span className="relative text-2xl transition group-hover:translate-x-1">→</span>
+      </Link>
+
       {/* ---------- Navigation bubbles ---------- */}
-      <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-        {CARDS.map((c) => (
+      <h2 className="mb-3 mt-8 h-section">Explore</h2>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+        {CARDS.map((c, i) => (
           <Link
             key={c.href}
             href={c.href}
-            className={`group relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-3xl border-2 border-dotted border-[#1e3a8a] bg-gradient-to-br ${c.gradient} p-5 text-white shadow-soft transition duration-200 hover:-translate-y-1 hover:shadow-glow sm:min-h-[168px]`}
+            style={{ animationDelay: `${i * 45}ms` }}
+            className={`group relative flex min-h-[150px] animate-rise flex-col justify-between overflow-hidden rounded-3xl border-2 border-dotted border-[#1e3a8a] bg-gradient-to-br ${c.gradient} p-5 text-white shadow-soft transition duration-200 hover:-translate-y-1 hover:shadow-glow sm:min-h-[170px]`}
           >
-            <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-2xl backdrop-blur-sm ring-1 ring-white/20">
+            <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-2xl ring-1 ring-white/25 backdrop-blur-sm transition group-hover:scale-105">
               {c.icon}
             </div>
             <div className="relative">
@@ -146,9 +177,7 @@ export default async function Landing() {
         ))}
       </div>
 
-      <p className="mt-8 text-center text-xs text-navy-400">
-        🏐 RallyHQ · built for the team
-      </p>
+      <p className="mt-8 text-center text-xs text-navy-400">🏐 RallyHQ · built for the team</p>
     </NavShell>
   );
 }

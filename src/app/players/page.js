@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import Avatar from "@/components/Avatar";
 import Leaderboard from "@/components/Leaderboard";
+import PageHeader from "@/components/PageHeader";
 import { teamLeaderboard } from "@/lib/stats";
 
 export default async function PlayersPage() {
@@ -14,10 +15,11 @@ export default async function PlayersPage() {
 
   return (
     <NavShell user={user}>
-      <h1 className="text-2xl font-extrabold text-navy-900">Players</h1>
-      <p className="mb-5 mt-1 text-sm text-navy-500">
-        Tap a player to open their full profile, stats, and wellness history.
-      </p>
+      <PageHeader
+        eyebrow="Roster"
+        title="Players"
+        subtitle="Tap a player to open their full profile, stats, and wellness history."
+      />
 
       {/* Roster — clean cards (no stats) */}
       <h2 className="h-section mb-2">Roster</h2>

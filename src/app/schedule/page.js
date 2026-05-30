@@ -5,6 +5,7 @@ import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import { fmtDateTime, EVENT_STYLES } from "@/lib/format";
 import EventCreator from "@/components/EventCreator";
+import PageHeader from "@/components/PageHeader";
 
 const VIEWS = [
   { key: "upcoming", label: "Upcoming", type: null },
@@ -24,10 +25,12 @@ export default async function SchedulePage({ searchParams }) {
 
   return (
     <NavShell user={user}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-navy-900">Schedule</h1>
-        {user.role === "coach" && <EventCreator defaultType={activeView.type || "practice"} />}
-      </div>
+      <PageHeader
+        eyebrow="Calendar"
+        title="Schedule"
+        subtitle="Practices, games, tournaments and team bonding."
+        action={user.role === "coach" ? <EventCreator defaultType={activeView.type || "practice"} /> : null}
+      />
 
       <Legend />
       <ViewTabs view={view} />

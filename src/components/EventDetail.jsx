@@ -10,7 +10,7 @@ const STATUS_STYLE = {
   present: "bg-emerald-600 text-white ring-emerald-600",
   late: "bg-amber-500 text-white ring-amber-500",
   absent: "bg-red-500 text-white ring-red-500",
-  excused: "bg-slate-400 text-white ring-slate-400",
+  excused: "bg-navy-400 text-white ring-navy-400",
 };
 
 export default function EventDetail({ event, user, players, initialAttendance, initialResult, initialStats }) {
@@ -41,8 +41,8 @@ export default function EventDetail({ event, user, players, initialAttendance, i
       {/* Attendance */}
       <section className="card">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-slate-900">Attendance</h2>
-          <span className="text-sm text-slate-400">
+          <h2 className="font-bold text-navy-900">Attendance</h2>
+          <span className="text-sm text-navy-400">
             {present}/{players.length} in
           </span>
         </div>
@@ -54,7 +54,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
             const status = att[p.id];
             return (
               <div key={p.id} className="flex items-center gap-2">
-                <div className="w-28 shrink-0 truncate text-sm font-medium text-slate-700">
+                <div className="w-28 shrink-0 truncate text-sm font-medium text-navy-700">
                   {p.name} {mine && <span className="text-xs text-brand-600">(you)</span>}
                 </div>
                 <div className="flex flex-1 flex-wrap gap-1.5">
@@ -64,7 +64,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                       disabled={!editable}
                       onClick={() => setStatus(p.id, st)}
                       className={`chip capitalize ring-1 transition disabled:opacity-40 ${
-                        status === st ? STATUS_STYLE[st] : "bg-white text-slate-500 ring-slate-200"
+                        status === st ? STATUS_STYLE[st] : "bg-white text-navy-500 ring-navy-100"
                       }`}
                     >
                       {st}
@@ -76,7 +76,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
           })}
         </div>
         {!isCoach && (
-          <p className="mt-3 text-xs text-slate-400">You can set your own attendance status.</p>
+          <p className="mt-3 text-xs text-navy-400">You can set your own attendance status.</p>
         )}
       </section>
 
@@ -112,13 +112,13 @@ function ResultPanel({ event, isCoach, initial }) {
 
   return (
     <section className="card">
-      <h2 className="font-bold text-slate-900">Final score</h2>
-      {!isCoach && !initial && <p className="mt-2 text-sm text-slate-400">No result recorded yet.</p>}
+      <h2 className="font-bold text-navy-900">Final score</h2>
+      {!isCoach && !initial && <p className="mt-2 text-sm text-navy-400">No result recorded yet.</p>}
 
       {(isCoach || initial) && (
         <div className="mt-3 flex items-center gap-4">
           <ScoreBox label="Us" value={our} onChange={setOur} editable={isCoach} />
-          <span className="text-2xl font-bold text-slate-300">–</span>
+          <span className="text-2xl font-bold text-navy-300">–</span>
           <ScoreBox label={event.opponent || "Them"} value={opp} onChange={setOpp} editable={isCoach} />
           {(our || opp) ? (
             <span
@@ -141,17 +141,17 @@ function ResultPanel({ event, isCoach, initial }) {
 function ScoreBox({ label, value, onChange, editable }) {
   return (
     <div className="text-center">
-      <div className="mb-1 text-xs font-medium text-slate-400">{label}</div>
+      <div className="mb-1 text-xs font-medium text-navy-400">{label}</div>
       {editable ? (
         <input
           type="number"
           min="0"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-16 rounded-xl border border-slate-200 py-2 text-center text-xl font-extrabold"
+          className="w-16 rounded-xl border border-navy-100 py-2 text-center text-xl font-extrabold"
         />
       ) : (
-        <div className="text-3xl font-extrabold text-slate-900">{value}</div>
+        <div className="text-3xl font-extrabold text-navy-900">{value}</div>
       )}
     </div>
   );
@@ -169,14 +169,14 @@ function StatsPanel({ event, players, initialStats }) {
   return (
     <section className="card">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-slate-900">Player stats</h2>
-        <span className="text-xs text-slate-400">Anyone can help record</span>
+        <h2 className="font-bold text-navy-900">Player stats</h2>
+        <span className="text-xs text-navy-400">Anyone can help record</span>
       </div>
 
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[480px] text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <tr className="text-left text-xs uppercase tracking-wide text-navy-400">
               <th className="py-2">Player</th>
               {STAT_COLS.map((c) => (
                 <th key={c.key} className="px-2 text-center">
@@ -190,8 +190,8 @@ function StatsPanel({ event, players, initialStats }) {
             {players.map((p) => {
               const s = statMap[p.id];
               return (
-                <tr key={p.id} className="border-t border-slate-100">
-                  <td className="py-2 font-medium text-slate-700">{p.name}</td>
+                <tr key={p.id} className="border-t border-navy-50">
+                  <td className="py-2 font-medium text-navy-700">{p.name}</td>
                   {STAT_COLS.map((c) => (
                     <td key={c.key} className="px-2 text-center text-navy-600">
                       {s ? s[c.key] : "–"}
@@ -250,8 +250,8 @@ function StatEditor({ event, player, existing, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
       <div className="w-full max-w-md rounded-t-3xl bg-white p-5 md:rounded-2xl">
-        <h3 className="text-lg font-bold text-slate-900">{player.name}</h3>
-        <p className="mb-4 text-sm text-slate-400">Record stats for this game</p>
+        <h3 className="text-lg font-bold text-navy-900">{player.name}</h3>
+        <p className="mb-4 text-sm text-navy-400">Record stats for this game</p>
         <div className="grid grid-cols-2 gap-3">
           {STAT_COLS.map((c) => (
             <div key={c.key}>

@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import CheckinForm from "@/components/CheckinForm";
+import PageHeader from "@/components/PageHeader";
 
 export default async function CheckinPage() {
   const user = await getCurrentUser();
@@ -18,22 +19,23 @@ export default async function CheckinPage() {
 
   return (
     <NavShell user={user}>
-      <h1 className="text-2xl font-extrabold text-slate-900">Daily check-in</h1>
-      <p className="mb-5 mt-1 text-sm text-slate-500">
-        Takes 20 seconds. Helps your coach manage load and catch injuries early.
-      </p>
+      <PageHeader
+        eyebrow="Wellness"
+        title="Daily check-in"
+        subtitle="Takes 20 seconds. Helps your coach manage load and catch injuries early."
+      />
 
       <CheckinForm existing={today} />
 
       <section className="mt-6 card">
-        <h2 className="mb-3 font-bold text-slate-900">Last 14 days</h2>
+        <h2 className="mb-3 font-bold text-navy-900">Last 14 days</h2>
         {history.length === 0 ? (
-          <p className="text-sm text-slate-400">No check-ins yet.</p>
+          <p className="text-sm text-navy-400">No check-ins yet.</p>
         ) : (
           <div className="space-y-2">
             {history.map((h) => (
-              <div key={h.id} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
-                <span className="w-24 font-medium text-slate-600">{h.date}</span>
+              <div key={h.id} className="flex items-center gap-3 rounded-xl bg-navy-50 px-3 py-2 text-sm">
+                <span className="w-24 font-medium text-navy-600">{h.date}</span>
                 <Bar label="Sore" value={h.soreness} invert />
                 <Bar label="Energy" value={h.energy} />
                 <Bar label="Mood" value={h.mood} />
@@ -54,11 +56,11 @@ function Bar({ label, value, invert }) {
   const color = good ? "bg-emerald-500" : bad ? "bg-red-400" : "bg-amber-400";
   return (
     <div className="flex-1">
-      <div className="flex items-center justify-between text-[10px] text-slate-400">
+      <div className="flex items-center justify-between text-[10px] text-navy-400">
         <span>{label}</span>
         <span>{value}/5</span>
       </div>
-      <div className="mt-0.5 h-1.5 w-full rounded-full bg-slate-200">
+      <div className="mt-0.5 h-1.5 w-full rounded-full bg-navy-100">
         <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${value * 20}%` }} />
       </div>
     </div>

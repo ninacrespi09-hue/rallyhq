@@ -35,7 +35,7 @@ export default function Announcer() {
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
       <form onSubmit={submit} className="w-full max-w-md rounded-t-3xl bg-white p-5 md:rounded-2xl">
-        <h2 className="text-lg font-bold text-slate-900">New post</h2>
+        <h2 className="text-lg font-bold text-navy-900">New post</h2>
 
         <div className="my-3 grid grid-cols-3 gap-2">
           {[
@@ -48,7 +48,7 @@ export default function Announcer() {
               type="button"
               onClick={() => setCategory(val)}
               className={`rounded-xl py-2 text-xs font-semibold ring-1 transition ${
-                category === val ? "bg-brand-600 text-white ring-brand-600" : "bg-white text-slate-500 ring-slate-200"
+                category === val ? "bg-brand-600 text-white ring-brand-600" : "bg-white text-navy-500 ring-navy-100"
               }`}
             >
               {label}
@@ -65,7 +65,7 @@ export default function Announcer() {
             <label className="label">Message</label>
             <textarea name="body" required rows={4} className="input" placeholder="Write your message…" />
           </div>
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <label className="flex items-center gap-2 text-sm font-medium text-navy-700">
             <input
               type="checkbox"
               checked={pinned}

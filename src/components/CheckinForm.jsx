@@ -49,8 +49,8 @@ export default function CheckinForm({ existing }) {
       {SCALES.map((s) => (
         <div key={s.key}>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="font-medium text-slate-700">{s.label}</label>
-            <span className="text-xs text-slate-400">
+            <label className="font-medium text-navy-700">{s.label}</label>
+            <span className="text-xs text-navy-400">
               {s.low} → {s.high}
             </span>
           </div>
@@ -65,7 +65,7 @@ export default function CheckinForm({ existing }) {
                   className={`rounded-xl py-3 text-sm font-bold ring-1 transition ${
                     active
                       ? "bg-brand-600 text-white ring-brand-600"
-                      : "bg-white text-slate-500 ring-slate-200 hover:bg-slate-50"
+                      : "bg-white text-navy-500 ring-navy-100 hover:bg-navy-50"
                   }`}
                 >
                   {n}
@@ -77,7 +77,7 @@ export default function CheckinForm({ existing }) {
       ))}
 
       <div>
-        <label className="mb-2 flex items-center gap-2 font-medium text-slate-700">
+        <label className="mb-2 flex items-center gap-2 font-medium text-navy-700">
           <input
             type="checkbox"
             checked={injury}
@@ -96,7 +96,7 @@ export default function CheckinForm({ existing }) {
                 className={`chip ring-1 transition ${
                   areas.includes(a)
                     ? "bg-red-100 text-red-700 ring-red-200"
-                    : "bg-white text-slate-500 ring-slate-200"
+                    : "bg-white text-navy-500 ring-navy-100"
                 }`}
               >
                 {a}
