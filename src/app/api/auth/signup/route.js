@@ -40,11 +40,18 @@ export async function POST(req) {
     teamId = t.lastInsertRowid;
   } else if (role === "player") {
     if (!team_code?.trim())
-      return NextResponse.json({ error: "Team code is required to join a team." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Players must join using their coach's invite link." },
+        { status: 400 }
+      );
 
-    const team = db.prepare("SELECT id FROM teams WHERE code = ?").get(team_code.trim().toUpperCase());
+    const code = team_code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const team = db.prepare("SELECT id FROM teams WHERE code = ?").get(code);
     if (!team)
-      return NextResponse.json({ error: "Team code not found. Ask your coach for the correct code." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Invalid invite link. Ask your coach for a new team link." },
+        { status: 404 }
+      );
 
     teamId = team.id;
   } else {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
+import TeamCodeBadge from "@/components/TeamCodeBadge";
 import { upcomingEvents, teamWellness, todaysCheckin } from "@/lib/queries";
 import { fmtDate, EVENT_STYLES } from "@/lib/format";
 
@@ -104,6 +105,7 @@ export default async function Landing() {
     <NavShell user={user}>
       {/* ---------- Hero ---------- */}
       <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-sky-200 via-blue-100 to-white p-7 ring-1 ring-blue-200/60 shadow-soft sm:p-10">
+        <TeamCodeBadge code={user.team_code} teamName={user.team_name} isCoach={user.role === "coach"} />
         <NetBackground />
         <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-blue-300/30 blur-3xl animate-float" />
 

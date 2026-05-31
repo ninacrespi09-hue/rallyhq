@@ -7,12 +7,13 @@ import { POSITIONS } from "@/lib/format";
 
 const SAVED_EMAIL_KEY = "rallyhq_email";
 
-export default function AuthForm({ mode, prefilledCode, teamName }) {
+// coachOnly = coach creates a new team at /signup/coach
+// prefilledCode = player joins via /join/CODE invite link only
+export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = false }) {
   const router = useRouter();
   const emailRef = useRef(null);
   const isSignup = mode === "signup";
   const isInvite = !!prefilledCode;
-  const [role, setRole] = useState("player");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [savedEmail, setSavedEmail] = useState("");
@@ -61,19 +62,19 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
       <div className="w-full max-w-sm card">
         {isInvite && (
           <div className="mb-4 rounded-xl bg-blue-600 px-4 py-3 text-center text-white">
-            <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">You're joining</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">You&apos;re joining</div>
             <div className="mt-0.5 text-lg font-extrabold">{teamName}</div>
           </div>
         )}
 
         <h1 className="text-lg font-bold text-navy-900">
-          {isSignup ? "Create your account" : "Welcome back"}
+          {coachOnly ? "Create your team" : isSignup ? "Create your account" : "Welcome back"}
         </h1>
         <p className="mb-5 mt-1 text-sm text-navy-500">
           {isInvite
-            ? "Fill in your details to join the team."
-            : isSignup
-              ? "Use your real email — you'll sign back in with it later."
+            ? "Fill in your details to join this team."
+            : coachOnly
+              ? "Set up your own team. Share the invite link with your players."
               : savedEmail
                 ? "Sign in with your email and password. Your account and team are still saved."
                 : "Sign in with the same email you used when you joined."}
@@ -92,53 +93,42 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
                   <input type="hidden" name="role" value="player" />
                   <input type="hidden" name="team_code" value={prefilledCode} />
                 </>
-              ) : (
+              ) : coachOnly ? (
                 <>
-                  <div>
-                    <label className="label">I am a…</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {["player", "coach"].map((r) => (
-                        <button type="button" key={r} onClick={() => setRole(r)}
-                          className={`rounded-xl px-3 py-2.5 text-sm font-semibold capitalize ring-1 transition ${
-                            role === r ? "bg-blue-600 text-white ring-blue-600" : "bg-white/60 text-navy-600 ring-navy-200"
-                          }`}
-                        >{r}</button>
-                      ))}
-                    </div>
-                    <input type="hidden" name="role" value={role} />
-                  </div>
-
-                  {role === "coach" ? (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="label">Team name</label>
-                        <input name="team_name" required className="input" placeholder="e.g. Westfield Varsity" />
-                      </div>
-                      <div>
-                        <label className="label">Team join code</label>
-                        <input name="team_code" required minLength={4} maxLength={20} className="input"
-                          placeholder="e.g. WOLVES2025"
-                          style={{ textTransform: "uppercase", letterSpacing: "0.08em" }} />
-                        <p className="mt-1 text-xs text-navy-400">Pick a word your players will type to join.</p>
-                      </div>
-                    </div>
-                  ) : (
+                  <input type="hidden" name="role" value="coach" />
+                  <div className="space-y-3">
                     <div>
-                      <label className="label">Team code</label>
-                      <input name="team_code" required className="input" placeholder="Ask your coach for the code"
-                        style={{ textTransform: "uppercase", letterSpacing: "0.08em" }} />
+                      <label className="label">Team name</label>
+                      <input name="team_name" required className="input" placeholder="e.g. Westfield Varsity" />
                     </div>
-                  )}
+                    <div>
+                      <label className="label">Team join code</label>
+                      <input
+                        name="team_code"
+                        required
+                        minLength={4}
+                        maxLength={20}
+                        className="input"
+                        placeholder="e.g. WOLVES2025"
+                        style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
+                      />
+                      <p className="mt-1 text-xs text-navy-400">
+                        Players will use this in your invite link to join your team.
+                      </p>
+                    </div>
+                  </div>
                 </>
-              )}
+              ) : null}
 
-              {(isInvite || role === "player") && (
+              {isInvite && (
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="label">Position</label>
                     <select name="position" className="input">
                       <option value="">Select…</option>
-                      {POSITIONS.map((p) => <option key={p}>{p}</option>)}
+                      {POSITIONS.map((p) => (
+                        <option key={p}>{p}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -162,7 +152,7 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
               placeholder="you@example.com"
             />
             {isSignup && (
-              <p className="mt-1 text-xs text-navy-400">You'll use this email every time you sign back in.</p>
+              <p className="mt-1 text-xs text-navy-400">You&apos;ll use this email every time you sign back in.</p>
             )}
           </div>
           <div>
@@ -182,14 +172,22 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
           )}
 
           <button disabled={loading} className="btn-primary w-full">
-            {loading ? "Please wait…" : isSignup ? (isInvite ? "Join team" : role === "coach" ? "Create team" : "Join team") : "Sign in"}
+            {loading
+              ? "Please wait…"
+              : isSignup
+                ? isInvite
+                  ? "Join team"
+                  : coachOnly
+                    ? "Create team"
+                    : "Sign up"
+                : "Sign in"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-navy-500">
           {isSignup ? "Already have an account? " : "New here? "}
           <Link href={isSignup ? "/login" : "/signup"} className="font-semibold text-blue-700">
-            {isSignup ? "Sign in" : "Create one"}
+            {isSignup ? "Sign in" : "Join or create a team"}
           </Link>
         </p>
       </div>
