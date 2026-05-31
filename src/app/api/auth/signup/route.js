@@ -3,7 +3,9 @@ import { getDb } from "@/lib/db";
 import { hashPassword, createSession, normalizeEmail, isValidEmail } from "@/lib/auth";
 
 export async function POST(req) {
-  const { name, email, password, role, team_name, team_code, position, jersey_number } = await req.json();
+  const { name, email, password: rawPassword, role, team_name, team_code, position, jersey_number } =
+    await req.json();
+  const password = (rawPassword || "").trim();
 
   if (!name || !email || !password)
     return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 });

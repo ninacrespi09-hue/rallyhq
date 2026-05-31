@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { POSITIONS } from "@/lib/format";
@@ -11,7 +11,6 @@ const SAVED_EMAIL_KEY = "rallyhq_email";
 // prefilledCode = player joins via /join/CODE invite link only
 export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = false }) {
   const router = useRouter();
-  const emailRef = useRef(null);
   const isSignup = mode === "signup";
   const isInvite = !!prefilledCode;
   const [error, setError] = useState("");
@@ -20,9 +19,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
 
   useEffect(() => {
     if (!isSignup) {
-      const stored = localStorage.getItem(SAVED_EMAIL_KEY) || "";
-      setSavedEmail(stored);
-      if (stored && emailRef.current) emailRef.current.value = stored;
+      setSavedEmail(localStorage.getItem(SAVED_EMAIL_KEY) || "");
     }
   }, [isSignup]);
 
@@ -44,6 +41,11 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
         const email = body.email || "";
         if (email) localStorage.setItem(SAVED_EMAIL_KEY, email);
         return setError("You already have an account with that email. Sign in below with your password.");
+      }
+      if (data.code === "NO_ACCOUNT") {
+        return setError(
+          "No account on this site with that email. Sign up at /signup/coach (coaches) or use your coach's invite link (players)."
+        );
       }
       return setError(data.error || "Something went wrong.");
     }
@@ -143,11 +145,12 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
           <div>
             <label className="label">Email</label>
             <input
-              ref={emailRef}
               name="email"
               type="email"
               required
-              defaultValue={!isSignup ? savedEmail : undefined}
+              {...(!isSignup
+                ? { value: savedEmail, onChange: (e) => setSavedEmail(e.target.value) }
+                : {})}
               className="input"
               placeholder="you@example.com"
             />

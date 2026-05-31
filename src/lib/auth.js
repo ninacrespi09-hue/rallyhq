@@ -4,7 +4,12 @@ import { cookies } from "next/headers";
 import { getDb } from "./db";
 
 const COOKIE = "rallyhq_session";
-const COOKIE_OPTS = { httpOnly: true, sameSite: "lax", path: "/" };
+const COOKIE_OPTS = {
+  httpOnly: true,
+  sameSite: "lax",
+  path: "/",
+  secure: process.env.NODE_ENV === "production",
+};
 const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET || "dev-secret-change-me-in-production"
 );

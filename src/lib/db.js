@@ -11,7 +11,9 @@ let db;
 export function getDb() {
   if (db) return db;
 
-  const dataDir = process.env.DB_PATH || path.join(process.cwd(), "data");
+  const dataDir =
+    process.env.DB_PATH ||
+    (fs.existsSync("/var/data") ? "/var/data" : path.join(process.cwd(), "data"));
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
   db = new Database(path.join(dataDir, "rallyhq.db"));

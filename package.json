@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/ensure-demo.mjs && next start",
     "seed": "node scripts/seed.mjs"
   },
   "dependencies": {
