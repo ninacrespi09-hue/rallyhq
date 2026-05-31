@@ -132,6 +132,12 @@ export default async function Landing() {
             >
               📅 Full schedule
             </Link>
+            <Link
+              href="/schedule?view=upcoming"
+              className="chip bg-white/70 text-blue-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white"
+            >
+              ⏭️ Upcoming
+            </Link>
           </div>
         </div>
       </section>
