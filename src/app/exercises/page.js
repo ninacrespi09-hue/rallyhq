@@ -14,11 +14,14 @@ export default async function ExercisesPage() {
       `SELECT e.*,
         (SELECT COUNT(*) FROM exercise_completions c WHERE c.exercise_id = e.id) AS completed_count,
         EXISTS(SELECT 1 FROM exercise_completions c WHERE c.exercise_id = e.id AND c.user_id = ?) AS mine_done
-       FROM exercises e ORDER BY e.category, e.id`
+       FROM exercises e JOIN users u ON u.id = e.created_by
+       WHERE u.team_id = ? ORDER BY e.category, e.id`
     )
-    .all(user.id);
+    .all(user.id, user.team_id);
 
-  const playerCount = db.prepare("SELECT COUNT(*) AS n FROM users WHERE role='player'").get().n;
+  const playerCount = db
+    .prepare("SELECT COUNT(*) AS n FROM users WHERE role='player' AND team_id = ?")
+    .get(user.team_id).n;
 
   return (
     <NavShell user={user}>

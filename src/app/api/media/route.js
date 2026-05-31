@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { eventTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,7 @@ export async function POST(req) {
   if (eventId) {
     const ev = db.prepare("SELECT type FROM events WHERE id = ?").get(eventId);
     if (!ev || (ev.type !== "game" && ev.type !== "tournament")) eventId = null;
+    else if (eventTeamId(eventId) !== user.team_id) return forbiddenTeam();
   }
 
   // "moment" describes the action (Serving, Hitting, …); stored in the category column.

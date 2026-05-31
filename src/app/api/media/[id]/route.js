@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { authorTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Toggle favorite (any authenticated user).
 export async function PATCH(req, { params }) {
@@ -10,6 +11,7 @@ export async function PATCH(req, { params }) {
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
   const { id } = await params;
+  if (authorTeamId("media", id) !== user.team_id) return forbiddenTeam();
   const { favorite } = await req.json();
   getDb().prepare("UPDATE media SET favorite = ? WHERE id = ?").run(favorite ? 1 : 0, Number(id));
   return NextResponse.json({ ok: true });
@@ -24,6 +26,7 @@ export async function DELETE(req, { params }) {
   const db = getDb();
   const row = db.prepare("SELECT * FROM media WHERE id = ?").get(Number(id));
   if (!row) return NextResponse.json({ error: "Not found." }, { status: 404 });
+  if (authorTeamId("media", id) !== user.team_id) return forbiddenTeam();
   if (user.role !== "coach" && row.uploaded_by !== user.id) {
     return NextResponse.json({ error: "You can only delete your own photos." }, { status: 403 });
   }

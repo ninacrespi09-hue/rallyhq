@@ -105,8 +105,8 @@ export function injuryHistory(userId) {
 }
 
 /** Heuristic strengths + areas for improvement from stat profile vs. team. */
-export function strengthsAndImprovements(userId) {
-  const board = teamLeaderboard();
+export function strengthsAndImprovements(userId, teamId) {
+  const board = teamLeaderboard(teamId);
   const me = board.find((p) => p.id === userId);
   if (!me || me.games === 0) {
     return { strengths: ["Building a baseline — keep logging games."], improvements: ["Play more games to unlock insights."] };
@@ -142,22 +142,37 @@ export function strengthsAndImprovements(userId) {
 
 /* ------------------------------ Team analytics ------------------------------ */
 
-export function teamStatTotals() {
+export function teamStatTotals(teamId) {
+  if (!teamId) {
+    return getDb().prepare(`SELECT ${SUMS} FROM player_stats ps`).get();
+  }
   return getDb()
-    .prepare(`SELECT ${SUMS} FROM player_stats ps`)
-    .get();
+    .prepare(
+      `SELECT ${SUMS} FROM player_stats ps
+       JOIN users u ON u.id = ps.user_id WHERE u.team_id = ?`
+    )
+    .get(teamId);
 }
 
 /** Per-game offensive output (kills + aces + blocks) over time, plus W/L. */
-export function teamTrends() {
+export function teamTrends(teamId) {
   const db = getDb();
-  const games = db
-    .prepare(
-      `SELECT e.id, e.title, e.opponent, e.start_time, r.result, r.our_score, r.opp_score
-       FROM events e JOIN game_results r ON r.event_id = e.id
-       ORDER BY e.start_time ASC`
-    )
-    .all();
+  const games = teamId
+    ? db
+        .prepare(
+          `SELECT e.id, e.title, e.opponent, e.start_time, r.result, r.our_score, r.opp_score
+           FROM events e JOIN game_results r ON r.event_id = e.id
+           JOIN users u ON u.id = e.created_by
+           WHERE u.team_id = ? ORDER BY e.start_time ASC`
+        )
+        .all(teamId)
+    : db
+        .prepare(
+          `SELECT e.id, e.title, e.opponent, e.start_time, r.result, r.our_score, r.opp_score
+           FROM events e JOIN game_results r ON r.event_id = e.id
+           ORDER BY e.start_time ASC`
+        )
+        .all();
 
   return games.map((g) => {
     const agg = db

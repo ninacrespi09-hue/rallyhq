@@ -6,11 +6,9 @@ import { getDb } from "@/lib/db";
 export default async function JoinPage({ params }) {
   const { code } = await params;
 
-  // Already logged in — go home
   const user = await getCurrentUser();
   if (user) redirect("/");
 
-  // Validate the code exists
   const team = getDb()
     .prepare("SELECT name FROM teams WHERE code = ?")
     .get(code.toUpperCase());
@@ -27,5 +25,11 @@ export default async function JoinPage({ params }) {
     );
   }
 
-  return <AuthForm mode="signup" prefilledCode={code.toUpperCase()} teamName={team.name} />;
+  return (
+    <AuthForm
+      mode="signup"
+      prefilledCode={code.toUpperCase()}
+      teamName={team.name}
+    />
+  );
 }

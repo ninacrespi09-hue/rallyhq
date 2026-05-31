@@ -12,9 +12,9 @@ export default async function StatsPage() {
   if (!user) redirect("/login");
 
   const rec = teamRecord(user.team_id);
-  const totals = teamStatTotals();
-  const trends = teamTrends();
-  const board = teamLeaderboard();
+  const totals = teamStatTotals(user.team_id);
+  const trends = teamTrends(user.team_id);
+  const board = teamLeaderboard(user.team_id);
 
   const statBars = STATS.map((s) => ({ label: s.label, value: totals[s.key] }));
   const trendPoints = trends.map((t) => ({ label: t.label, value: t.points }));

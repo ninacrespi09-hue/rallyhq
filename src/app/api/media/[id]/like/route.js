@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { authorTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Toggle a per-user like on a photo; returns the new count + liked state.
 export async function POST(req, { params }) {
@@ -9,6 +10,7 @@ export async function POST(req, { params }) {
 
   const { id } = await params;
   const mediaId = Number(id);
+  if (authorTeamId("media", mediaId) !== user.team_id) return forbiddenTeam();
   const db = getDb();
 
   const existing = db

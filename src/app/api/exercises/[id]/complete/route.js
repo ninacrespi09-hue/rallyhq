@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { authorTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Players mark an exercise complete / incomplete for themselves.
 export async function POST(req, { params }) {
@@ -8,6 +9,7 @@ export async function POST(req, { params }) {
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
   const { id } = await params;
+  if (authorTeamId("exercises", id) !== user.team_id) return forbiddenTeam();
   const { completed } = await req.json();
   const db = getDb();
 

@@ -117,12 +117,6 @@
   .stat-label {
     @apply text-[11px] font-semibold uppercase tracking-wide text-navy-400;
   }
-
-  /* ---- Signature "court line" dotted frame -------------------------------- */
-  .court-dotted {
-    @apply rounded-[2rem] border-4 border-dotted;
-    border-color: rgba(30, 58, 138, 0.85);
-  }
 }
 
 @layer utilities {

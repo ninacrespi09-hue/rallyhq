@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getDb } from "./db";
 
 const COOKIE = "rallyhq_session";
+const COOKIE_OPTS = { httpOnly: true, sameSite: "lax", path: "/" };
 const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET || "dev-secret-change-me-in-production"
 );
@@ -16,26 +17,36 @@ export async function verifyPassword(plain, hash) {
   return bcrypt.compare(plain, hash);
 }
 
-/** Create a signed session cookie for the given user id. */
+/** Lowercase and trim an email address for storage and lookup. */
+export function normalizeEmail(email) {
+  return (email || "").toLowerCase().trim();
+}
+
+/** Basic check that the user entered a real-looking email address. */
+export function isValidEmail(email) {
+  const e = normalizeEmail(email);
+  return e.length >= 5 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+/** Create a signed session cookie for the given user id (persists until logout). */
 export async function createSession(userId) {
   const token = await new SignJWT({ uid: userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
     .sign(secret);
 
   const jar = await cookies();
   jar.set(COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    ...COOKIE_OPTS,
+    // ~10 years — stays logged in on this device until sign out
+    maxAge: 60 * 60 * 24 * 365 * 10,
   });
 }
 
+/** Clear the session cookie so the user can sign in again with the same email. */
 export async function destroySession() {
   const jar = await cookies();
-  jar.delete(COOKIE);
+  jar.set(COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
 }
 
 /** Returns the logged-in user row (without password) or null. */
@@ -48,7 +59,9 @@ export async function getCurrentUser() {
     const db = getDb();
     const user = db
       .prepare(
-        "SELECT id, name, email, role, team_id, position, jersey_number, height_cm, bio FROM users WHERE id = ?"
+        `SELECT u.id, u.name, u.email, u.role, u.team_id, u.position, u.jersey_number, u.height_cm, u.bio,
+                t.name AS team_name, t.code AS team_code
+         FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.id = ?`
       )
       .get(payload.uid);
     return user || null;

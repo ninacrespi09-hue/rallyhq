@@ -98,11 +98,20 @@ export function teamWellness(teamId) {
   };
 }
 
-/** Most recent photos for the homepage preview. */
-export function recentMedia(limit = 3) {
+/** Most recent photos for the homepage preview — scoped to a team. */
+export function recentMedia(limit = 3, teamId) {
+  if (!teamId) {
+    return getDb()
+      .prepare("SELECT id, url, caption FROM media ORDER BY created_at DESC, id DESC LIMIT ?")
+      .all(limit);
+  }
   return getDb()
-    .prepare("SELECT id, url, caption FROM media ORDER BY created_at DESC, id DESC LIMIT ?")
-    .all(limit);
+    .prepare(
+      `SELECT m.id, m.url, m.caption FROM media m
+       JOIN users u ON u.id = m.uploaded_by
+       WHERE u.team_id = ? ORDER BY m.created_at DESC, m.id DESC LIMIT ?`
+    )
+    .all(teamId, limit);
 }
 
 /** All players on a team. */

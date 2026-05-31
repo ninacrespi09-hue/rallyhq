@@ -24,6 +24,7 @@ export default async function SchedulePage({ searchParams }) {
   const sp = (await searchParams) || {};
   const view = VIEWS.find((v) => v.key === sp.view)?.key || "upcoming";
   const activeView = VIEWS.find((v) => v.key === view);
+  const teamId = user.team_id;
 
   return (
     <NavShell user={user}>
@@ -39,11 +40,11 @@ export default async function SchedulePage({ searchParams }) {
 
       <div className="mt-5">
         {view === "calendar" ? (
-          <CalendarView monthParam={sp.month} />
+          <CalendarView monthParam={sp.month} teamId={teamId} />
         ) : activeView.type ? (
-          <TypeView type={activeView.type} label={activeView.label} isCoach={user.role === "coach"} />
+          <TypeView type={activeView.type} label={activeView.label} isCoach={user.role === "coach"} teamId={teamId} />
         ) : (
-          <UpcomingView isCoach={user.role === "coach"} />
+          <UpcomingView isCoach={user.role === "coach"} teamId={teamId} />
         )}
       </div>
     </NavShell>
@@ -52,18 +53,24 @@ export default async function SchedulePage({ searchParams }) {
 
 /* -------------------------------- Sub views -------------------------------- */
 
-function UpcomingView({ isCoach }) {
+function UpcomingView({ isCoach, teamId }) {
   const db = getDb();
+  const teamFilter = teamId
+    ? "JOIN users u ON u.id = e.created_by WHERE u.team_id = ? AND"
+    : "WHERE";
   const upcoming = db
-    .prepare("SELECT * FROM events WHERE date(start_time) >= date('now') ORDER BY start_time ASC")
-    .all();
+    .prepare(
+      `SELECT e.* FROM events e ${teamFilter} date(e.start_time) >= date('now') ORDER BY e.start_time ASC`
+    )
+    .all(...(teamId ? [teamId] : []));
   const past = db
     .prepare(
       `SELECT e.*, r.result, r.our_score, r.opp_score
        FROM events e LEFT JOIN game_results r ON r.event_id = e.id
-       WHERE date(e.start_time) < date('now') ORDER BY e.start_time DESC LIMIT 20`
+       ${teamId ? "JOIN users u ON u.id = e.created_by" : ""}
+       WHERE ${teamId ? "u.team_id = ? AND" : ""} date(e.start_time) < date('now') ORDER BY e.start_time DESC LIMIT 20`
     )
-    .all();
+    .all(...(teamId ? [teamId] : []));
 
   return (
     <>
@@ -86,18 +93,24 @@ function UpcomingView({ isCoach }) {
   );
 }
 
-function TypeView({ type, label, isCoach }) {
+function TypeView({ type, label, isCoach, teamId }) {
   const db = getDb();
+  const teamJoin = teamId ? "JOIN users u ON u.id = e.created_by" : "";
+  const teamWhere = teamId ? "u.team_id = ? AND" : "";
   const upcoming = db
-    .prepare("SELECT * FROM events WHERE type = ? AND date(start_time) >= date('now') ORDER BY start_time ASC")
-    .all(type);
+    .prepare(
+      `SELECT e.* FROM events e ${teamJoin}
+       WHERE ${teamWhere} e.type = ? AND date(e.start_time) >= date('now') ORDER BY e.start_time ASC`
+    )
+    .all(...(teamId ? [teamId, type] : [type]));
   const past = db
     .prepare(
       `SELECT e.*, r.result, r.our_score, r.opp_score
        FROM events e LEFT JOIN game_results r ON r.event_id = e.id
-       WHERE e.type = ? AND date(e.start_time) < date('now') ORDER BY e.start_time DESC`
+       ${teamJoin}
+       WHERE ${teamWhere} e.type = ? AND date(e.start_time) < date('now') ORDER BY e.start_time DESC`
     )
-    .all(type);
+    .all(...(teamId ? [teamId, type] : [type]));
 
   const empty = upcoming.length === 0 && past.length === 0;
 
@@ -140,7 +153,7 @@ const MONTHS = [
 ];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function CalendarView({ monthParam }) {
+function CalendarView({ monthParam, teamId }) {
   // Determine the month to show (YYYY-MM), defaulting to the current month.
   const now = new Date();
   let year = now.getFullYear();
@@ -151,7 +164,14 @@ function CalendarView({ monthParam }) {
     month = m - 1;
   }
 
-  const events = getDb().prepare("SELECT * FROM events ORDER BY start_time ASC").all();
+  const events = teamId
+    ? getDb()
+        .prepare(
+          `SELECT e.* FROM events e JOIN users u ON u.id = e.created_by
+           WHERE u.team_id = ? ORDER BY e.start_time ASC`
+        )
+        .all(teamId)
+    : getDb().prepare("SELECT * FROM events ORDER BY start_time ASC").all();
 
   // Bucket events by day-of-month, using the local date of each event.
   const byDay = {};

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { eventTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Coaches create practices / games / tournaments.
 export async function POST(req) {
@@ -8,6 +9,7 @@ export async function POST(req) {
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   if (user.role !== "coach")
     return NextResponse.json({ error: "Only coaches can create events." }, { status: 403 });
+  if (!user.team_id) return NextResponse.json({ error: "No team found." }, { status: 403 });
 
   const { type, title, opponent, location, start_time, end_time, notes } = await req.json();
   if (!type || !title || !start_time) {
@@ -30,6 +32,7 @@ export async function DELETE(req) {
   if (!user || user.role !== "coach")
     return NextResponse.json({ error: "Only coaches can delete events." }, { status: 403 });
   const { id } = await req.json();
+  if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
   getDb().prepare("DELETE FROM events WHERE id = ?").run(id);
   return NextResponse.json({ ok: true });
 }

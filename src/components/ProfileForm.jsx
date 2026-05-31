@@ -32,6 +32,12 @@ export default function ProfileForm({ user }) {
   return (
     <form onSubmit={submit} className="card max-w-lg space-y-4">
       <div>
+        <label className="label">Login email</label>
+        <input value={user.email} readOnly className="input bg-navy-50 text-navy-500" />
+        <p className="mt-1 text-xs text-navy-400">Use this email to sign back in after signing out.</p>
+      </div>
+
+      <div>
         <label className="label">Name</label>
         <input name="name" defaultValue={user.name} className="input" required />
       </div>

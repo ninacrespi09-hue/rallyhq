@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { authorTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Coaches post announcements / exercises / info to the team.
 export async function POST(req) {
@@ -28,6 +29,7 @@ export async function DELETE(req) {
   if (!user || user.role !== "coach")
     return NextResponse.json({ error: "Only coaches can delete." }, { status: 403 });
   const { id } = await req.json();
+  if (authorTeamId("announcements", id) !== user.team_id) return forbiddenTeam();
   getDb().prepare("DELETE FROM announcements WHERE id = ?").run(id);
   return NextResponse.json({ ok: true });
 }

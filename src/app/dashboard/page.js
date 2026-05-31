@@ -21,8 +21,11 @@ export default async function Dashboard() {
 
   const events = upcomingEvents(4, user.team_id);
   const pinned = getDb()
-    .prepare("SELECT * FROM announcements ORDER BY pinned DESC, created_at DESC LIMIT 3")
-    .all();
+    .prepare(
+      `SELECT a.* FROM announcements a JOIN users u ON u.id = a.author_id
+       WHERE u.team_id = ? ORDER BY a.pinned DESC, a.created_at DESC LIMIT 3`
+    )
+    .all(user.team_id);
 
   return (
     <NavShell user={user}>
@@ -34,7 +37,7 @@ export default async function Dashboard() {
         <h1 className="text-2xl font-extrabold text-navy-900">{user.name.split(" ")[0]} 🏐</h1>
       </div>
 
-      {user.role === "coach" ? <CoachHome /> : <PlayerHome user={user} />}
+      {user.role === "coach" ? <CoachHome user={user} /> : <PlayerHome user={user} />}
 
       {/* Shared: upcoming + announcements */}
       <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -138,16 +141,22 @@ function PlayerHome({ user }) {
   );
 }
 
-function CoachHome() {
+function CoachHome({ user }) {
   const rec = teamRecord(user.team_id);
   const players = allPlayers(user.team_id);
   const wellness = teamWellness(user.team_id);
   const checkedInToday = getDb()
-    .prepare("SELECT COUNT(*) AS n FROM checkins WHERE date = date('now')")
-    .get().n;
+    .prepare(
+      `SELECT COUNT(*) AS n FROM checkins c JOIN users u ON u.id = c.user_id
+       WHERE u.team_id = ? AND c.date = date('now')`
+    )
+    .get(user.team_id).n;
   const injuries = getDb()
-    .prepare("SELECT COUNT(*) AS n FROM checkins WHERE date >= date('now','-7 days') AND injury = 1")
-    .get().n;
+    .prepare(
+      `SELECT COUNT(*) AS n FROM checkins c JOIN users u ON u.id = c.user_id
+       WHERE u.team_id = ? AND c.date >= date('now','-7 days') AND c.injury = 1`
+    )
+    .get(user.team_id).n;
   const topScorer = leaderboard("kills", 1, user.team_id)[0];
 
   return (

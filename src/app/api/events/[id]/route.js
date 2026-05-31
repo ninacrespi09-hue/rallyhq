@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { eventTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Edit an event (coaches only).
 export async function PATCH(req, { params }) {
@@ -9,6 +10,7 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ error: "Only coaches can edit events." }, { status: 403 });
 
   const { id } = await params;
+  if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
   const { type, title, opponent, location, start_time, end_time, notes } = await req.json();
 
   getDb()
@@ -28,6 +30,7 @@ export async function DELETE(req, { params }) {
     return NextResponse.json({ error: "Only coaches can delete events." }, { status: 403 });
 
   const { id } = await params;
+  if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
   getDb().prepare("DELETE FROM events WHERE id = ?").run(Number(id));
   return NextResponse.json({ ok: true });
 }

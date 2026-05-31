@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { eventTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Record / update a game result (coaches only).
 export async function POST(req, { params }) {
@@ -9,6 +10,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: "Only coaches can record results." }, { status: 403 });
 
   const { id } = await params;
+  if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
   const { our_score, opp_score, sets } = await req.json();
   const ours = Number(our_score) || 0;
   const opp = Number(opp_score) || 0;

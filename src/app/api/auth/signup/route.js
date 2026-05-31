@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { hashPassword, createSession } from "@/lib/auth";
+import { hashPassword, createSession, normalizeEmail, isValidEmail } from "@/lib/auth";
 
 export async function POST(req) {
   const { name, email, password, role, team_name, team_code, position, jersey_number } = await req.json();
 
   if (!name || !email || !password)
     return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 });
+  if (!isValidEmail(email))
+    return NextResponse.json({ error: "Enter a valid email address (e.g. you@gmail.com)." }, { status: 400 });
 
   const db = getDb();
+  const normalizedEmail = normalizeEmail(email);
 
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email.toLowerCase().trim());
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(normalizedEmail);
   if (existing)
-    return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
+    return NextResponse.json(
+      { error: "An account with that email already exists. Sign in instead.", code: "EMAIL_EXISTS" },
+      { status: 409 }
+    );
 
   let teamId = null;
 
@@ -32,8 +38,7 @@ export async function POST(req) {
 
     const t = db.prepare("INSERT INTO teams (name, code) VALUES (?, ?)").run(team_name.trim(), code);
     teamId = t.lastInsertRowid;
-  } else {
-    // Player joins an existing team via code.
+  } else if (role === "player") {
     if (!team_code?.trim())
       return NextResponse.json({ error: "Team code is required to join a team." }, { status: 400 });
 
@@ -42,6 +47,8 @@ export async function POST(req) {
       return NextResponse.json({ error: "Team code not found. Ask your coach for the correct code." }, { status: 404 });
 
     teamId = team.id;
+  } else {
+    return NextResponse.json({ error: "Invalid signup role." }, { status: 400 });
   }
 
   const hash = await hashPassword(password);
@@ -52,7 +59,7 @@ export async function POST(req) {
     )
     .run(
       name.trim(),
-      email.toLowerCase().trim(),
+      normalizedEmail,
       hash,
       role === "coach" ? "coach" : "player",
       teamId,

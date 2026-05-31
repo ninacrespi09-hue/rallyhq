@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { userTeamId } from "@/lib/tenancy";
 import NavShell from "@/components/NavShell";
 import Avatar from "@/components/Avatar";
 import CoachNotes from "@/components/CoachNotes";
@@ -28,6 +29,7 @@ export default async function PlayerProfile({ params }) {
     .prepare("SELECT id, name, position, jersey_number, height_cm, bio, photo_url FROM users WHERE id = ? AND role='player'")
     .get(Number(id));
   if (!player) notFound();
+  if (userTeamId(player.id) !== user.team_id) notFound();
 
   const totals = statTotals(player.id);
   const games = recentGames(player.id, 8);
@@ -35,7 +37,7 @@ export default async function PlayerProfile({ params }) {
   const wellness = wellnessScore(player.id);
   const wHistory = wellnessHistory(player.id);
   const injuries = injuryHistory(player.id);
-  const { strengths, improvements } = strengthsAndImprovements(player.id);
+  const { strengths, improvements } = strengthsAndImprovements(player.id, user.team_id);
   const notes = db
     .prepare(
       `SELECT n.*, u.name AS author FROM player_notes n LEFT JOIN users u ON u.id = n.author_id

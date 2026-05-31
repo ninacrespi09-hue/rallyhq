@@ -17,15 +17,19 @@ export default async function GalleryPage() {
          EXISTS(SELECT 1 FROM media_likes ml WHERE ml.media_id = m.id AND ml.user_id = ?) AS liked
        FROM media m
        LEFT JOIN events e ON e.id = m.event_id
-       LEFT JOIN users u ON u.id = m.uploaded_by
+       JOIN users u ON u.id = m.uploaded_by
+       WHERE u.team_id = ?
        ORDER BY m.created_at DESC, m.id DESC`
     )
-    .all(user.id);
+    .all(user.id, user.team_id);
 
-  // Only games & tournaments can be tagged (action photos only).
   const events = db
-    .prepare("SELECT id, title, type FROM events WHERE type IN ('game','tournament') ORDER BY start_time DESC")
-    .all();
+    .prepare(
+      `SELECT e.id, e.title, e.type FROM events e
+       JOIN users u ON u.id = e.created_by
+       WHERE u.team_id = ? AND e.type IN ('game','tournament') ORDER BY e.start_time DESC`
+    )
+    .all(user.team_id);
 
   return (
     <NavShell user={user}>

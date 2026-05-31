@@ -73,7 +73,7 @@ export default function Gallery({ user, media, events }) {
             <div className="flex items-center gap-2 text-sm font-semibold text-white/80">
               <CameraIcon className="h-5 w-5" /> Media Gallery
             </div>
-            <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Highlight Reel</h1>
+            <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Player Photos</h1>
             <p className="mt-1 text-sm text-white/85">
               The team's best game &amp; tournament moments. {items.length} shot
               {items.length === 1 ? "" : "s"}.

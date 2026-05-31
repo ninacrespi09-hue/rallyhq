@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { userTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Coaches add notes to a player's profile.
 export async function POST(req, { params }) {
@@ -9,6 +10,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: "Only coaches can add notes." }, { status: 403 });
 
   const { id } = await params;
+  if (userTeamId(id) !== user.team_id) return forbiddenTeam();
   const { note } = await req.json();
   if (!note?.trim()) return NextResponse.json({ error: "Note cannot be empty." }, { status: 400 });
 

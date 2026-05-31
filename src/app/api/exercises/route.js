@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { authorTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 // Coaches create and edit exercises.
 export async function POST(req) {
@@ -34,6 +35,7 @@ export async function PATCH(req) {
     return NextResponse.json({ error: "Only coaches can edit exercises." }, { status: 403 });
 
   const { id, title, instructions, reps, difficulty, category, coach_notes } = await req.json();
+  if (authorTeamId("exercises", id) !== user.team_id) return forbiddenTeam();
   getDb()
     .prepare(
       `UPDATE exercises SET title=?, instructions=?, reps=?, difficulty=?, category=?, coach_notes=? WHERE id=?`
@@ -47,6 +49,7 @@ export async function DELETE(req) {
   if (!user || user.role !== "coach")
     return NextResponse.json({ error: "Only coaches can delete exercises." }, { status: 403 });
   const { id } = await req.json();
+  if (authorTeamId("exercises", id) !== user.team_id) return forbiddenTeam();
   getDb().prepare("DELETE FROM exercises WHERE id = ?").run(Number(id));
   return NextResponse.json({ ok: true });
 }

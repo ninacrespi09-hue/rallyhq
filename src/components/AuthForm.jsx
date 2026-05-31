@@ -1,17 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { POSITIONS } from "@/lib/format";
 
+const SAVED_EMAIL_KEY = "rallyhq_email";
+
 export default function AuthForm({ mode, prefilledCode, teamName }) {
   const router = useRouter();
+  const emailRef = useRef(null);
   const isSignup = mode === "signup";
-  const isInvite = !!prefilledCode; // came via /join/CODE link
+  const isInvite = !!prefilledCode;
   const [role, setRole] = useState("player");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [savedEmail, setSavedEmail] = useState("");
+
+  useEffect(() => {
+    if (!isSignup) {
+      const stored = localStorage.getItem(SAVED_EMAIL_KEY) || "";
+      setSavedEmail(stored);
+      if (stored && emailRef.current) emailRef.current.value = stored;
+    }
+  }, [isSignup]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -26,7 +38,15 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) return setError(data.error || "Something went wrong.");
+    if (!res.ok) {
+      if (data.code === "EMAIL_EXISTS") {
+        const email = body.email || "";
+        if (email) localStorage.setItem(SAVED_EMAIL_KEY, email);
+        return setError("You already have an account with that email. Sign in below with your password.");
+      }
+      return setError(data.error || "Something went wrong.");
+    }
+    if (body.email) localStorage.setItem(SAVED_EMAIL_KEY, body.email);
     router.push("/");
     router.refresh();
   }
@@ -50,7 +70,13 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
           {isSignup ? "Create your account" : "Welcome back"}
         </h1>
         <p className="mb-5 mt-1 text-sm text-navy-500">
-          {isInvite ? "Fill in your details to join the team." : isSignup ? "Set up your team or join one." : "Sign in to your team."}
+          {isInvite
+            ? "Fill in your details to join the team."
+            : isSignup
+              ? "Use your real email — you'll sign back in with it later."
+              : savedEmail
+                ? "Sign in with your email and password. Your account and team are still saved."
+                : "Sign in with the same email you used when you joined."}
         </p>
 
         <form onSubmit={onSubmit} className="space-y-3.5">
@@ -61,7 +87,6 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
                 <input name="name" required className="input" placeholder="Your name" />
               </div>
 
-              {/* Hide role switcher and code field on invite links */}
               {isInvite ? (
                 <>
                   <input type="hidden" name="role" value="player" />
@@ -107,7 +132,6 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
                 </>
               )}
 
-              {/* Position + jersey for players */}
               {(isInvite || role === "player") && (
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -128,14 +152,34 @@ export default function AuthForm({ mode, prefilledCode, teamName }) {
 
           <div>
             <label className="label">Email</label>
-            <input name="email" type="email" required className="input" placeholder="you@example.com" />
+            <input
+              ref={emailRef}
+              name="email"
+              type="email"
+              required
+              defaultValue={!isSignup ? savedEmail : undefined}
+              className="input"
+              placeholder="you@example.com"
+            />
+            {isSignup && (
+              <p className="mt-1 text-xs text-navy-400">You'll use this email every time you sign back in.</p>
+            )}
           </div>
           <div>
             <label className="label">Password</label>
             <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
           </div>
 
-          {error && <p className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-900">{error}</p>}
+          {error && (
+            <div className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-900">
+              <p>{error}</p>
+              {error.includes("already have an account") && (
+                <Link href="/login" className="mt-1 inline-block font-semibold underline">
+                  Go to sign in →
+                </Link>
+              )}
+            </div>
+          )}
 
           <button disabled={loading} className="btn-primary w-full">
             {loading ? "Please wait…" : isSignup ? (isInvite ? "Join team" : role === "coach" ? "Create team" : "Join team") : "Sign in"}

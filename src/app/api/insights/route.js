@@ -20,10 +20,10 @@ export async function POST() {
           .prepare(
             `SELECT u.name, c.date, c.soreness, c.energy, c.mood, c.injury, c.sore_areas, c.note
              FROM checkins c JOIN users u ON u.id = c.user_id
-             WHERE c.date >= date('now', '-14 days')
+             WHERE u.team_id = ? AND c.date >= date('now', '-14 days')
              ORDER BY c.date DESC LIMIT 200`
           )
-          .all()
+          .all(user.team_id)
       : db
           .prepare(
             `SELECT u.name, c.date, c.soreness, c.energy, c.mood, c.injury, c.sore_areas, c.note

@@ -1,5 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { eventTeamId } from "@/lib/tenancy";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import { fmtDateTime, EVENT_STYLES, isCompetitive } from "@/lib/format";
@@ -15,10 +16,11 @@ export default async function EventPage({ params }) {
   const db = getDb();
   const event = db.prepare("SELECT * FROM events WHERE id = ?").get(Number(id));
   if (!event) notFound();
+  if (eventTeamId(event.id) !== user.team_id) notFound();
 
   const players = db
-    .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' ORDER BY name")
-    .all();
+    .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' AND team_id = ? ORDER BY name")
+    .all(user.team_id);
 
   const attendance = db.prepare("SELECT user_id, status FROM attendance WHERE event_id = ?").all(event.id);
   const result = db.prepare("SELECT * FROM game_results WHERE event_id = ?").get(event.id);

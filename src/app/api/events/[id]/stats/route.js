@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { eventTeamId, userTeamId, forbiddenTeam } from "@/lib/tenancy";
 
 /**
  * Record per-player stats for a game. Any authenticated teammate can help
@@ -11,8 +12,11 @@ export async function POST(req, { params }) {
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
   const { id } = await params;
+  if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
+
   const { user_id, kills, hits, assists, aces, digs, blocks, errors } = await req.json();
   if (!user_id) return NextResponse.json({ error: "Player is required." }, { status: 400 });
+  if (userTeamId(user_id) !== user.team_id) return forbiddenTeam();
 
   const n = (v) => Math.max(0, Number(v) || 0);
 
