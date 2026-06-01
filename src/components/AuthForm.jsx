@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { POSITIONS } from "@/lib/format";
 
 const SAVED_EMAIL_KEY = "rallyhq_email";
@@ -11,17 +11,17 @@ const SAVED_EMAIL_KEY = "rallyhq_email";
 // prefilledCode = player joins via /join/CODE invite link only
 export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = false }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const signedOut = searchParams.get("signedOut") === "1";
   const isSignup = mode === "signup";
   const isInvite = !!prefilledCode;
+  const isLogin = !isSignup;
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [savedEmail, setSavedEmail] = useState("");
-
-  useEffect(() => {
-    if (!isSignup) {
-      setSavedEmail(localStorage.getItem(SAVED_EMAIL_KEY) || "");
-    }
-  }, [isSignup]);
+  const [savedEmail, setSavedEmail] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(SAVED_EMAIL_KEY) || "";
+  });
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -44,8 +44,11 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
       }
       if (data.code === "NO_ACCOUNT") {
         return setError(
-          "No account on this site with that email. Sign up at /signup/coach (coaches) or use your coach's invite link (players)."
+          "No account with that email. Sign up at /signup/coach (coaches) or use your coach's invite link (players)."
         );
+      }
+      if (data.code === "WRONG_PASSWORD") {
+        return setError("Wrong password. Use the same password you picked when you signed up.");
       }
       return setError(data.error || "Something went wrong.");
     }
@@ -77,10 +80,18 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
             ? "Fill in your details to join this team."
             : coachOnly
               ? "Set up your own team. Share the invite link with your players."
-              : savedEmail
-                ? "Sign in with your email and password. Your account and team are still saved."
-                : "Sign in with the same email you used when you joined."}
+              : signedOut
+                ? "You signed out. Your account is still saved — sign back in with the same email and password."
+                : savedEmail
+                  ? "Sign in with your email and password."
+                  : "Sign in with the same email you used when you joined."}
         </p>
+
+        {signedOut && isLogin && (
+          <div className="mb-4 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-900 ring-1 ring-blue-200">
+            Your team and data are still here. Only your session ended.
+          </div>
+        )}
 
         <form onSubmit={onSubmit} className="space-y-3.5">
           {isSignup && (
@@ -91,10 +102,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
               </div>
 
               {isInvite ? (
-                <>
-                  <input type="hidden" name="role" value="player" />
-                  <input type="hidden" name="team_code" value={prefilledCode} />
-                </>
+                <input type="hidden" name="role" value="player" />
               ) : coachOnly ? (
                 <>
                   <input type="hidden" name="role" value="coach" />
@@ -122,46 +130,77 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
                 </>
               ) : null}
 
+              <div>
+                <label className="label">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  className="input"
+                  placeholder="you@example.com"
+                />
+                <p className="mt-1 text-xs text-navy-400">You&apos;ll use this email every time you sign back in.</p>
+              </div>
+              <div>
+                <label className="label">Password</label>
+                <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
+              </div>
+
               {isInvite && (
-                <div className="grid grid-cols-2 gap-2">
+                <>
                   <div>
-                    <label className="label">Position</label>
-                    <select name="position" className="input">
-                      <option value="">Select…</option>
-                      {POSITIONS.map((p) => (
-                        <option key={p}>{p}</option>
-                      ))}
-                    </select>
+                    <label className="label">Team code</label>
+                    <input
+                      name="team_code"
+                      required
+                      minLength={4}
+                      maxLength={20}
+                      defaultValue={prefilledCode}
+                      className="input"
+                      placeholder="e.g. WOLVES2025"
+                      style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
+                    />
                   </div>
-                  <div>
-                    <label className="label">Jersey #</label>
-                    <input name="jersey_number" type="number" min="0" className="input" placeholder="7" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="label">Position</label>
+                      <select name="position" className="input">
+                        <option value="">Select…</option>
+                        {POSITIONS.map((p) => (
+                          <option key={p}>{p}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label">Jersey #</label>
+                      <input name="jersey_number" type="number" min="0" className="input" placeholder="7" />
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </>
           )}
 
-          <div>
-            <label className="label">Email</label>
-            <input
-              name="email"
-              type="email"
-              required
-              {...(!isSignup
-                ? { value: savedEmail, onChange: (e) => setSavedEmail(e.target.value) }
-                : {})}
-              className="input"
-              placeholder="you@example.com"
-            />
-            {isSignup && (
-              <p className="mt-1 text-xs text-navy-400">You&apos;ll use this email every time you sign back in.</p>
-            )}
-          </div>
-          <div>
-            <label className="label">Password</label>
-            <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
-          </div>
+          {!isSignup && (
+            <>
+              <div>
+                <label className="label">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  value={savedEmail}
+                  onChange={(e) => setSavedEmail(e.target.value)}
+                  className="input"
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div>
+                <label className="label">Password</label>
+                <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
+              </div>
+            </>
+          )}
 
           {error && (
             <div className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-900">

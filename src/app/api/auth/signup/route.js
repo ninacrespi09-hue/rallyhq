@@ -43,7 +43,7 @@ export async function POST(req) {
   } else if (role === "player") {
     if (!team_code?.trim())
       return NextResponse.json(
-        { error: "Players must join using their coach's invite link." },
+        { error: "Team code is required. Ask your coach for your team code." },
         { status: 400 }
       );
 
@@ -51,7 +51,7 @@ export async function POST(req) {
     const team = db.prepare("SELECT id FROM teams WHERE code = ?").get(code);
     if (!team)
       return NextResponse.json(
-        { error: "Invalid invite link. Ask your coach for a new team link." },
+        { error: "That team code is not valid. Check with your coach and try again." },
         { status: 404 }
       );
 

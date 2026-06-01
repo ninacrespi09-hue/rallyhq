@@ -10,14 +10,14 @@ const PRIMARY = [
   { href: "/schedule", label: "Schedule", icon: "📅" },
   { href: "/players", label: "Players", icon: "🏐" },
   { href: "/exercises", label: "Exercises", icon: "💪" },
-  { href: "/gallery", label: "Gallery", icon: "📷" },
+  { href: "/ai-coach", label: "AI", icon: "🤖" },
 ];
 
 // Secondary destinations — sidebar only (desktop).
 const SECONDARY = [
+  { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/stats", label: "Team Stats", icon: "📊" },
   { href: "/checkin", label: "Wellness", icon: "🩺" },
-  { href: "/insights", label: "AI Insights", icon: "🤖" },
   { href: "/announcements", label: "Announcements", icon: "📣" },
   { href: "/dashboard", label: "Dashboard", icon: "📋" },
 ];

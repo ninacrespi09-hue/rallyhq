@@ -79,6 +79,23 @@ export function recentGames(userId, limit = 6) {
     .all(userId, limit);
 }
 
+/** Kills-over-time points for the profile trend chart. */
+export function killsTrend(userId, limit = 8) {
+  const games = recentGames(userId, limit);
+  if (games.length > 0) {
+    return [...games].reverse().map((g) => ({
+      label: g.opponent || g.title || "Game",
+      value: Number(g.kills) || 0,
+    }));
+  }
+
+  const totals = statTotals(userId);
+  if ((totals.kills ?? 0) > 0 || totals.games > 0) {
+    return [{ label: "Season", value: Number(totals.kills) || 0 }];
+  }
+  return [];
+}
+
 /** Recent daily check-ins for the wellness history list/chart. */
 export function wellnessHistory(userId, limit = 10) {
   return getDb()

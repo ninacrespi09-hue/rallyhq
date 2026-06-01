@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function InsightsRedirect() {
+export default function AIPage() {
   redirect("/ai-coach");
 }

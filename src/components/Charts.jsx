@@ -34,12 +34,28 @@ export function LineChart({ points, height = 140, stroke = "#2563eb" }) {
   const W = 320;
   const H = height;
   const pad = 24;
-  const max = Math.max(1, ...points.map((p) => p.value));
-  const stepX = points.length > 1 ? (W - pad * 2) / (points.length - 1) : 0;
-  const x = (i) => pad + i * stepX;
+  const values = points.map((p) => Number(p.value) || 0);
+  const max = Math.max(1, ...values);
   const y = (v) => H - pad - (v / max) * (H - pad * 2);
 
-  const line = points.map((p, i) => `${x(i)},${y(p.value)}`).join(" ");
+  // Single point — centered dot (polyline needs 2+ points to draw a visible line).
+  if (points.length === 1) {
+    const cx = W / 2;
+    const cy = y(values[0]);
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: H }}>
+        <line x1={pad} y1={cy} x2={W - pad} y2={cy} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 4" />
+        <circle cx={cx} cy={cy} r="6" fill={stroke} />
+        <text x={cx} y={H - 8} textAnchor="middle" style={{ fontSize: 10, fill: "#64748b" }}>
+          {points[0].label} · {values[0]} kills
+        </text>
+      </svg>
+    );
+  }
+
+  const stepX = (W - pad * 2) / (points.length - 1);
+  const x = (i) => pad + i * stepX;
+  const line = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
   const area = `${pad},${H - pad} ${line} ${x(points.length - 1)},${H - pad}`;
 
   return (
@@ -52,8 +68,8 @@ export function LineChart({ points, height = 140, stroke = "#2563eb" }) {
       </defs>
       <polygon points={area} fill="url(#lc)" />
       <polyline points={line} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-      {points.map((p, i) => (
-        <circle key={i} cx={x(i)} cy={y(p.value)} r="3.5" fill="#fff" stroke={stroke} strokeWidth="2" />
+      {values.map((v, i) => (
+        <circle key={i} cx={x(i)} cy={y(v)} r="3.5" fill="#fff" stroke={stroke} strokeWidth="2" />
       ))}
     </svg>
   );

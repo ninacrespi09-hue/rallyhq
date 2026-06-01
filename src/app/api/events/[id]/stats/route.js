@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { eventTeamId, userTeamId, forbiddenTeam } from "@/lib/tenancy";
+import { regeneratePlayerCoachInsight } from "@/lib/playerCoachInsight";
 
 /**
  * Record per-player stats for a game. Any authenticated teammate can help
@@ -17,6 +18,11 @@ export async function POST(req, { params }) {
   const { user_id, kills, hits, assists, aces, digs, blocks, errors } = await req.json();
   if (!user_id) return NextResponse.json({ error: "Player is required." }, { status: 400 });
   if (userTeamId(user_id) !== user.team_id) return forbiddenTeam();
+
+  const targetId = Number(user_id);
+  if (user.role !== "coach" && targetId !== user.id) {
+    return NextResponse.json({ error: "Only coaches can edit other players' stats." }, { status: 403 });
+  }
 
   const n = (v) => Math.max(0, Number(v) || 0);
 
@@ -40,6 +46,8 @@ export async function POST(req, { params }) {
       blocks: n(blocks),
       errors: n(errors),
     });
+
+  await regeneratePlayerCoachInsight(targetId, user.team_id);
 
   return NextResponse.json({ ok: true });
 }

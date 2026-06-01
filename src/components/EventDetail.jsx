@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { isCompetitive } from "@/lib/format";
 import { STATS } from "@/lib/statDefs";
+import StatEditor from "./StatEditor";
 
 const STATUSES = ["present", "late", "absent", "excused"];
 const STATUS_STYLE = {
@@ -84,7 +85,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
       {isGame && (
         <>
           <ResultPanel event={event} isCoach={isCoach} initial={initialResult} />
-          <StatsPanel event={event} players={players} initialStats={initialStats} />
+          <StatsPanel event={event} players={players} initialStats={initialStats} isCoach={isCoach} userId={user.id} />
         </>
       )}
     </div>
@@ -160,17 +161,23 @@ function ScoreBox({ label, value, onChange, editable }) {
 // Full statistic names (no abbreviations): Kills, Hits, Blocks, Digs, Serve Aces.
 const STAT_COLS = STATS;
 
-function StatsPanel({ event, players, initialStats }) {
+function StatsPanel({ event, players, initialStats, isCoach, userId }) {
   const router = useRouter();
   const [editing, setEditing] = useState(null); // player id being edited
   const statMap = {};
   initialStats.forEach((s) => (statMap[s.user_id] = s));
 
+  function canEdit(playerId) {
+    return isCoach || playerId === userId;
+  }
+
   return (
     <section className="card">
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-navy-900">Player stats</h2>
-        <span className="text-xs text-navy-400">Anyone can help record</span>
+        <span className="text-xs text-navy-400">
+          {isCoach ? "Coach can edit every player" : "Edit your own stats"}
+        </span>
       </div>
 
       <div className="mt-3 overflow-x-auto">
@@ -198,12 +205,14 @@ function StatsPanel({ event, players, initialStats }) {
                     </td>
                   ))}
                   <td className="text-right">
-                    <button
-                      onClick={() => setEditing(p.id)}
-                      className="text-xs font-semibold text-brand-600"
-                    >
-                      {s ? "Edit" : "Add"}
-                    </button>
+                    {canEdit(p.id) && (
+                      <button
+                        onClick={() => setEditing(p.id)}
+                        className="text-xs font-semibold text-brand-600"
+                      >
+                        {s ? "Edit" : "Add"}
+                      </button>
+                    )}
                   </td>
                 </tr>
               );
@@ -214,8 +223,9 @@ function StatsPanel({ event, players, initialStats }) {
 
       {editing && (
         <StatEditor
-          event={event}
-          player={players.find((p) => p.id === editing)}
+          eventId={event.id}
+          playerId={editing}
+          playerName={players.find((p) => p.id === editing)?.name}
           existing={statMap[editing]}
           onClose={() => setEditing(null)}
           onSaved={() => {
@@ -225,56 +235,5 @@ function StatsPanel({ event, players, initialStats }) {
         />
       )}
     </section>
-  );
-}
-
-function StatEditor({ event, player, existing, onClose, onSaved }) {
-  const [vals, setVals] = useState(() => {
-    const v = {};
-    STAT_COLS.forEach((c) => (v[c.key] = existing?.[c.key] ?? 0));
-    return v;
-  });
-  const [saving, setSaving] = useState(false);
-
-  async function save() {
-    setSaving(true);
-    await fetch(`/api/events/${event.id}/stats`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: player.id, ...vals }),
-    });
-    setSaving(false);
-    onSaved();
-  }
-
-  return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
-      <div className="w-full max-w-md rounded-t-3xl bg-white p-5 md:rounded-2xl">
-        <h3 className="text-lg font-bold text-navy-900">{player.name}</h3>
-        <p className="mb-4 text-sm text-navy-400">Record stats for this game</p>
-        <div className="grid grid-cols-2 gap-3">
-          {STAT_COLS.map((c) => (
-            <div key={c.key}>
-              <label className="label">{c.label}</label>
-              <input
-                type="number"
-                min="0"
-                value={vals[c.key]}
-                onChange={(e) => setVals((v) => ({ ...v, [c.key]: e.target.value }))}
-                className="input"
-              />
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 flex gap-2">
-          <button onClick={onClose} className="btn-ghost flex-1">
-            Cancel
-          </button>
-          <button onClick={save} disabled={saving} className="btn-primary flex-1">
-            {saving ? "Saving…" : "Save stats"}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }

@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { enrichImprovementsWithExercises } from "./weaknessExercises";
 
 /**
  * Analyze a set of player check-ins and surface trends.
@@ -160,4 +161,340 @@ function isRising(arr) {
 
 function severityRank(s) {
   return { high: 3, medium: 2, low: 1 }[s] || 0;
+}
+
+/* ----------------------------- AI Coach (full player profile) ----------------------------- */
+
+/**
+ * Personalized coach bot: strengths, weaknesses, habits, improvements from all app data.
+ * @param {Object} profile - from buildPlayerCoachProfile()
+ */
+export async function analyzePlayerCoach(profile) {
+  if (!profile) {
+    return emptyCoachInsight("No player data found.");
+  }
+
+  let result;
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      result = await analyzePlayerCoachClaude(profile);
+    } catch (err) {
+      console.error("Claude player coach failed, falling back to rules:", err.message);
+      result = analyzePlayerCoachRules(profile);
+    }
+  } else {
+    result = analyzePlayerCoachRules(profile);
+  }
+
+  return enrichImprovementsWithExercises(result, profile);
+}
+
+function emptyCoachInsight(summary) {
+  return {
+    summary,
+    strengths: [],
+    weaknesses: [],
+    habitImpact: "",
+    improvements: [],
+    source: "rules",
+  };
+}
+
+async function analyzePlayerCoachClaude(profile) {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const system =
+    "You are an expert volleyball coach AI assistant. Analyze the player's full profile: " +
+    "game stats, wellness check-ins, exercise habits, and attendance. " +
+    "Be encouraging but honest. Tie wellness habits directly to on-court performance. " +
+    "Respond ONLY with valid JSON.";
+
+  const exerciseList = (profile.teamExercises || [])
+    .map((e) => `${e.title} (${e.reps}, ${e.category})`)
+    .join("; ");
+
+  const prompt =
+    `Player: ${profile.name} (${profile.position || "Player"})\n\n` +
+    `Profile data:\n${JSON.stringify(profile, null, 2)}\n\n` +
+    (exerciseList ? `Team exercises available: ${exerciseList}\n\n` : "") +
+    `Return JSON exactly:\n` +
+    `{"summary":"2-3 sentence overview","strengths":["..."],"weaknesses":["..."],` +
+    `"habitImpact":"1-2 sentences on how daily habits affect their game",` +
+    `"improvements":["specific actionable tips — do NOT list exercises here; exercises are added separately"]}`;
+
+  const msg = await client.messages.create({
+    model: "claude-opus-4-8",
+    max_tokens: 1200,
+    system,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const text = msg.content.find((b) => b.type === "text")?.text || "{}";
+  const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+  return {
+    summary: json.summary || "Analysis complete.",
+    strengths: arr(json.strengths),
+    weaknesses: arr(json.weaknesses),
+    habitImpact: json.habitImpact || "",
+    improvements: arr(json.improvements),
+    source: "claude",
+  };
+}
+
+function analyzePlayerCoachRules(profile) {
+  const strengths = [...profile.computedStrengths];
+  const weaknesses = [...profile.computedImprovements];
+  const improvements = [];
+
+  if (profile.gamesPlayed === 0) {
+    return {
+      summary: `${profile.name} is building their profile. Log game stats and check in daily so the AI can learn their game.`,
+      strengths: ["Ready to grow — every rep counts."],
+      weaknesses: ["Limited game data so far."],
+      habitImpact:
+        "Daily wellness check-ins will help the coach spot fatigue before it hurts performance in matches.",
+      improvements: [
+        "Complete your daily wellness check-in.",
+        "Finish recommended exercises from the coach.",
+        "After each game, stats will unlock deeper insights.",
+      ],
+      source: "rules",
+    };
+  }
+
+  let habitImpact = "";
+  const checkins = profile.recentCheckins || [];
+  if (checkins.length === 0) {
+    habitImpact =
+      "Without regular check-ins, it's harder to connect energy and soreness to performance dips in games.";
+    improvements.push("Check in daily so the AI can link your wellness to your stats.");
+  } else {
+    const avgEnergy = checkins.reduce((s, c) => s + c.energy, 0) / checkins.length;
+    const avgSoreness = checkins.reduce((s, c) => s + c.soreness, 0) / checkins.length;
+    if (avgEnergy <= 2.5) {
+      habitImpact =
+        "Low energy scores lately often show up as slower reactions and fewer successful digs in games.";
+      improvements.push("Prioritize sleep and recovery on low-energy days.");
+      weaknesses.push("Energy has been low in recent check-ins.");
+    } else if (avgSoreness >= 3.5) {
+      habitImpact =
+        "Higher soreness can limit jump height and attack power — watch for error spikes after tough weeks.";
+      improvements.push("Use recovery exercises and ice sore areas before practice.");
+      weaknesses.push("Soreness trending higher than ideal.");
+    } else {
+      habitImpact =
+        "Solid wellness habits — your energy and soreness levels support consistent performance in matches.";
+    }
+  }
+
+  if (profile.attendancePct != null && profile.attendancePct < 75) {
+    weaknesses.push(`Attendance at ${profile.attendancePct}% — missing reps limits stat growth.`);
+    improvements.push("Aim for more consistent practice attendance to sharpen skills.");
+  } else if (profile.attendancePct != null && profile.attendancePct >= 90) {
+    strengths.push("Excellent practice attendance.");
+  }
+
+  if (profile.exercisesAvailable > 0) {
+    const pct = Math.round((profile.exercisesCompleted / profile.exercisesAvailable) * 100);
+    if (pct < 40) {
+      improvements.push(`Only ${pct}% of recommended exercises completed — extra work accelerates improvement.`);
+    } else if (pct >= 70) {
+      strengths.push("Strong follow-through on recommended exercises.");
+    }
+  }
+
+  if (profile.wellnessScore != null && profile.wellnessScore < 60) {
+    weaknesses.push(`Wellness score ${profile.wellnessScore}/100 — recovery may be affecting output.`);
+  }
+
+  const topStat = Object.entries(profile.perGameStats || {}).sort(
+    (a, b) => Number(b[1]) - Number(a[1])
+  )[0];
+  if (topStat && Number(topStat[1]) > 0) {
+    strengths.push(`Strong ${topStat[0]} production (${topStat[1]} per game).`);
+  }
+
+  if (improvements.length === 0) {
+    improvements.push("Keep logging stats and checking in daily to refine this plan.");
+  }
+
+  const summary = `${profile.name} has ${profile.gamesPlayed} game(s) logged. ${
+    strengths.length ? "Leading with " + strengths[0].toLowerCase().replace(/\.$/, "") + "." : ""
+  } ${weaknesses.length ? "Focus area: " + weaknesses[0].toLowerCase().replace(/\.$/, "") + "." : "Trending well overall."}`;
+
+  return {
+    summary,
+    strengths: strengths.slice(0, 4),
+    weaknesses: weaknesses.slice(0, 4),
+    habitImpact,
+    improvements: improvements.slice(0, 5),
+    source: "rules",
+  };
+}
+
+function arr(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+/**
+ * Answer a player's volleyball question using their profile + optional chat history.
+ */
+export async function answerPlayerVolleyballQuestion({ profile, message, history = [] }) {
+  const q = (message || "").trim();
+  if (!q) {
+    return { reply: "Ask me anything about volleyball — serving, digging, your position, or how to improve.", source: "rules" };
+  }
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      return await answerVolleyballChatClaude({ profile, message: q, history });
+    } catch (err) {
+      console.error("Claude volleyball chat failed, falling back to rules:", err.message);
+    }
+  }
+  return answerVolleyballChatRules({ profile, message: q });
+}
+
+async function answerVolleyballChatClaude({ profile, message, history }) {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const insight = profile?.latestInsight;
+
+  const system =
+    "You are a friendly volleyball coach chatting with one player on their team app. " +
+    "Only answer questions about volleyball, training, recovery, team play, and their development. " +
+    "If asked about unrelated topics, politely redirect to volleyball. " +
+    "Keep replies concise (2-4 short paragraphs max). Be encouraging and practical. " +
+    "Use their stats and wellness data when relevant.";
+
+  const context =
+    `Player: ${profile?.name || "Player"} (${profile?.position || "Player"})\n` +
+    `Games logged: ${profile?.gamesPlayed ?? 0}\n` +
+    `Per-game stats: ${JSON.stringify(profile?.perGameStats || {})}\n` +
+    `Wellness score: ${profile?.wellnessScore ?? "n/a"}\n` +
+    `Strengths: ${(profile?.computedStrengths || []).join("; ")}\n` +
+    `Focus areas: ${(profile?.computedImprovements || []).join("; ")}\n` +
+    (insight?.summary ? `Latest AI coach summary: ${insight.summary}\n` : "");
+
+  const prior = history
+    .slice(-8)
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .map((m) => ({ role: m.role, content: m.content }));
+
+  const msg = await client.messages.create({
+    model: "claude-opus-4-8",
+    max_tokens: 600,
+    system: system + "\n\nPlayer context:\n" + context,
+    messages: [...prior, { role: "user", content: message }],
+  });
+
+  const text = msg.content.find((b) => b.type === "text")?.text?.trim();
+  return { reply: text || "I'm here to help with volleyball — try asking about a skill you want to work on.", source: "claude" };
+}
+
+function answerVolleyballChatRules({ profile, message }) {
+  const q = message.toLowerCase();
+  const name = profile?.name?.split(" ")[0] || "there";
+  const pos = (profile?.position || "").toLowerCase();
+  const topWeak = profile?.computedImprovements?.[0];
+  const topStrong = profile?.computedStrengths?.[0];
+
+  if (/serve|ace|float|jump serve/.test(q)) {
+    return {
+      reply:
+        `For serving, ${name}, focus on a consistent toss and contact the ball at your highest reach. ` +
+        `Start with a float serve — firm hand, no spin — and aim deep corners. ` +
+        (topWeak?.toLowerCase().includes("ace")
+          ? `Your stats show room to grow on aces — try 10 minutes of target serving after practice.`
+          : `Track your aces in RallyHQ after each match to see progress.`),
+      source: "rules",
+    };
+  }
+
+  if (/dig|defense|pass|receive|libero/.test(q)) {
+    return {
+      reply:
+        `Good digging starts low: athletic stance, platform arms together, move your feet before you swing. ` +
+        `Read the hitter's shoulder and angle early. ` +
+        (pos.includes("libero") || pos.includes("defensive")
+          ? `As a ${profile.position}, prioritize first contact — call the ball and hold your platform through contact.`
+          : `Even if you're not libero, solid passing wins rallies — work on short, medium, and deep passes.`),
+      source: "rules",
+    };
+  }
+
+  if (/block|middle|mb/.test(q)) {
+    return {
+      reply:
+        `Blocking is about timing and hands: jump on the setter's release, penetrate the net, and seal the line or angle based on the scout. ` +
+        `Middle blockers should work on quick footwork — slide, commit, and recover fast. ` +
+        (topStrong?.toLowerCase().includes("block")
+          ? `Your block numbers are a strength — keep reading the setter and trusting your jump.`
+          : `Film one rotation of your block footwork and compare left vs. right side.`),
+      source: "rules",
+    };
+  }
+
+  if (/hit|attack|kill|spike|approach/.test(q)) {
+    return {
+      reply:
+        `On attacks, accelerate through your approach: slow-to-fast last two steps, high reach, and snap your wrist for topspin. ` +
+        `Mix shots — line, cross, tip — so blockers can't sit on you. ` +
+        (topWeak?.toLowerCase().includes("kill")
+          ? `Your AI analysis flagged kills as a growth area — add 20 reps of high-ball approaches after warm-up.`
+          : `Ask your setter for sets on different tempos so you can hit in-system and out-of-system.`),
+      source: "rules",
+    };
+  }
+
+  if (/set|setter|hands|tempo/.test(q)) {
+    return {
+      reply:
+        `Setters: hands early, feet to the ball, and deliver a consistent tempo — high outside, quicker middle, back set with shoulders square. ` +
+        `Communicate loudly ("here!", "help!", "out!") every rally. Run the offense your pass allows — don't force a fast set on a bad pass.`,
+      source: "rules",
+    };
+  }
+
+  if (/sore|energy|recover|sleep|wellness|tired|injury/.test(q)) {
+    const sore = profile?.recentCheckins?.length
+      ? profile.recentCheckins.reduce((s, c) => s + c.soreness, 0) / profile.recentCheckins.length
+      : null;
+    return {
+      reply:
+        `Recovery is part of performance. Hydrate, sleep 8+ hours when you can, and use ice or light stretching on sore areas. ` +
+        (sore != null && sore >= 3.5
+          ? `Your recent check-ins show higher soreness — consider lighter jumping reps and extra recovery before big matches.`
+          : `Keep logging daily check-ins in RallyHQ so your coach can spot fatigue early.`) +
+        ` If pain is sharp or getting worse, tell your coach — don't push through real injuries.`,
+      source: "rules",
+    };
+  }
+
+  if (/improve|better|weak|focus|tip|help/.test(q)) {
+    const tips = profile?.computedImprovements?.slice(0, 2).join(" ") || "Keep logging games and check-ins.";
+    return {
+      reply:
+        `Based on your RallyHQ data, ${name}, focus on: ${tips} ` +
+        `Pick one skill this week, drill it for 15 minutes per practice, and track stats in your next match. Small, consistent work beats cramming before games.`,
+      source: "rules",
+    };
+  }
+
+  if (/rotation|6-2|5-1|lineup|position/.test(q)) {
+    return {
+      reply:
+        `Know your base rotation and who covers what on serve receive. ` +
+        (profile?.position
+          ? `As a ${profile.position}, learn your front-row and back-row responsibilities in each rotation — blocking, attacking, and passing zones.`
+          : `Walk through each rotation on paper: who passes, who sets backup, and where you block.`) +
+        ` Ask your coach which system you run (5-1 vs 6-2) and study one rotation per day.`,
+      source: "rules",
+    };
+  }
+
+  return {
+    reply:
+      `Hey ${name}! I can help with serving, passing, hitting, blocking, setting, rotations, recovery, and how to use your stats to improve. ` +
+      (topStrong ? `You're doing well with ${topStrong.toLowerCase().replace(/\.$/, "")} — ask me how to build on that.` : "What part of your game do you want to work on?"),
+    source: "rules",
+  };
 }

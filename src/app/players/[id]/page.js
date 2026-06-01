@@ -5,13 +5,21 @@ import { userTeamId } from "@/lib/tenancy";
 import NavShell from "@/components/NavShell";
 import Avatar from "@/components/Avatar";
 import CoachNotes from "@/components/CoachNotes";
+import CoachPlayerStats from "@/components/CoachPlayerStats";
+import CoachSeasonStats from "@/components/CoachSeasonStats";
 import { BarChart, LineChart, Ring } from "@/components/Charts";
 import { getDb } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
 import {
+  getLatestPlayerCoachInsight,
+  profileInsightsFromAi,
+  wellnessNotesFromAi,
+} from "@/lib/playerCoachInsight";
+import {
   STATS,
   statTotals,
   recentGames,
+  killsTrend,
   attendancePct,
   wellnessScore,
   wellnessHistory,
@@ -37,7 +45,10 @@ export default async function PlayerProfile({ params }) {
   const wellness = wellnessScore(player.id);
   const wHistory = wellnessHistory(player.id);
   const injuries = injuryHistory(player.id);
-  const { strengths, improvements } = strengthsAndImprovements(player.id, user.team_id);
+  const aiInsight = getLatestPlayerCoachInsight(player.id);
+  const statInsights = strengthsAndImprovements(player.id, user.team_id);
+  const { strengths, improvements } = profileInsightsFromAi(aiInsight, statInsights);
+  const { wellnessNotes, injuryNote } = wellnessNotesFromAi(aiInsight, wellness, injuries);
   const notes = db
     .prepare(
       `SELECT n.*, u.name AS author FROM player_notes n LEFT JOIN users u ON u.id = n.author_id
@@ -46,9 +57,7 @@ export default async function PlayerProfile({ params }) {
     .all(player.id);
 
   const statBars = STATS.map((s) => ({ label: s.label, value: totals[s.key] }));
-  const trend = [...games]
-    .reverse()
-    .map((g) => ({ label: g.opponent || fmtDate(g.start_time), value: g.kills }));
+  const trend = killsTrend(player.id, 8);
 
   return (
     <NavShell user={user}>
@@ -83,15 +92,21 @@ export default async function PlayerProfile({ params }) {
 
       {/* Season statistics (full names) */}
       <section className="mt-4 card">
-        <h2 className="mb-3 font-bold text-navy-900">Season Statistics</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {STATS.map((s) => (
-            <div key={s.key} className="rounded-xl bg-navy-50 p-3 text-center">
-              <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
+        {user.role === "coach" ? (
+          <CoachSeasonStats playerId={player.id} playerName={player.name} totals={totals} />
+        ) : (
+          <>
+            <h2 className="mb-3 font-bold text-navy-900">Season Statistics</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {STATS.map((s) => (
+                <div key={s.key} className="rounded-xl bg-navy-50 p-3 text-center">
+                  <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </section>
 
       {/* Charts */}
@@ -128,8 +143,15 @@ export default async function PlayerProfile({ params }) {
 
       {/* Recent game statistics */}
       <section className="mt-4 card overflow-x-auto">
-        <h2 className="mb-3 font-bold text-navy-900">Recent Game Statistics</h2>
-        {games.length === 0 ? (
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="font-bold text-navy-900">Recent Game Statistics</h2>
+          {user.role === "coach" && games.length > 0 && (
+            <span className="text-xs text-navy-400">Tap Edit to update any game</span>
+          )}
+        </div>
+        {user.role === "coach" ? (
+          <CoachPlayerStats player={player} games={games} />
+        ) : games.length === 0 ? (
           <p className="text-sm text-navy-400">No games recorded yet.</p>
         ) : (
           <table className="w-full min-w-[520px] text-sm">
@@ -162,6 +184,9 @@ export default async function PlayerProfile({ params }) {
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <section className="card">
           <h2 className="mb-3 font-bold text-navy-900">Wellness History</h2>
+          {wellnessNotes.map((note, i) => (
+            <p key={i} className="mb-3 text-sm text-navy-600">{note}</p>
+          ))}
           {wHistory.length === 0 ? (
             <p className="text-sm text-navy-400">No check-ins yet.</p>
           ) : (
@@ -178,6 +203,7 @@ export default async function PlayerProfile({ params }) {
         </section>
         <section className="card">
           <h2 className="mb-3 font-bold text-navy-900">Injury History</h2>
+          {injuryNote && <p className="mb-3 text-sm text-navy-600">{injuryNote}</p>}
           {injuries.length === 0 ? (
             <p className="text-sm text-emerald-700">✓ No injuries reported.</p>
           ) : (

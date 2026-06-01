@@ -176,7 +176,7 @@ function CoachHome({ user }) {
       <WellnessSummary wellness={wellness} />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Link href="/insights" className="card flex items-center justify-between hover:ring-brand-200">
+        <Link href="/ai-coach" className="card flex items-center justify-between hover:ring-brand-200">
           <div>
             <div className="text-sm font-semibold text-navy-800">🤖 AI player insights</div>
             <div className="text-xs text-navy-400">Spot soreness & energy trends across the team</div>

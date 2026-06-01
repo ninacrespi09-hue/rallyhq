@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import JoinTeamCode from "@/components/JoinTeamCode";
 
 export default async function SignupPage() {
   const user = await getCurrentUser();
@@ -16,17 +17,11 @@ export default async function SignupPage() {
       <div className="w-full max-w-sm card text-center">
         <h1 className="text-lg font-bold text-navy-900">Join RallyHQ</h1>
         <p className="mt-2 text-sm text-navy-500">
-          Players join through their coach&apos;s invite link. Coaches create their own separate team.
+          Players join with their team code. Coaches create their own separate team.
         </p>
 
         <div className="mt-6 space-y-3 text-left">
-          <div className="rounded-xl bg-white/50 p-4 ring-1 ring-blue-200/60">
-            <div className="text-sm font-bold text-navy-900">🏐 I&apos;m a player</div>
-            <p className="mt-1 text-xs text-navy-500">
-              Ask your coach for the team invite link — it looks like{" "}
-              <span className="font-mono text-brand-700">/join/TEAMCODE</span>. You cannot join by typing a code here.
-            </p>
-          </div>
+          <JoinTeamCode />
 
           <Link href="/signup/coach" className="btn-primary block w-full text-center">
             🏆 I&apos;m a coach — create my team

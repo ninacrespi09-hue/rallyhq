@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import AuthForm from "@/components/AuthForm";
@@ -5,5 +6,9 @@ import AuthForm from "@/components/AuthForm";
 export default async function LoginPage() {
   const user = await getCurrentUser();
   if (user) redirect("/");
-  return <AuthForm mode="login" />;
+  return (
+    <Suspense>
+      <AuthForm mode="login" />
+    </Suspense>
+  );
 }
