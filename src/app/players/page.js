@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import PageHeader from "@/components/PageHeader";
 import { teamLeaderboard } from "@/lib/stats";
+import { isParent } from "@/lib/permissions";
 
 // Translucent blue shades so the overlapping circles blend where they meet.
 const CIRCLE_SHADES = [
@@ -31,8 +32,12 @@ export default async function PlayersPage() {
     <NavShell user={user}>
       <PageHeader
         eyebrow="Roster"
-        title="Players"
-        subtitle="Tap a player to open their full profile, stats, and wellness history."
+        title={isParent(user) ? "Team" : "Players"}
+        subtitle={
+          isParent(user)
+            ? "Tap a player for basic profile and season stats."
+            : "Tap a player to open their full profile, stats, and wellness history."
+        }
       />
 
       {/* Roster — overlapping translucent blue circles, four per row */}

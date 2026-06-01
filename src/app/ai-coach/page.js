@@ -1,14 +1,18 @@
 import { redirect } from "next/navigation";
+import dynamic from "next/dynamic";
 import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import PageHeader from "@/components/PageHeader";
-import AICoachPanel from "@/components/AICoachPanel";
-import { getLatestPlayerCoachInsight } from "@/lib/playerCoachInsight";
+import { getLatestPlayerCoachInsight, getLatestPlayerCoachInsights } from "@/lib/playerCoachInsight";
 import { teamPlayerIds } from "@/lib/playerCoachData";
+import { blockParent } from "@/lib/parentPages";
+
+const AICoachPanel = dynamic(() => import("@/components/AICoachPanel"));
 
 export default async function AICoachPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  blockParent(user);
 
   if (user.role === "player") {
     const insight = getLatestPlayerCoachInsight(user.id);
@@ -25,9 +29,10 @@ export default async function AICoachPage() {
   }
 
   const roster = teamPlayerIds(user.team_id);
+  const insightMap = getLatestPlayerCoachInsights(roster.map((p) => p.id));
   const players = roster.map((p) => ({
     ...p,
-    insight: getLatestPlayerCoachInsight(p.id),
+    insight: insightMap[p.id] ?? null,
   }));
 
   return (

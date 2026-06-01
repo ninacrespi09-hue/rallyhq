@@ -3,30 +3,15 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import TeamCodeCard from "./TeamCodeCard";
-
-// Primary destinations — shown in the mobile bottom bar and the sidebar.
-const PRIMARY = [
-  { href: "/", label: "Home", icon: "🏠" },
-  { href: "/schedule", label: "Schedule", icon: "📅" },
-  { href: "/players", label: "Players", icon: "🏐" },
-  { href: "/exercises", label: "Exercises", icon: "💪" },
-  { href: "/ai-coach", label: "AI", icon: "🤖" },
-];
-
-// Secondary destinations — sidebar only (desktop).
-const SECONDARY = [
-  { href: "/gallery", label: "Gallery", icon: "📷" },
-  { href: "/stats", label: "Team Stats", icon: "📊" },
-  { href: "/checkin", label: "Wellness", icon: "🩺" },
-  { href: "/announcements", label: "Announcements", icon: "📣" },
-  { href: "/dashboard", label: "Dashboard", icon: "📋" },
-];
+import { navPrimaryForRole, navSecondaryForRole, isCoach } from "@/lib/permissions";
 
 export default function NavShell({ user, children }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const items = PRIMARY;
+  const primary = navPrimaryForRole(user.role);
+  const secondary = navSecondaryForRole(user.role);
+  const navCols = primary.length === 5 ? "grid-cols-5" : "grid-cols-6";
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -43,7 +28,7 @@ export default function NavShell({ user, children }) {
       <aside className="hidden md:flex md:w-64 md:flex-col bg-gradient-to-b from-navy-900 to-navy-950 p-4 text-white">
         <Brand light />
         <nav className="mt-7 flex flex-1 flex-col gap-1">
-          {[...PRIMARY, ...SECONDARY].map((n) => (
+          {[...primary, ...secondary].map((n) => (
             <Link
               key={n.href}
               href={n.href}
@@ -58,7 +43,7 @@ export default function NavShell({ user, children }) {
             </Link>
           ))}
         </nav>
-        {user.role === "coach" && <TeamCodeCard />}
+        {isCoach(user) && <TeamCodeCard />}
         <UserCard user={user} onLogout={logout} />
       </aside>
 
@@ -82,8 +67,8 @@ export default function NavShell({ user, children }) {
         </main>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 z-10 grid grid-cols-5 border-t border-navy-100 bg-white/95 backdrop-blur">
-          {items.map((n) => (
+        <nav className={`md:hidden fixed bottom-0 inset-x-0 z-10 grid ${navCols} border-t border-navy-100 bg-white/95 backdrop-blur`}>
+          {primary.map((n) => (
             <Link
               key={n.href}
               href={n.href}

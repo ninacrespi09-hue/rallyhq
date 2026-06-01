@@ -6,10 +6,12 @@ import { BarChart, LineChart, RecordDonut } from "@/components/Charts";
 import PageHeader from "@/components/PageHeader";
 import { teamRecord } from "@/lib/queries";
 import { STATS, teamStatTotals, teamTrends, teamLeaderboard } from "@/lib/stats";
+import { blockParent } from "@/lib/parentPages";
 
 export default async function StatsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  blockParent(user);
 
   const rec = teamRecord(user.team_id);
   const totals = teamStatTotals(user.team_id);
@@ -22,6 +24,24 @@ export default async function StatsPage() {
   return (
     <NavShell user={user}>
       <PageHeader eyebrow="Analytics" title="Team Stats" subtitle="Season performance dashboard and analytics." />
+
+      {user.role === "coach" && (
+        <section className="card mt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="font-bold text-navy-900">Upload Stat Sheet</h2>
+              <p className="mt-1 text-sm text-navy-500">
+                Upload a photo of your volleyball stat sheet and RallyHQ will help fill in the stats automatically.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+              <Link href="/stats/upload" className="btn-primary w-full sm:w-auto text-center">
+                Upload Stat Sheet
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Record dashboard */}
       <div className="grid gap-4 md:grid-cols-3">

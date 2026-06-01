@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { eventTeamId, userTeamId, forbiddenTeam } from "@/lib/tenancy";
 import { regeneratePlayerCoachInsight } from "@/lib/playerCoachInsight";
+import { blockParentApi, isCoach } from "@/lib/permissions";
 
 /**
  * Record per-player stats for a game. Any authenticated teammate can help
@@ -11,6 +12,9 @@ import { regeneratePlayerCoachInsight } from "@/lib/playerCoachInsight";
 export async function POST(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (blockParentApi(user)) {
+    return NextResponse.json({ error: "Parents cannot edit stats." }, { status: 403 });
+  }
 
   const { id } = await params;
   if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
@@ -20,7 +24,7 @@ export async function POST(req, { params }) {
   if (userTeamId(user_id) !== user.team_id) return forbiddenTeam();
 
   const targetId = Number(user_id);
-  if (user.role !== "coach" && targetId !== user.id) {
+  if (!isCoach(user) && targetId !== user.id) {
     return NextResponse.json({ error: "Only coaches can edit other players' stats." }, { status: 403 });
   }
 

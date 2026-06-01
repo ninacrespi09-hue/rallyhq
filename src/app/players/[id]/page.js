@@ -15,6 +15,7 @@ import {
   profileInsightsFromAi,
   wellnessNotesFromAi,
 } from "@/lib/playerCoachInsight";
+import { isCoach, isParent } from "@/lib/permissions";
 import {
   STATS,
   statTotals,
@@ -52,12 +53,13 @@ export default async function PlayerProfile({ params }) {
   const notes = db
     .prepare(
       `SELECT n.*, u.name AS author FROM player_notes n LEFT JOIN users u ON u.id = n.author_id
-       WHERE n.user_id = ? ORDER BY n.created_at DESC`
+       WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT 25`
     )
     .all(player.id);
 
   const statBars = STATS.map((s) => ({ label: s.label, value: totals[s.key] }));
-  const trend = killsTrend(player.id, 8);
+  const trend = killsTrend(player.id, 8, games);
+  const parentView = isParent(user);
 
   return (
     <NavShell user={user}>
@@ -86,13 +88,13 @@ export default async function PlayerProfile({ params }) {
       {/* Quick metrics */}
       <div className="mt-4 grid grid-cols-3 gap-3">
         <Metric label="Games" value={totals.games} />
-        <MetricRing label="Attendance" value={attendance} suffix="%" color="#0ea5e9" />
-        <MetricRing label="Wellness" value={wellness} color="#10b981" />
+        {!parentView && <MetricRing label="Attendance" value={attendance} suffix="%" color="#0ea5e9" />}
+        {!parentView && <MetricRing label="Wellness" value={wellness} color="#10b981" />}
       </div>
 
       {/* Season statistics (full names) */}
       <section className="mt-4 card">
-        {user.role === "coach" ? (
+        {isCoach(user) ? (
           <CoachSeasonStats playerId={player.id} playerName={player.name} totals={totals} />
         ) : (
           <>
@@ -121,7 +123,8 @@ export default async function PlayerProfile({ params }) {
         </section>
       </div>
 
-      {/* Strengths + improvements */}
+      {/* Strengths + improvements — hidden from parents (may include wellness context) */}
+      {!parentView && (
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <section className="card">
           <h2 className="mb-2 font-bold text-emerald-700">💪 Strengths</h2>
@@ -140,16 +143,17 @@ export default async function PlayerProfile({ params }) {
           </ul>
         </section>
       </div>
+      )}
 
       {/* Recent game statistics */}
       <section className="mt-4 card overflow-x-auto">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="font-bold text-navy-900">Recent Game Statistics</h2>
-          {user.role === "coach" && games.length > 0 && (
+          {isCoach(user) && games.length > 0 && (
             <span className="text-xs text-navy-400">Tap Edit to update any game</span>
           )}
         </div>
-        {user.role === "coach" ? (
+        {isCoach(user) ? (
           <CoachPlayerStats player={player} games={games} />
         ) : games.length === 0 ? (
           <p className="text-sm text-navy-400">No games recorded yet.</p>
@@ -180,7 +184,8 @@ export default async function PlayerProfile({ params }) {
         )}
       </section>
 
-      {/* Wellness + injury history */}
+      {/* Wellness + injury history — coaches and players only */}
+      {!parentView && (
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <section className="card">
           <h2 className="mb-3 font-bold text-navy-900">Wellness History</h2>
@@ -221,12 +226,15 @@ export default async function PlayerProfile({ params }) {
           )}
         </section>
       </div>
+      )}
 
-      {/* Coach notes */}
+      {/* Coach notes — coaches and players only */}
+      {!parentView && (
       <section className="mt-4 card">
         <h2 className="mb-3 font-bold text-navy-900">📋 Coach Notes</h2>
-        <CoachNotes playerId={player.id} notes={notes} canEdit={user.role === "coach"} />
+        <CoachNotes playerId={player.id} notes={notes} canEdit={isCoach(user)} />
       </section>
+      )}
     </NavShell>
   );
 }

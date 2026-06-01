@@ -79,9 +79,9 @@ export function recentGames(userId, limit = 6) {
     .all(userId, limit);
 }
 
-/** Kills-over-time points for the profile trend chart. */
-export function killsTrend(userId, limit = 8) {
-  const games = recentGames(userId, limit);
+/** Kills-over-time points for the profile trend chart. Pass `games` to avoid a duplicate query. */
+export function killsTrend(userId, limit = 8, gamesIn) {
+  const games = gamesIn ?? recentGames(userId, limit);
   if (games.length > 0) {
     return [...games].reverse().map((g) => ({
       label: g.opponent || g.title || "Game",
@@ -104,19 +104,19 @@ export function wellnessHistory(userId, limit = 10) {
 }
 
 /** Injury reports drawn from daily and post-game check-ins. */
-export function injuryHistory(userId) {
+export function injuryHistory(userId, limit = 12) {
   const db = getDb();
   const daily = db
-    .prepare("SELECT date, sore_areas, note FROM checkins WHERE user_id = ? AND injury = 1 ORDER BY date DESC")
-    .all(userId)
+    .prepare("SELECT date, sore_areas, note FROM checkins WHERE user_id = ? AND injury = 1 ORDER BY date DESC LIMIT ?")
+    .all(userId, limit)
     .map((r) => ({ date: r.date, areas: r.sore_areas, note: r.note, source: "Daily check-in" }));
   const post = db
     .prepare(
       `SELECT e.start_time AS date, w.sore_areas, w.note, e.title
        FROM post_game_checkins w JOIN events e ON e.id = w.event_id
-       WHERE w.user_id = ? AND w.injury = 1 ORDER BY e.start_time DESC`
+       WHERE w.user_id = ? AND w.injury = 1 ORDER BY e.start_time DESC LIMIT ?`
     )
-    .all(userId)
+    .all(userId, limit)
     .map((r) => ({ date: r.date?.slice(0, 10), areas: r.sore_areas, note: r.note, source: r.title }));
   return [...daily, ...post].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
@@ -191,13 +191,23 @@ export function teamTrends(teamId) {
         )
         .all();
 
+  if (games.length === 0) return [];
+
+  const ids = games.map((g) => g.id);
+  const placeholders = ids.map(() => "?").join(",");
+  const aggs = db
+    .prepare(
+      `SELECT event_id, COALESCE(SUM(kills + aces + blocks), 0) AS pts
+       FROM player_stats WHERE event_id IN (${placeholders}) GROUP BY event_id`
+    )
+    .all(...ids);
+  const ptsByEvent = Object.fromEntries(aggs.map((a) => [a.event_id, a.pts]));
+
   return games.map((g) => {
-    const agg = db
-      .prepare("SELECT COALESCE(SUM(kills+aces+blocks),0) AS pts FROM player_stats WHERE event_id = ?")
-      .get(g.id);
+    const pts = ptsByEvent[g.id] ?? 0;
     return {
       label: (g.opponent || g.title || "").slice(0, 10),
-      points: agg.pts,
+      points: pts,
       result: g.result,
       score: `${g.our_score}-${g.opp_score}`,
     };

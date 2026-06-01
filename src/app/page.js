@@ -5,6 +5,7 @@ import NavShell from "@/components/NavShell";
 import TeamCodeBadge from "@/components/TeamCodeBadge";
 import { upcomingEvents, teamWellness, todaysCheckin } from "@/lib/queries";
 import { fmtDate, EVENT_STYLES } from "@/lib/format";
+import { isCoach, isParent, isPlayer } from "@/lib/permissions";
 
 // The seven main navigation bubbles.
 const CARDS = [
@@ -59,17 +60,64 @@ const CARDS = [
   },
 ];
 
+const PARENT_CARDS = [
+  {
+    href: "/schedule",
+    title: "Schedule",
+    subtitle: "Practices, games & tournaments",
+    icon: "📅",
+    gradient: "from-sky-400 to-blue-600",
+  },
+  {
+    href: "/announcements",
+    title: "Announcements",
+    subtitle: "Updates, reminders & info",
+    icon: "📣",
+    gradient: "from-indigo-500 to-blue-700",
+  },
+  {
+    href: "/gallery",
+    title: "Media Gallery",
+    subtitle: "Photos, albums & highlights",
+    icon: "📷",
+    gradient: "from-cyan-500 to-blue-700",
+  },
+  {
+    href: "/players",
+    title: "Team Roster",
+    subtitle: "Player profiles & basic info",
+    icon: "🏐",
+    gradient: "from-cyan-500 to-blue-600",
+  },
+];
+
 export default async function Landing() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const nextEvent = upcomingEvents(1, user.team_id)[0];
-  const wellness = user.role === "coach" ? teamWellness(user.team_id) : null;
-  const checkin = user.role === "player" ? todaysCheckin(user.id) : null;
+  const wellness = isCoach(user) ? teamWellness(user.team_id) : null;
+  const checkin = isPlayer(user) ? todaysCheckin(user.id) : null;
+  const cards = isParent(user) ? PARENT_CARDS : CARDS;
 
   // Role-aware "for you" featured action.
-  const featured =
-    user.role === "coach"
+  const featured = isParent(user)
+    ? nextEvent
+      ? {
+          href: `/schedule/${nextEvent.id}`,
+          icon: "📅",
+          title: `Next up: ${nextEvent.title}`,
+          sub: fmtDate(nextEvent.start_time),
+          gradient: "from-sky-400 to-blue-600",
+        }
+      : {
+          href: "/announcements",
+          icon: "📣",
+          title: "Team announcements",
+          sub: "Catch up on the latest from your coach",
+          gradient: "from-indigo-500 to-blue-700",
+        }
+    : isCoach(user)
       ? wellness?.needRest?.length
         ? {
             href: "/dashboard",
@@ -106,7 +154,7 @@ export default async function Landing() {
       {/* ---------- Hero ---------- */}
       <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-sky-200 via-blue-100 to-white p-7 ring-1 ring-blue-200/60 shadow-soft sm:p-10">
         <NetBackground />
-        {user.role === "coach" && user.team_code && (
+        {isCoach(user) && user.team_code && (
           <TeamCodeBadge code={user.team_code} teamName={user.team_name} isCoach />
         )}
         <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-blue-300/30 blur-3xl animate-float" />
@@ -166,7 +214,7 @@ export default async function Landing() {
       {/* ---------- Navigation bubbles ---------- */}
       <h2 className="mb-3 mt-8 h-section">Explore</h2>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-        {CARDS.map((c, i) => (
+        {cards.map((c, i) => (
           <Link
             key={c.href}
             href={c.href}

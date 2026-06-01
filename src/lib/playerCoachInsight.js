@@ -33,6 +33,27 @@ export function getLatestPlayerCoachInsight(userId) {
   return parsePlayerCoachInsight(row);
 }
 
+/** Batch-fetch latest insights for many players (one query). */
+export function getLatestPlayerCoachInsights(userIds) {
+  if (!userIds?.length) return {};
+  const db = getDb();
+  const placeholders = userIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT a.* FROM ai_insights a
+       INNER JOIN (
+         SELECT user_id, MAX(generated_at) AS max_at
+         FROM ai_insights WHERE scope = ? AND user_id IN (${placeholders})
+         GROUP BY user_id
+       ) latest ON latest.user_id = a.user_id AND latest.max_at = a.generated_at
+       WHERE a.scope = ?`
+    )
+    .all(SCOPE, ...userIds, SCOPE);
+  const map = {};
+  for (const row of rows) map[row.user_id] = parsePlayerCoachInsight(row);
+  return map;
+}
+
 function savePlayerCoachInsight(userId, result) {
   getDb()
     .prepare(

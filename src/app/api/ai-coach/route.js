@@ -5,8 +5,10 @@ import { userTeamId } from "@/lib/tenancy";
 import { teamPlayerIds } from "@/lib/playerCoachData";
 import {
   getLatestPlayerCoachInsight,
+  getLatestPlayerCoachInsights,
   regeneratePlayerCoachInsight,
 } from "@/lib/playerCoachInsight";
+import { blockParentApi, isCoach, isPlayer } from "@/lib/permissions";
 
 async function generateForPlayer(playerId, teamId) {
   const result = await regeneratePlayerCoachInsight(playerId, teamId);
@@ -26,8 +28,11 @@ async function generateForPlayer(playerId, teamId) {
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (blockParentApi(user)) {
+    return NextResponse.json({ error: "AI Coach is not available for parent accounts." }, { status: 403 });
+  }
 
-  if (user.role === "player") {
+  if (isPlayer(user)) {
     const insight = getLatestPlayerCoachInsight(user.id);
     return NextResponse.json({
       role: "player",
@@ -36,12 +41,13 @@ export async function GET() {
   }
 
   const roster = teamPlayerIds(user.team_id);
+  const insightMap = getLatestPlayerCoachInsights(roster.map((p) => p.id));
   const players = roster.map((p) => ({
     id: p.id,
     name: p.name,
     position: p.position,
     jersey_number: p.jersey_number,
-    insight: getLatestPlayerCoachInsight(p.id),
+    insight: insightMap[p.id] ?? null,
   }));
 
   return NextResponse.json({ role: "coach", players });
@@ -51,6 +57,9 @@ export async function GET() {
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (blockParentApi(user)) {
+    return NextResponse.json({ error: "AI Coach is not available for parent accounts." }, { status: 403 });
+  }
 
   let body = {};
   try {
@@ -59,7 +68,7 @@ export async function POST(req) {
     body = {};
   }
 
-  if (user.role === "player") {
+  if (isPlayer(user)) {
     const out = await generateForPlayer(user.id, user.team_id);
     if (!out) return NextResponse.json({ error: "Could not build your profile." }, { status: 400 });
     return NextResponse.json({

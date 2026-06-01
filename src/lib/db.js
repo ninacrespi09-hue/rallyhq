@@ -9,7 +9,11 @@ let db;
  * The DB file lives in /data so it persists across restarts.
  */
 export function getDb() {
-  if (db) return db;
+  if (db) {
+    ensureEventRsvpsTable(db);
+    ensureIndexes(db);
+    return db;
+  }
 
   const dataDir =
     process.env.DB_PATH ||
@@ -20,7 +24,39 @@ export function getDb() {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   initSchema(db);
+  ensureEventRsvpsTable(db);
+  ensureIndexes(db);
   return db;
+}
+
+/** Hot-path indexes for mobile query performance. */
+function ensureIndexes(db) {
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_player_stats_event ON player_stats(event_id);
+    CREATE INDEX IF NOT EXISTS idx_events_start ON events(start_time);
+    CREATE INDEX IF NOT EXISTS idx_event_rsvps_event ON event_rsvps(event_id);
+    CREATE INDEX IF NOT EXISTS idx_media_created ON media(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_ai_insights_user ON ai_insights(scope, user_id, generated_at);
+  `);
+}
+
+/** Existing DBs opened before RSVP may lack this table until migration runs. */
+function ensureEventRsvpsTable(db) {
+  const exists = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'event_rsvps'")
+    .get();
+  if (exists) return;
+
+  db.exec(`
+    CREATE TABLE event_rsvps (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id   INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status     TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(event_id, user_id)
+    );
+  `);
 }
 
 function initSchema(db) {
@@ -38,7 +74,7 @@ function initSchema(db) {
       email         TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       team_id       INTEGER REFERENCES teams(id),
-      role          TEXT NOT NULL DEFAULT 'player', -- 'coach' | 'player'
+      role          TEXT NOT NULL DEFAULT 'player', -- 'coach' | 'player' | 'parent'
       position      TEXT,                            -- setter, libero, outside hitter, etc.
       jersey_number INTEGER,
       height_cm     INTEGER,
@@ -65,6 +101,15 @@ function initSchema(db) {
       event_id  INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
       user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       status    TEXT NOT NULL DEFAULT 'present', -- present | late | absent | excused
+      UNIQUE(event_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS event_rsvps (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id   INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status     TEXT NOT NULL, -- going | maybe | cant_go
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(event_id, user_id)
     );
 

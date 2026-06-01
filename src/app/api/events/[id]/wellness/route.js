@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { eventTeamId, userTeamId, forbiddenTeam } from "@/lib/tenancy";
+import { blockParentApi, isCoach } from "@/lib/permissions";
 
 /**
  * Submit a player's post-game wellness check-in for a specific game.
@@ -10,12 +11,15 @@ import { eventTeamId, userTeamId, forbiddenTeam } from "@/lib/tenancy";
 export async function POST(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (blockParentApi(user)) {
+    return NextResponse.json({ error: "Parents cannot submit post-game wellness." }, { status: 403 });
+  }
 
   const { id } = await params;
   if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
 
   const body = await req.json();
-  const targetId = user.role === "coach" && body.user_id ? Number(body.user_id) : user.id;
+  const targetId = isCoach(user) && body.user_id ? Number(body.user_id) : user.id;
   if (userTeamId(targetId) !== user.team_id) return forbiddenTeam();
 
   const clamp = (n) => {

@@ -19,7 +19,7 @@ export default async function AnnouncementsPage() {
   const posts = getDb()
     .prepare(
       `SELECT a.*, u.name AS author FROM announcements a JOIN users u ON u.id = a.author_id
-       WHERE u.team_id = ? ORDER BY a.pinned DESC, a.created_at DESC`
+       WHERE u.team_id = ? ORDER BY a.pinned DESC, a.created_at DESC LIMIT 50`
     )
     .all(user.team_id);
 

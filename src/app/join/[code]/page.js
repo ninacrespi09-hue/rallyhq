@@ -3,8 +3,10 @@ import { getCurrentUser } from "@/lib/auth";
 import AuthForm from "@/components/AuthForm";
 import { getDb } from "@/lib/db";
 
-export default async function JoinPage({ params }) {
+export default async function JoinPage({ params, searchParams }) {
   const { code } = await params;
+  const { role } = await searchParams;
+  const signupRole = role === "parent" ? "parent" : "player";
 
   const user = await getCurrentUser();
   if (user) redirect("/");
@@ -30,6 +32,7 @@ export default async function JoinPage({ params }) {
       mode="signup"
       prefilledCode={code.toUpperCase()}
       teamName={team.name}
+      signupRole={signupRole}
     />
   );
 }

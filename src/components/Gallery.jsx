@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { canUploadMedia } from "@/lib/permissions";
 
 // Action moments — these are the gallery's four tabs.
 const MOMENTS = ["Serving", "Setting", "Hitting", "Digging"];
@@ -17,8 +18,21 @@ export default function Gallery({ user, media, events }) {
   const [lightbox, setLightbox] = useState(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const canUpload = canUploadMedia(user);
 
-  const filtered = tab ? items.filter((m) => m.category === tab) : [];
+  const countsByMoment = useMemo(() => {
+    const counts = {};
+    for (const m of MOMENTS) counts[m] = 0;
+    for (const item of items) {
+      if (counts[item.category] !== undefined) counts[item.category]++;
+    }
+    return counts;
+  }, [items]);
+
+  const filtered = useMemo(
+    () => (tab ? items.filter((m) => m.category === tab) : []),
+    [items, tab]
+  );
 
   function flash(msg) {
     setToast(msg);
@@ -79,19 +93,21 @@ export default function Gallery({ user, media, events }) {
               {items.length === 1 ? "" : "s"}.
             </p>
           </div>
+          {canUpload && (
           <button
             onClick={() => setUploadOpen(true)}
             className="btn shrink-0 bg-white text-blue-700 shadow-sm hover:bg-blue-50"
           >
             <CameraIcon className="h-4 w-4" /> Upload
           </button>
+          )}
         </div>
       </section>
 
       {/* Tab bubbles — same size and style as the homepage navigation cards */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {MOMENTS.map((m) => {
-          const count = items.filter((x) => x.category === m).length;
+          const count = countsByMoment[m];
           const active = tab === m;
           const { icon, gradient } = TAB_META[m];
           return (
@@ -120,7 +136,15 @@ export default function Gallery({ user, media, events }) {
       <div className="mt-4">
         {!tab ? null : filtered.length === 0 ? (
           <div className="card text-center text-sm text-navy-400">
-            No {tab.toLowerCase()} shots yet. Tap <b className="text-navy-600">Upload</b> to add one!
+            No {tab.toLowerCase()} shots yet.
+            {canUpload ? (
+              <>
+                {" "}
+                Tap <b className="text-navy-600">Upload</b> to add one!
+              </>
+            ) : (
+              " Check back after the next game."
+            )}
           </div>
         ) : (
           <div className="columns-2 gap-3 sm:columns-3 lg:columns-4 [column-fill:_balance]">
@@ -176,6 +200,8 @@ function MediaCard({ m, index, onOpen, onLike, onFav }) {
           src={m.url}
           alt={m.caption || "Action shot"}
           loading="lazy"
+          decoding="async"
+          fetchPriority="low"
           className="h-full w-full object-cover opacity-80 mix-blend-multiply"
         />
         {m.favorite ? <span className="absolute right-3 top-3 text-lg drop-shadow">⭐</span> : null}
@@ -220,6 +246,7 @@ function Lightbox({ item, canDelete, onClose, onLike, onFav, onDelete }) {
         <img
           src={item.url}
           alt={item.caption || "Action shot"}
+          decoding="async"
           className="mx-auto max-h-[78vh] w-auto rounded-2xl object-contain"
         />
         <div className="mt-3 rounded-2xl bg-white p-4">

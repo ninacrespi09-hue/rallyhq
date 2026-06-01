@@ -40,7 +40,7 @@ export async function POST(req) {
 
     const t = db.prepare("INSERT INTO teams (name, code) VALUES (?, ?)").run(team_name.trim(), code);
     teamId = t.lastInsertRowid;
-  } else if (role === "player") {
+  } else if (role === "player" || role === "parent") {
     if (!team_code?.trim())
       return NextResponse.json(
         { error: "Team code is required. Ask your coach for your team code." },
@@ -60,6 +60,8 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid signup role." }, { status: 400 });
   }
 
+  const signupRole = role === "coach" ? "coach" : role === "parent" ? "parent" : "player";
+
   const hash = await hashPassword(password);
   const info = db
     .prepare(
@@ -70,10 +72,10 @@ export async function POST(req) {
       name.trim(),
       normalizedEmail,
       hash,
-      role === "coach" ? "coach" : "player",
+      signupRole,
       teamId,
-      position || null,
-      jersey_number ? Number(jersey_number) : null
+      signupRole === "player" ? position || null : null,
+      signupRole === "player" && jersey_number ? Number(jersey_number) : null
     );
 
   await createSession(info.lastInsertRowid);

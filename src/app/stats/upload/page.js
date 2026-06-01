@@ -5,10 +5,12 @@ import NavShell from "@/components/NavShell";
 import PageHeader from "@/components/PageHeader";
 import StatSheetUpload from "@/components/StatSheetUpload";
 import { getDb } from "@/lib/db";
+import { blockParent } from "@/lib/parentPages";
 
 export default async function StatSheetUploadPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  blockParent(user);
   if (user.role !== "coach") redirect("/stats");
 
   const roster = user.team_id

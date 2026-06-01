@@ -8,13 +8,15 @@ import { POSITIONS } from "@/lib/format";
 const SAVED_EMAIL_KEY = "rallyhq_email";
 
 // coachOnly = coach creates a new team at /signup/coach
-// prefilledCode = player joins via /join/CODE invite link only
-export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = false }) {
+// prefilledCode = player/parent joins via /join/CODE invite link only
+// signupRole = 'player' | 'parent' when joining via invite
+export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = false, signupRole = "player" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const signedOut = searchParams.get("signedOut") === "1";
   const isSignup = mode === "signup";
   const isInvite = !!prefilledCode;
+  const isParentSignup = isInvite && signupRole === "parent";
   const isLogin = !isSignup;
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,7 +46,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
       }
       if (data.code === "NO_ACCOUNT") {
         return setError(
-          "No account with that email. Sign up at /signup/coach (coaches) or use your coach's invite link (players)."
+          "No account with that email. Sign up at /signup/coach (coaches) or use your coach's invite link (players or parents)."
         );
       }
       if (data.code === "WRONG_PASSWORD") {
@@ -76,15 +78,17 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
           {coachOnly ? "Create your team" : isSignup ? "Create your account" : "Welcome back"}
         </h1>
         <p className="mb-5 mt-1 text-sm text-navy-500">
-          {isInvite
-            ? "Fill in your details to join this team."
-            : coachOnly
-              ? "Set up your own team. Share the invite link with your players."
-              : signedOut
-                ? "You signed out. Your account is still saved — sign back in with the same email and password."
-                : savedEmail
-                  ? "Sign in with your email and password."
-                  : "Sign in with the same email you used when you joined."}
+          {isParentSignup
+            ? "Create a parent account to follow schedule, announcements, and team updates."
+            : isInvite
+              ? "Fill in your details to join this team."
+              : coachOnly
+                ? "Set up your own team. Share the invite link with your players."
+                : signedOut
+                  ? "You signed out. Your account is still saved — sign back in with the same email and password."
+                  : savedEmail
+                    ? "Sign in with your email and password."
+                    : "Sign in with the same email you used when you joined."}
         </p>
 
         {signedOut && isLogin && (
@@ -102,7 +106,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
               </div>
 
               {isInvite ? (
-                <input type="hidden" name="role" value="player" />
+                <input type="hidden" name="role" value={isParentSignup ? "parent" : "player"} />
               ) : coachOnly ? (
                 <>
                   <input type="hidden" name="role" value="coach" />
@@ -146,7 +150,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
                 <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
               </div>
 
-              {isInvite && (
+              {isInvite && !isParentSignup && (
                 <>
                   <div>
                     <label className="label">Team code</label>
@@ -177,6 +181,22 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
                     </div>
                   </div>
                 </>
+              )}
+
+              {isInvite && isParentSignup && (
+                <div>
+                  <label className="label">Team code</label>
+                  <input
+                    name="team_code"
+                    required
+                    minLength={4}
+                    maxLength={20}
+                    defaultValue={prefilledCode}
+                    className="input"
+                    placeholder="e.g. WOLVES2025"
+                    style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
+                  />
+                </div>
               )}
             </>
           )}

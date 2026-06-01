@@ -17,11 +17,12 @@ export default async function SignupPage() {
       <div className="w-full max-w-sm card text-center">
         <h1 className="text-lg font-bold text-navy-900">Join RallyHQ</h1>
         <p className="mt-2 text-sm text-navy-500">
-          Players join with their team code. Coaches create their own separate team.
+          Players and parents join with a team code. Coaches create their own separate team.
         </p>
 
         <div className="mt-6 space-y-3 text-left">
-          <JoinTeamCode />
+          <JoinTeamCode joinRole="player" />
+          <JoinTeamCode joinRole="parent" />
 
           <Link href="/signup/coach" className="btn-primary block w-full text-center">
             🏆 I&apos;m a coach — create my team

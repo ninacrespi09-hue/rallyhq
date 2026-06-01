@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { authorTeamId, forbiddenTeam } from "@/lib/tenancy";
+import { blockParentApi } from "@/lib/permissions";
 
 // Players mark an exercise complete / incomplete for themselves.
 export async function POST(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (blockParentApi(user)) {
+    return NextResponse.json({ error: "Parents cannot mark exercises complete." }, { status: 403 });
+  }
 
   const { id } = await params;
   if (authorTeamId("exercises", id) !== user.team_id) return forbiddenTeam();

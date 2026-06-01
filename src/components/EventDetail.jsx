@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isCompetitive } from "@/lib/format";
 import { STATS } from "@/lib/statDefs";
 import StatEditor from "./StatEditor";
+import { isCoach, isParent, isPlayer, canManageRsvp, canRsvp } from "@/lib/permissions";
 
 const STATUSES = ["present", "late", "absent", "excused"];
 const STATUS_STYLE = {
@@ -14,9 +15,22 @@ const STATUS_STYLE = {
   excused: "bg-navy-400 text-white ring-navy-400",
 };
 
-export default function EventDetail({ event, user, players, initialAttendance, initialResult, initialStats }) {
+const RSVP_OPTIONS = [
+  { key: "going", label: "Going" },
+  { key: "maybe", label: "Maybe" },
+  { key: "cant_go", label: "Can't Go" },
+];
+const RSVP_STYLE = {
+  going: "bg-emerald-600 text-white ring-emerald-600",
+  maybe: "bg-blue-500 text-white ring-blue-500",
+  cant_go: "bg-navy-400 text-white ring-navy-400",
+};
+
+export default function EventDetail({ event, user, players, initialAttendance, initialRsvps = [], initialResult, initialStats }) {
   const router = useRouter();
-  const isCoach = user.role === "coach";
+  const coach = isCoach(user);
+  const parent = isParent(user);
+  const player = isPlayer(user);
   const isGame = isCompetitive(event.type);
 
   const [att, setAtt] = useState(() => {
@@ -25,6 +39,44 @@ export default function EventDetail({ event, user, players, initialAttendance, i
     return map;
   });
 
+  const [rsvp, setRsvp] = useState(() => {
+    const map = {};
+    initialRsvps.forEach((r) => (map[r.user_id] = r.status));
+    return map;
+  });
+
+  const rsvpCounts = useMemo(() => {
+    const counts = { going: 0, maybe: 0, cant_go: 0 };
+    for (const p of players) {
+      const s = rsvp[p.id];
+      if (s && counts[s] !== undefined) counts[s]++;
+    }
+    return counts;
+  }, [players, rsvp]);
+  const rsvpResponded = rsvpCounts.going + rsvpCounts.maybe + rsvpCounts.cant_go;
+
+  async function setRsvpStatus(userId, status) {
+    setRsvp((m) => ({ ...m, [userId]: status }));
+    await fetch(`/api/events/${event.id}/rsvp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, status }),
+    });
+  }
+
+  async function clearRsvp(userId) {
+    setRsvp((m) => {
+      const next = { ...m };
+      delete next[userId];
+      return next;
+    });
+    await fetch(`/api/events/${event.id}/rsvp`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId }),
+    });
+  }
+
   async function setStatus(userId, status) {
     setAtt((m) => ({ ...m, [userId]: status }));
     await fetch(`/api/events/${event.id}/attendance`, {
@@ -32,14 +84,90 @@ export default function EventDetail({ event, user, players, initialAttendance, i
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: userId, status }),
     });
-    router.refresh();
   }
 
   const present = Object.values(att).filter((s) => s === "present" || s === "late").length;
 
   return (
     <div className="space-y-5">
-      {/* Attendance */}
+      {/* RSVP / availability (pre-event) */}
+      <section className="card">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-navy-900">RSVP</h2>
+          <span className="text-sm text-navy-400">
+            {rsvpResponded}/{players.length} responded
+          </span>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {RSVP_OPTIONS.map(({ key, label }) => (
+            <span key={key} className={`chip ring-1 ${RSVP_STYLE[key]}`}>
+              {label}: {rsvpCounts[key]}
+            </span>
+          ))}
+        </div>
+
+        {(coach || parent || isGame) && (
+          <div className="mt-3 space-y-2 text-sm text-navy-600">
+            {RSVP_OPTIONS.map(({ key, label }) => {
+              const names = players.filter((p) => rsvp[p.id] === key).map((p) => p.name);
+              return (
+                <div key={key}>
+                  <span className="font-semibold text-navy-800">{label}:</span>{" "}
+                  {names.length ? names.join(", ") : <span className="text-navy-400">—</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {!parent && (
+          <div className="mt-3 space-y-2">
+            {players.map((p) => {
+              const mine = p.id === user.id;
+              const editable = canManageRsvp(user) || (canRsvp(user) && mine);
+              if (!editable && !coach) return null;
+              const status = rsvp[p.id];
+              return (
+                <div key={p.id} className="flex items-center gap-2">
+                  <div className="w-28 shrink-0 truncate text-sm font-medium text-navy-700">
+                    {p.name} {mine && <span className="text-xs text-brand-600">(you)</span>}
+                  </div>
+                  <div className="flex flex-1 flex-wrap gap-1.5">
+                    {RSVP_OPTIONS.map(({ key, label }) => (
+                      <button
+                        key={key}
+                        disabled={!editable}
+                        onClick={() => setRsvpStatus(p.id, key)}
+                        className={`chip ring-1 transition disabled:opacity-40 ${
+                          status === key ? RSVP_STYLE[key] : "bg-white text-navy-500 ring-navy-100"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                    {editable && status && (
+                      <button
+                        onClick={() => clearRsvp(p.id)}
+                        className="chip bg-white text-navy-400 ring-navy-100"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {player && !coach && (
+          <p className="mt-3 text-xs text-navy-400">Tap Going, Maybe, or Can&apos;t Go to RSVP for this event.</p>
+        )}
+      </section>
+
+      {/* Attendance — hidden for games/tournaments (RSVP-only view) */}
+      {!isGame && (
       <section className="card">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-navy-900">Attendance</h2>
@@ -51,7 +179,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
         <div className="mt-3 space-y-2">
           {players.map((p) => {
             const mine = p.id === user.id;
-            const editable = isCoach || mine;
+            const editable = coach || (mine && !parent);
             const status = att[p.id];
             return (
               <div key={p.id} className="flex items-center gap-2">
@@ -76,17 +204,10 @@ export default function EventDetail({ event, user, players, initialAttendance, i
             );
           })}
         </div>
-        {!isCoach && (
+        {!coach && !parent && (
           <p className="mt-3 text-xs text-navy-400">You can set your own attendance status.</p>
         )}
       </section>
-
-      {/* Game result + stats */}
-      {isGame && (
-        <>
-          <ResultPanel event={event} isCoach={isCoach} initial={initialResult} />
-          <StatsPanel event={event} players={players} initialStats={initialStats} isCoach={isCoach} userId={user.id} />
-        </>
       )}
     </div>
   );
@@ -161,13 +282,14 @@ function ScoreBox({ label, value, onChange, editable }) {
 // Full statistic names (no abbreviations): Kills, Hits, Blocks, Digs, Serve Aces.
 const STAT_COLS = STATS;
 
-function StatsPanel({ event, players, initialStats, isCoach, userId }) {
+function StatsPanel({ event, players, initialStats, isCoach, isParent: parent, userId }) {
   const router = useRouter();
   const [editing, setEditing] = useState(null); // player id being edited
   const statMap = {};
   initialStats.forEach((s) => (statMap[s.user_id] = s));
 
   function canEdit(playerId) {
+    if (parent) return false;
     return isCoach || playerId === userId;
   }
 
@@ -176,7 +298,7 @@ function StatsPanel({ event, players, initialStats, isCoach, userId }) {
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-navy-900">Player stats</h2>
         <span className="text-xs text-navy-400">
-          {isCoach ? "Coach can edit every player" : "Edit your own stats"}
+          {parent ? "View only" : isCoach ? "Coach can edit every player" : "Edit your own stats"}
         </span>
       </div>
 

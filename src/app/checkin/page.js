@@ -4,10 +4,12 @@ import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import CheckinForm from "@/components/CheckinForm";
 import PageHeader from "@/components/PageHeader";
+import { blockParent } from "@/lib/parentPages";
 
 export default async function CheckinPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  blockParent(user);
 
   const today = getDb()
     .prepare("SELECT * FROM checkins WHERE user_id = ? AND date = date('now')")

@@ -19,7 +19,8 @@ export default async function GalleryPage() {
        LEFT JOIN events e ON e.id = m.event_id
        JOIN users u ON u.id = m.uploaded_by
        WHERE u.team_id = ?
-       ORDER BY m.created_at DESC, m.id DESC`
+       ORDER BY m.created_at DESC, m.id DESC
+       LIMIT 120`
     )
     .all(user.id, user.team_id);
 
@@ -27,7 +28,7 @@ export default async function GalleryPage() {
     .prepare(
       `SELECT e.id, e.title, e.type FROM events e
        JOIN users u ON u.id = e.created_by
-       WHERE u.team_id = ? AND e.type IN ('game','tournament') ORDER BY e.start_time DESC`
+       WHERE u.team_id = ? AND e.type IN ('game','tournament') ORDER BY e.start_time DESC LIMIT 40`
     )
     .all(user.team_id);
 

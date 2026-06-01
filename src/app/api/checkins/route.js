@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { blockParentApi } from "@/lib/permissions";
 
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (blockParentApi(user)) {
+    return NextResponse.json({ error: "Parents cannot submit wellness check-ins." }, { status: 403 });
+  }
 
   const { date, soreness, energy, mood, injury, sore_areas, note } = await req.json();
   const day = date || new Date().toISOString().slice(0, 10);

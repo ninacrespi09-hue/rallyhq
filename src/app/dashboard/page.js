@@ -14,6 +14,7 @@ import {
 import { getDb } from "@/lib/db";
 import { fmtDateTime, EVENT_STYLES } from "@/lib/format";
 import { LEVEL_STYLE } from "@/lib/wellness";
+import { isCoach, isParent } from "@/lib/permissions";
 
 export default async function Dashboard() {
   const user = await getCurrentUser();
@@ -37,7 +38,7 @@ export default async function Dashboard() {
         <h1 className="text-2xl font-extrabold text-navy-900">{user.name.split(" ")[0]} 🏐</h1>
       </div>
 
-      {user.role === "coach" ? <CoachHome user={user} /> : <PlayerHome user={user} />}
+      {isCoach(user) ? <CoachHome user={user} /> : isParent(user) ? <ParentHome /> : <PlayerHome user={user} />}
 
       {/* Shared: upcoming + announcements */}
       <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -92,6 +93,17 @@ export default async function Dashboard() {
         </section>
       </div>
     </NavShell>
+  );
+}
+
+function ParentHome() {
+  return (
+    <div className="card">
+      <h2 className="font-bold text-navy-900">Parent view</h2>
+      <p className="mt-2 text-sm text-navy-500">
+        Follow the team schedule, announcements, gallery, and roster. Stats and wellness tools are for coaches and players.
+      </p>
+    </div>
   );
 }
 

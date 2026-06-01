@@ -1,28 +1,48 @@
 ---
-description: Preserve RallyHQ design — locked on design-backup-working branch
+description: RallyHQ visual lock — design-backup-working is source of truth; logic-only edits by default
 alwaysApply: true
 ---
 
 # RallyHQ design lock
 
-The canonical RallyHQ UI is saved on branch **`design-backup-working`**. Do not change visual design unless the user explicitly asks.
+**Visual source of truth:** git branch **`design-backup-working`** (commit on that branch). All pages, components, styling, and layout must match that branch unless the user explicitly approves visual changes.
 
-## Do not modify without explicit request
+## Do not modify
 
-- Colors, fonts, typography scale
-- Layout, spacing, grid structure
+- JSX layout
+- CSS (`globals.css`, stylesheets)
+- Tailwind classes
+- Colors
+- Spacing
+- Charts (`Charts.jsx`, chart props/data shaping for display)
 - Cards, buttons, chips, form styling
-- Navigation (NavShell links, order, labels)
-- Dashboard and chart styling (Charts.jsx, stats page layout)
-- globals.css design tokens and component primitives (`.card`, `.btn-*`, `.input`, etc.)
+- Navigation (`NavShell.jsx`, links, order, labels)
+- Fonts
+- Dashboard layout
+- Page structure (`src/app/**/page.js` layout/JSX, `src/components/*.jsx` visual structure)
 
 ## Allowed without design approval
 
-- Backend logic, API routes, database schema
-- New features that reuse existing classes (`card`, `btn-primary`, `btn-ghost`, `input`, `label`, modal pattern)
-- Bug fixes that do not alter appearance
-- Stat sheet upload/functionality on `/stats/upload` using existing RallyHQ patterns
+- Backend logic
+- OCR logic (`statSheetOcr.js`, Tesseract pipeline)
+- Parsing logic (`statSheetParse.js`, `statSheetSave.js`, `statSheetDefs.js`)
+- Database logic (`db.js`, migrations, queries)
+- API routes (`src/app/api/**`)
+- Data processing and aggregation (server-side only, no display/layout changes)
 
-## When adding UI
+## UI changes require approval
 
-Match existing components: read nearby pages and reuse the same Tailwind classes and patterns. Never introduce new color palettes, layout systems, or component styles.
+If a feature **requires** any visual file change:
+
+1. **Stop** — do not edit JSX, CSS, or Tailwind.
+2. **Ask the user for approval** before touching visual files.
+3. Describe exactly which visual files would change and why.
+
+## Before every edit session
+
+1. **List the files you plan to modify** in the response before making changes.
+2. Confirm each file is logic/backend only. If any file is visual, get approval first or find a logic-only approach (e.g. new API route instead of new UI component).
+
+## If the app looks broken
+
+Corrupted `.next` cache can make styling disappear without any design code changing. Before editing visual files: `rm -rf .next && npm run dev`, hard refresh, use `http://localhost:3000`.

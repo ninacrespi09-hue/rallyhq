@@ -3,10 +3,12 @@ import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import Exercises from "@/components/Exercises";
+import { blockParent } from "@/lib/parentPages";
 
 export default async function ExercisesPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  blockParent(user);
 
   const db = getDb();
   const exercises = db

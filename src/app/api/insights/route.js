@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { analyzeCheckins } from "@/lib/ai";
+import { blockParentApi, isCoach } from "@/lib/permissions";
 
 /**
  * Generate AI insights from recent check-ins.
@@ -10,9 +11,12 @@ import { analyzeCheckins } from "@/lib/ai";
 export async function POST() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  if (blockParentApi(user)) {
+    return NextResponse.json({ error: "Parents cannot run wellness insights." }, { status: 403 });
+  }
 
   const db = getDb();
-  const scope = user.role === "coach" ? "team" : "player";
+  const scope = isCoach(user) ? "team" : "player";
 
   const checkins =
     scope === "team"
