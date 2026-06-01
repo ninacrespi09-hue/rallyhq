@@ -1,0 +1,28 @@
+---
+description: Preserve RallyHQ design — locked on design-backup-working branch
+alwaysApply: true
+---
+
+# RallyHQ design lock
+
+The canonical RallyHQ UI is saved on branch **`design-backup-working`**. Do not change visual design unless the user explicitly asks.
+
+## Do not modify without explicit request
+
+- Colors, fonts, typography scale
+- Layout, spacing, grid structure
+- Cards, buttons, chips, form styling
+- Navigation (NavShell links, order, labels)
+- Dashboard and chart styling (Charts.jsx, stats page layout)
+- globals.css design tokens and component primitives (`.card`, `.btn-*`, `.input`, etc.)
+
+## Allowed without design approval
+
+- Backend logic, API routes, database schema
+- New features that reuse existing classes (`card`, `btn-primary`, `btn-ghost`, `input`, `label`, modal pattern)
+- Bug fixes that do not alter appearance
+- Stat sheet upload/functionality on `/stats/upload` using existing RallyHQ patterns
+
+## When adding UI
+
+Match existing components: read nearby pages and reuse the same Tailwind classes and patterns. Never introduce new color palettes, layout systems, or component styles.

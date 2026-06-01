@@ -9,7 +9,8 @@ export function playerStatTotals(userId) {
          COALESCE(SUM(kills),0) AS kills, COALESCE(SUM(hits),0) AS hits,
          COALESCE(SUM(assists),0) AS assists, COALESCE(SUM(aces),0) AS aces,
          COALESCE(SUM(digs),0) AS digs, COALESCE(SUM(blocks),0) AS blocks,
-         COALESCE(SUM(errors),0) AS errors
+         COALESCE(SUM(errors),0) AS errors,
+         COALESCE(SUM(service_receptions),0) AS service_receptions
        FROM player_stats WHERE user_id = ?`
     )
     .get(userId);

@@ -15,7 +15,7 @@ export async function POST(req, { params }) {
   const { id } = await params;
   if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
 
-  const { user_id, kills, hits, assists, aces, digs, blocks, errors } = await req.json();
+  const { user_id, kills, hits, assists, aces, digs, blocks, errors, service_receptions } = await req.json();
   if (!user_id) return NextResponse.json({ error: "Player is required." }, { status: 400 });
   if (userTeamId(user_id) !== user.team_id) return forbiddenTeam();
 
@@ -28,11 +28,11 @@ export async function POST(req, { params }) {
 
   getDb()
     .prepare(
-      `INSERT INTO player_stats (event_id, user_id, recorded_by, kills, hits, assists, aces, digs, blocks, errors)
-       VALUES (@event_id, @user_id, @recorded_by, @kills, @hits, @assists, @aces, @digs, @blocks, @errors)
+      `INSERT INTO player_stats (event_id, user_id, recorded_by, kills, hits, assists, aces, digs, blocks, errors, service_receptions)
+       VALUES (@event_id, @user_id, @recorded_by, @kills, @hits, @assists, @aces, @digs, @blocks, @errors, @service_receptions)
        ON CONFLICT(event_id, user_id) DO UPDATE SET
          kills=@kills, hits=@hits, assists=@assists, aces=@aces, digs=@digs,
-         blocks=@blocks, errors=@errors, recorded_by=@recorded_by`
+         blocks=@blocks, errors=@errors, service_receptions=@service_receptions, recorded_by=@recorded_by`
     )
     .run({
       event_id: Number(id),
@@ -45,6 +45,7 @@ export async function POST(req, { params }) {
       digs: n(digs),
       blocks: n(blocks),
       errors: n(errors),
+      service_receptions: n(service_receptions),
     });
 
   await regeneratePlayerCoachInsight(targetId, user.team_id);

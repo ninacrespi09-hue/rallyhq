@@ -205,5 +205,8 @@ function initSchema(db) {
   if (!has("users", "team_id")) {
     db.exec("ALTER TABLE users ADD COLUMN team_id INTEGER REFERENCES teams(id)");
   }
+  if (!has("player_stats", "service_receptions")) {
+    db.exec("ALTER TABLE player_stats ADD COLUMN service_receptions INTEGER NOT NULL DEFAULT 0");
+  }
   // Events, announcements, exercises, media are scoped through their creator's team_id via JOIN.
 }

@@ -18,7 +18,13 @@ export default function StatEditor({ eventId, playerName, playerId, existing, on
     const res = await fetch(`/api/events/${eventId}/stats`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: playerId, ...vals }),
+      body: JSON.stringify({
+        user_id: playerId,
+        ...vals,
+        assists: existing?.assists ?? 0,
+        errors: existing?.errors ?? 0,
+        service_receptions: existing?.service_receptions ?? 0,
+      }),
     });
     const data = await res.json().catch(() => ({}));
     setSaving(false);
