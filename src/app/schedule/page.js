@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
-import { fmtDateTime, EVENT_STYLES } from "@/lib/format";
+import { fmtDateTime, getEventStyle } from "@/lib/format";
 import EventCreator from "@/components/EventCreator";
 import PageHeader from "@/components/PageHeader";
 import QuickDelete from "@/components/QuickDelete";
@@ -265,7 +265,7 @@ function CalendarView({ monthParam, teamId }) {
               </div>
               <div className="mt-0.5 space-y-0.5">
                 {dayEvents.slice(0, 3).map((e) => {
-                  const s = EVENT_STYLES[e.type] || EVENT_STYLES.practice;
+                  const s = getEventStyle(e.type);
                   return (
                     <Link
                       key={e.id}
@@ -327,7 +327,7 @@ function Legend() {
     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-navy-500">
       {items.map(([type, label]) => (
         <span key={type} className="flex items-center gap-1.5">
-          <span className={`h-2.5 w-2.5 rounded-full ${EVENT_STYLES[type].dot}`} />
+          <span className={`h-2.5 w-2.5 rounded-full ${getEventStyle(type).dot}`} />
           {label}
         </span>
       ))}
@@ -336,7 +336,7 @@ function Legend() {
 }
 
 function EventRow({ e, past, isCoach }) {
-  const s = EVENT_STYLES[e.type] || EVENT_STYLES.practice;
+  const s = getEventStyle(e.type);
   return (
     <div className={`card flex items-center gap-3 ${s.ring} ${s.bg}`}>
       <Link href={`/schedule/${e.id}`} className="flex flex-1 items-center gap-3 min-w-0">

@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { eventTeamId } from "@/lib/tenancy";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
-import { fmtDateTime, EVENT_STYLES, isCompetitive } from "@/lib/format";
+import { fmtDateTime, getEventStyle, isCompetitive } from "@/lib/format";
 import EventDetail from "@/components/EventDetail";
 import { isCoach } from "@/lib/permissions";
 
@@ -41,7 +41,7 @@ export default async function EventPage({ params }) {
         )
         .all(event.id);
 
-  const s = EVENT_STYLES[event.type];
+  const s = getEventStyle(event.type);
 
   return (
     <NavShell user={user}>

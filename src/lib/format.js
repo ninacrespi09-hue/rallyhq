@@ -23,7 +23,20 @@ export const EVENT_STYLES = {
   bonding:       { label: "Team Bonding",  chip: "bg-cyan-300 text-cyan-950 font-bold",  dot: "bg-cyan-400",   bar: "bg-cyan-400",   ring: "ring-2 ring-cyan-400",   bg: "bg-cyan-100/70" },
   // keep "game" for any existing stored events
   game:          { label: "Game",          chip: "bg-blue-600 text-white font-bold",     dot: "bg-blue-600",   bar: "bg-blue-600",   ring: "ring-2 ring-blue-600",   bg: "bg-blue-200/70" },
+  meeting:       { label: "Meeting",       chip: "bg-sky-200 text-sky-900 font-bold",    dot: "bg-sky-300",    bar: "bg-sky-300",    ring: "ring-2 ring-sky-300",    bg: "bg-sky-100/70" },
+  other:         { label: "Other",         chip: "bg-sky-200 text-sky-900 font-bold",    dot: "bg-sky-300",    bar: "bg-sky-300",    ring: "ring-2 ring-sky-300",    bg: "bg-sky-100/70" },
 };
+
+const DEFAULT_EVENT_STYLE = EVENT_STYLES.practice;
+
+export function getEventStyle(type) {
+  if (type && EVENT_STYLES[type]) return EVENT_STYLES[type];
+  const label =
+    typeof type === "string" && type.length
+      ? type.charAt(0).toUpperCase() + type.slice(1)
+      : DEFAULT_EVENT_STYLE.label;
+  return { ...DEFAULT_EVENT_STYLE, label };
+}
 
 // Events that have results / stats / post-game wellness.
 export const COMPETITIVE_TYPES = ["game", "tournament"];

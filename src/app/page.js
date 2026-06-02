@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
 import TeamCodeBadge from "@/components/TeamCodeBadge";
 import { upcomingEvents, teamWellness, todaysCheckin } from "@/lib/queries";
-import { fmtDate, EVENT_STYLES } from "@/lib/format";
+import { fmtDate, getEventStyle } from "@/lib/format";
 import { isCoach, isParent, isPlayer } from "@/lib/permissions";
 
 // The seven main navigation bubbles.
@@ -167,7 +167,7 @@ export default async function Landing() {
                 href={`/schedule/${nextEvent.id}`}
                 className="chip bg-white/80 text-navy-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white"
               >
-                <span className={`mr-1.5 h-2 w-2 rounded-full ${EVENT_STYLES[nextEvent.type].dot}`} />
+                <span className={`mr-1.5 h-2 w-2 rounded-full ${getEventStyle(nextEvent.type).dot}`} />
                 Next: {nextEvent.title} · {fmtDate(nextEvent.start_time)}
               </Link>
             )}

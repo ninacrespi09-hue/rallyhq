@@ -12,7 +12,7 @@ import {
   teamWellness,
 } from "@/lib/queries";
 import { getDb } from "@/lib/db";
-import { fmtDateTime, EVENT_STYLES } from "@/lib/format";
+import { fmtDateTime, getEventStyle } from "@/lib/format";
 import { LEVEL_STYLE } from "@/lib/wellness";
 import { isCoach, isParent } from "@/lib/permissions";
 
@@ -46,7 +46,7 @@ export default async function Dashboard() {
           <div className="mt-3 space-y-2">
             {events.length === 0 && <p className="text-sm text-navy-400">Nothing scheduled yet.</p>}
             {events.map((e) => {
-              const s = EVENT_STYLES[e.type];
+              const s = getEventStyle(e.type);
               return (
                 <Link
                   key={e.id}

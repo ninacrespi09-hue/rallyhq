@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { EVENT_STYLES } from "@/lib/format";
+import { getEventStyle } from "@/lib/format";
 
 const SCAN_TIMEOUT_MS = 45000;
 
@@ -238,7 +238,7 @@ export default function ScheduleUpload({ compact = false }) {
 
             <div className="flex-1 space-y-3 overflow-y-auto p-5">
               {events.map((ev, index) => {
-                const s = EVENT_STYLES[ev.type] || EVENT_STYLES.practice;
+                const s = getEventStyle(ev.type);
                 const typeLabel = SCHEDULE_EVENT_TYPES.find((t) => t.key === ev.type)?.label || s.label;
                 return (
                   <div
