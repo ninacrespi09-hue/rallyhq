@@ -5,7 +5,9 @@ alwaysApply: true
 
 # RallyHQ design lock
 
-**Visual source of truth:** git branch **`design-backup-working`** (commit on that branch). All pages, components, styling, and layout must match that branch unless the user explicitly approves visual changes.
+**Visual source of truth:** git branch **`design-fixed-before-schedule-upload`**. All pages, components, styling, and layout must match that branch unless the user explicitly approves visual changes.
+
+Includes: original 5-tab nav, single **+ New event** header on Schedule, stats-style **Upload Schedule** card (links to `/schedule/upload`), and `/stats/upload` stat sheet flow.
 
 ## Do not modify
 

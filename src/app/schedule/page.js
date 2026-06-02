@@ -35,6 +35,24 @@ export default async function SchedulePage({ searchParams }) {
         action={user.role === "coach" ? <EventCreator defaultType={activeView.type || "practice"} /> : null}
       />
 
+      {user.role === "coach" && (
+        <section className="card mt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="font-bold text-navy-900">Upload Schedule</h2>
+              <p className="mt-1 text-sm text-navy-500">
+                Upload a photo of your schedule and RallyHQ will help fill in upcoming events automatically.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+              <Link href="/schedule/upload" className="btn-primary w-full sm:w-auto text-center">
+                Upload Schedule Photo
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       <Legend />
       <ViewTabs view={view} />
 

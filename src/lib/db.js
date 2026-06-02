@@ -12,6 +12,7 @@ export function getDb() {
   if (db) {
     ensureEventRsvpsTable(db);
     ensureChatTables(db);
+    ensurePollTables(db);
     ensureIndexes(db);
     return db;
   }
@@ -27,6 +28,7 @@ export function getDb() {
   initSchema(db);
   ensureEventRsvpsTable(db);
   ensureChatTables(db);
+  ensurePollTables(db);
   ensureIndexes(db);
   return db;
 }
@@ -41,6 +43,42 @@ function ensureIndexes(db) {
     CREATE INDEX IF NOT EXISTS idx_ai_insights_user ON ai_insights(scope, user_id, generated_at);
     CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_chat_members_user ON chat_members(user_id);
+    CREATE INDEX IF NOT EXISTS idx_poll_votes_poll ON poll_votes(poll_id);
+    CREATE INDEX IF NOT EXISTS idx_poll_options_poll ON poll_options(poll_id);
+  `);
+}
+
+/** Team poll tables — added after initial schema. */
+function ensurePollTables(db) {
+  const exists = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'polls'")
+    .get();
+  if (exists) return;
+
+  db.exec(`
+    CREATE TABLE polls (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      author_id  INTEGER NOT NULL REFERENCES users(id),
+      question   TEXT NOT NULL,
+      pinned     INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE poll_options (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      poll_id    INTEGER NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
+      label      TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE poll_votes (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      poll_id    INTEGER NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
+      option_id  INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(poll_id, user_id)
+    );
   `);
 }
 

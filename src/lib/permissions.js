@@ -121,3 +121,17 @@ export function canUseAiCoach(user) {
 export function canUseGroupChat(user) {
   return (isCoach(user) || isPlayer(user)) && !!user?.team_id;
 }
+
+export function canCreatePoll(user) {
+  return isCoach(user);
+}
+
+/** Players only — one vote per poll. */
+export function canVotePoll(user) {
+  return isPlayer(user);
+}
+
+/** Coaches, players, and parents on the team can view poll results. */
+export function canViewPoll(user) {
+  return !!user?.team_id && (isCoach(user) || isPlayer(user) || isParent(user));
+}
