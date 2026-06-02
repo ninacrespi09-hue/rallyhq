@@ -11,6 +11,7 @@ let db;
 export function getDb() {
   if (db) {
     ensureEventRsvpsTable(db);
+    ensureChatTables(db);
     ensureIndexes(db);
     return db;
   }
@@ -25,6 +26,7 @@ export function getDb() {
   db.pragma("foreign_keys = ON");
   initSchema(db);
   ensureEventRsvpsTable(db);
+  ensureChatTables(db);
   ensureIndexes(db);
   return db;
 }
@@ -37,6 +39,8 @@ function ensureIndexes(db) {
     CREATE INDEX IF NOT EXISTS idx_event_rsvps_event ON event_rsvps(event_id);
     CREATE INDEX IF NOT EXISTS idx_media_created ON media(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_ai_insights_user ON ai_insights(scope, user_id, generated_at);
+    CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_chat_members_user ON chat_members(user_id);
   `);
 }
 
@@ -55,6 +59,40 @@ function ensureEventRsvpsTable(db) {
       status     TEXT NOT NULL,
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(event_id, user_id)
+    );
+  `);
+}
+
+/** Group chat tables — added after initial schema. */
+function ensureChatTables(db) {
+  const exists = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'chat_rooms'")
+    .get();
+  if (exists) return;
+
+  db.exec(`
+    CREATE TABLE chat_rooms (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      team_id    INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+      name       TEXT NOT NULL,
+      created_by INTEGER NOT NULL REFERENCES users(id),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE chat_members (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      room_id   INTEGER NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+      user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(room_id, user_id)
+    );
+
+    CREATE TABLE chat_messages (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      room_id    INTEGER NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body       TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
 }

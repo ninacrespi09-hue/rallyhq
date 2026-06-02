@@ -45,10 +45,10 @@ const CARDS = [
     gradient: "from-blue-600 to-navy-800",
   },
   {
-    href: "/announcements",
-    title: "Coach Announcements",
-    subtitle: "Updates, reminders & info",
-    icon: "📣",
+    href: "/chat",
+    title: "Group Chat",
+    subtitle: "Message coaches and teammates",
+    icon: "💬",
     gradient: "from-indigo-500 to-blue-700",
   },
   {
@@ -67,13 +67,6 @@ const PARENT_CARDS = [
     subtitle: "Practices, games & tournaments",
     icon: "📅",
     gradient: "from-sky-400 to-blue-600",
-  },
-  {
-    href: "/announcements",
-    title: "Announcements",
-    subtitle: "Updates, reminders & info",
-    icon: "📣",
-    gradient: "from-indigo-500 to-blue-700",
   },
   {
     href: "/gallery",
@@ -111,11 +104,11 @@ export default async function Landing() {
           gradient: "from-sky-400 to-blue-600",
         }
       : {
-          href: "/announcements",
-          icon: "📣",
-          title: "Team announcements",
-          sub: "Catch up on the latest from your coach",
-          gradient: "from-indigo-500 to-blue-700",
+          href: "/gallery",
+          icon: "📷",
+          title: "Team gallery",
+          sub: "Browse photos from games and tournaments",
+          gradient: "from-cyan-500 to-blue-700",
         }
     : isCoach(user)
       ? wellness?.needRest?.length

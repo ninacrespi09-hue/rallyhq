@@ -18,12 +18,11 @@ export function isParent(user) {
   return user?.role === ROLES.PARENT;
 }
 
-/** Primary mobile nav — parent sees schedule, news, gallery, team only. */
+/** Primary mobile nav — 5 tabs, matches original RallyHQ layout. */
 export const NAV_PRIMARY = [
   { href: "/", label: "Home", icon: "🏠" },
   { href: "/schedule", label: "Schedule", icon: "📅" },
   { href: "/players", label: "Players", icon: "🏐" },
-  { href: "/stats", label: "Stats", icon: "📊" },
   { href: "/exercises", label: "Exercises", icon: "💪" },
   { href: "/ai-coach", label: "AI", icon: "🤖" },
 ];
@@ -31,15 +30,15 @@ export const NAV_PRIMARY = [
 export const NAV_PARENT = [
   { href: "/", label: "Home", icon: "🏠" },
   { href: "/schedule", label: "Schedule", icon: "📅" },
-  { href: "/announcements", label: "News", icon: "📣" },
   { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/players", label: "Team", icon: "🏐" },
 ];
 
 export const NAV_SECONDARY = [
   { href: "/gallery", label: "Gallery", icon: "📷" },
+  { href: "/stats", label: "Team Stats", icon: "📊" },
   { href: "/checkin", label: "Wellness", icon: "🩺" },
-  { href: "/announcements", label: "Announcements", icon: "📣" },
+  { href: "/chat", label: "Chat", icon: "💬" },
   { href: "/dashboard", label: "Dashboard", icon: "📋" },
 ];
 
@@ -61,6 +60,7 @@ const PARENT_BLOCKED_PREFIXES = [
   "/ai-coach",
   "/checkin",
   "/insights",
+  "/chat",
 ];
 
 /** Redirect parents away from coach/player-only pages. */
@@ -116,4 +116,8 @@ export function canUploadMedia(user) {
 
 export function canUseAiCoach(user) {
   return isCoach(user) || isPlayer(user);
+}
+
+export function canUseGroupChat(user) {
+  return (isCoach(user) || isPlayer(user)) && !!user?.team_id;
 }

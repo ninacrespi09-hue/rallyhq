@@ -11,7 +11,7 @@ export default function NavShell({ user, children }) {
 
   const primary = navPrimaryForRole(user.role);
   const secondary = navSecondaryForRole(user.role);
-  const navCols = primary.length === 5 ? "grid-cols-5" : "grid-cols-6";
+  const navCols = primary.length === 4 ? "grid-cols-4" : "grid-cols-5";
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });

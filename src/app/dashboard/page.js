@@ -21,12 +21,6 @@ export default async function Dashboard() {
   if (!user) redirect("/login");
 
   const events = upcomingEvents(4, user.team_id);
-  const pinned = getDb()
-    .prepare(
-      `SELECT a.* FROM announcements a JOIN users u ON u.id = a.author_id
-       WHERE u.team_id = ? ORDER BY a.pinned DESC, a.created_at DESC LIMIT 3`
-    )
-    .all(user.team_id);
 
   return (
     <NavShell user={user}>
@@ -40,8 +34,8 @@ export default async function Dashboard() {
 
       {isCoach(user) ? <CoachHome user={user} /> : isParent(user) ? <ParentHome /> : <PlayerHome user={user} />}
 
-      {/* Shared: upcoming + announcements */}
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      {/* Shared: upcoming events */}
+      <div className="mt-6">
         <section className="card">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-navy-900">Upcoming</h2>
@@ -70,27 +64,6 @@ export default async function Dashboard() {
             })}
           </div>
         </section>
-
-        <section className="card">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-navy-900">Team board</h2>
-            <Link href="/announcements" className="text-sm font-medium text-brand-600">
-              View all
-            </Link>
-          </div>
-          <div className="mt-3 space-y-2">
-            {pinned.length === 0 && <p className="text-sm text-navy-400">No announcements yet.</p>}
-            {pinned.map((a) => (
-              <div key={a.id} className="rounded-xl p-2">
-                <div className="flex items-center gap-2">
-                  {a.pinned ? <span>📌</span> : null}
-                  <span className="text-sm font-semibold text-navy-800">{a.title}</span>
-                </div>
-                <p className="line-clamp-2 text-xs text-navy-500">{a.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </NavShell>
   );
@@ -101,7 +74,7 @@ function ParentHome() {
     <div className="card">
       <h2 className="font-bold text-navy-900">Parent view</h2>
       <p className="mt-2 text-sm text-navy-500">
-        Follow the team schedule, announcements, gallery, and roster. Stats and wellness tools are for coaches and players.
+        Follow the team schedule, gallery, and roster. Stats and wellness tools are for coaches and players.
       </p>
     </div>
   );
