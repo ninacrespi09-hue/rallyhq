@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import TeamCodeCard from "./TeamCodeCard";
+import RallyPetFloating from "./RallyPetFloating";
 import { navPrimaryForRole, navSecondaryForRole, isCoach } from "@/lib/permissions";
 
 export default function NavShell({ user, children }) {
@@ -82,6 +83,7 @@ export default function NavShell({ user, children }) {
           ))}
         </nav>
       </div>
+      <RallyPetFloating />
     </div>
   );
 }

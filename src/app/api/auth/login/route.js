@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { verifyPassword, createSession, normalizeEmail, isValidEmail } from "@/lib/auth";
+import { recordDailyVisit } from "@/lib/rallyPet";
 
 export async function POST(req) {
   const { email, password: rawPassword } = await req.json();
@@ -32,5 +33,6 @@ export async function POST(req) {
   }
 
   await createSession(user.id);
+  recordDailyVisit(user.id);
   return NextResponse.json({ ok: true });
 }

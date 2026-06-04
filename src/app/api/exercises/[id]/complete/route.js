@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { authorTeamId, forbiddenTeam } from "@/lib/tenancy";
 import { blockParentApi } from "@/lib/permissions";
+import { awardExerciseComplete } from "@/lib/rallyPet";
 
 // Players mark an exercise complete / incomplete for themselves.
 export async function POST(req, { params }) {
@@ -18,10 +19,13 @@ export async function POST(req, { params }) {
   const db = getDb();
 
   if (completed) {
-    db.prepare(
-      `INSERT INTO exercise_completions (exercise_id, user_id) VALUES (?, ?)
-       ON CONFLICT(exercise_id, user_id) DO NOTHING`
-    ).run(Number(id), user.id);
+    const info = db
+      .prepare(
+        `INSERT INTO exercise_completions (exercise_id, user_id) VALUES (?, ?)
+         ON CONFLICT(exercise_id, user_id) DO NOTHING`
+      )
+      .run(Number(id), user.id);
+    if (info.changes > 0) awardExerciseComplete(user.id, Number(id));
   } else {
     db.prepare("DELETE FROM exercise_completions WHERE exercise_id = ? AND user_id = ?").run(
       Number(id),

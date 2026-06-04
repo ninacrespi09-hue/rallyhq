@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SHEET_STAT_KEYS } from "@/lib/statSheetDefs";
 
@@ -59,7 +59,7 @@ async function prepareImageFile(file) {
   }
 }
 
-export default function StatSheetUpload({ roster }) {
+export default function StatSheetUpload({ roster, manualOnly = false }) {
   const router = useRouter();
   const fileRef = useRef(null);
   const [scanning, setScanning] = useState(false);
@@ -70,6 +70,16 @@ export default function StatSheetUpload({ roster }) {
   const [match, setMatch] = useState(emptyMatch());
   const [rows, setRows] = useState([]);
   const [previewName, setPreviewName] = useState("");
+
+  useEffect(() => {
+    if (!manualOnly) return;
+    setMatch(emptyMatch());
+    setRows(defaultRows(roster));
+    setInfo("Enter stats manually, then save when ready.");
+    setPreviewName("");
+    setPreviewOpen(true);
+    setError("");
+  }, [manualOnly, roster]);
 
   async function processFile(file) {
     if (!file) return;
@@ -256,6 +266,7 @@ export default function StatSheetUpload({ roster }) {
 
   return (
     <>
+      {!manualOnly && (
       <section className="card">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -290,15 +301,21 @@ export default function StatSheetUpload({ roster }) {
         {info && !previewOpen && <p className="mt-3 text-sm text-emerald-700">{info}</p>}
         {error && !previewOpen && <p className="mt-3 text-sm text-blue-700">{error}</p>}
       </section>
+      )}
+
+      {manualOnly && info && !previewOpen && <p className="text-sm text-emerald-700">{info}</p>}
 
       {previewOpen && (
         <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
           <div className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-t-3xl bg-white md:rounded-2xl">
             <div className="border-b border-navy-50 p-5">
-              <h3 className="text-lg font-bold text-navy-900">Review scanned stats</h3>
+              <h3 className="text-lg font-bold text-navy-900">
+                {manualOnly ? "Enter stats" : "Review scanned stats"}
+              </h3>
               <p className="mt-1 text-sm text-navy-400">
-                {previewName ? `From ${previewName}. ` : ""}
-                Edit anything that looks wrong, then save.
+                {manualOnly
+                  ? "Fill in match details and player stats, then save."
+                  : `${previewName ? `From ${previewName}. ` : ""}Edit anything that looks wrong, then save.`}
               </p>
               {info && <p className="mt-2 text-sm text-navy-500">{info}</p>}
             </div>
@@ -441,6 +458,10 @@ export default function StatSheetUpload({ roster }) {
               <button
                 type="button"
                 onClick={() => {
+                  if (manualOnly) {
+                    router.push("/stats");
+                    return;
+                  }
                   setPreviewOpen(false);
                   setError("");
                 }}
