@@ -4,6 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { POSITIONS } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const SAVED_EMAIL_KEY = "rallyhq_email";
 
@@ -66,7 +70,8 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
         <span className="text-2xl font-extrabold tracking-tight text-navy-900">RallyHQ</span>
       </div>
 
-      <div className="w-full max-w-sm card">
+      <Card className="w-full max-w-sm">
+        <CardContent className="p-5">
         {isInvite && (
           <div className="mb-4 rounded-xl bg-blue-600 px-4 py-3 text-center text-white">
             <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">You&apos;re joining</div>
@@ -101,8 +106,8 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
           {isSignup && (
             <>
               <div>
-                <label className="label">Full name</label>
-                <input name="name" required className="input" placeholder="Your name" />
+                <Label>Full name</Label>
+                <Input name="name" required placeholder="Your name" />
               </div>
 
               {isInvite ? (
@@ -112,17 +117,16 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
                   <input type="hidden" name="role" value="coach" />
                   <div className="space-y-3">
                     <div>
-                      <label className="label">Team name</label>
-                      <input name="team_name" required className="input" placeholder="e.g. Westfield Varsity" />
+                      <Label>Team name</Label>
+                      <Input name="team_name" required placeholder="e.g. Westfield Varsity" />
                     </div>
                     <div>
-                      <label className="label">Team join code</label>
-                      <input
+                      <Label>Team join code</Label>
+                      <Input
                         name="team_code"
                         required
                         minLength={4}
                         maxLength={20}
-                        className="input"
                         placeholder="e.g. WOLVES2025"
                         style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
                       />
@@ -135,39 +139,32 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
               ) : null}
 
               <div>
-                <label className="label">Email</label>
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  className="input"
-                  placeholder="you@example.com"
-                />
+                <Label>Email</Label>
+                <Input name="email" type="email" required placeholder="you@example.com" />
                 <p className="mt-1 text-xs text-navy-400">You&apos;ll use this email every time you sign back in.</p>
               </div>
               <div>
-                <label className="label">Password</label>
-                <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
+                <Label>Password</Label>
+                <Input name="password" type="password" required minLength={6} placeholder="••••••••" />
               </div>
 
               {isInvite && !isParentSignup && (
                 <>
                   <div>
-                    <label className="label">Team code</label>
-                    <input
+                    <Label>Team code</Label>
+                    <Input
                       name="team_code"
                       required
                       minLength={4}
                       maxLength={20}
                       defaultValue={prefilledCode}
-                      className="input"
                       placeholder="e.g. WOLVES2025"
                       style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="label">Position</label>
+                      <Label>Position</Label>
                       <select name="position" className="input">
                         <option value="">Select…</option>
                         {POSITIONS.map((p) => (
@@ -176,8 +173,8 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
                       </select>
                     </div>
                     <div>
-                      <label className="label">Jersey #</label>
-                      <input name="jersey_number" type="number" min="0" className="input" placeholder="7" />
+                      <Label>Jersey #</Label>
+                      <Input name="jersey_number" type="number" min="0" placeholder="7" />
                     </div>
                   </div>
                 </>
@@ -185,14 +182,13 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
 
               {isInvite && isParentSignup && (
                 <div>
-                  <label className="label">Team code</label>
-                  <input
+                  <Label>Team code</Label>
+                  <Input
                     name="team_code"
                     required
                     minLength={4}
                     maxLength={20}
                     defaultValue={prefilledCode}
-                    className="input"
                     placeholder="e.g. WOLVES2025"
                     style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
                   />
@@ -204,20 +200,19 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
           {!isSignup && (
             <>
               <div>
-                <label className="label">Email</label>
-                <input
+                <Label>Email</Label>
+                <Input
                   name="email"
                   type="email"
                   required
                   value={savedEmail}
                   onChange={(e) => setSavedEmail(e.target.value)}
-                  className="input"
                   placeholder="you@example.com"
                 />
               </div>
               <div>
-                <label className="label">Password</label>
-                <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
+                <Label>Password</Label>
+                <Input name="password" type="password" required minLength={6} placeholder="••••••••" />
               </div>
             </>
           )}
@@ -233,7 +228,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
             </div>
           )}
 
-          <button disabled={loading} className="btn-primary w-full">
+          <Button disabled={loading} className="w-full">
             {loading
               ? "Please wait…"
               : isSignup
@@ -243,7 +238,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
                     ? "Create team"
                     : "Sign up"
                 : "Sign in"}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-navy-500">
@@ -252,7 +247,8 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
             {isSignup ? "Sign in" : "Join or create a team"}
           </Link>
         </p>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

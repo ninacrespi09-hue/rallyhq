@@ -2,6 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { apiFetch, useApiMutation } from "@/hooks/use-api";
 
 const CATEGORIES = ["Skills", "Strength", "Conditioning", "Recovery", "Injury Prevention"];
 const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"];
@@ -23,7 +39,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
   const isCoach = user.role === "coach";
   const [items, setItems] = useState(initialExercises);
   const [filter, setFilter] = useState("All");
-  const [editor, setEditor] = useState(null); // null | {} for new | exercise for edit
+  const [editor, setEditor] = useState(null);
 
   const filtered = useMemo(
     () => (filter === "All" ? items : items.filter((e) => e.category === filter)),
@@ -31,6 +47,19 @@ export default function Exercises({ user, initialExercises, playerCount }) {
   );
 
   const myDone = items.filter((e) => e.mine_done).length;
+
+  const completeMutation = useMutation({
+    mutationFn: ({ id, completed }) =>
+      apiFetch(`/api/exercises/${id}/complete`, {
+        method: "POST",
+        body: JSON.stringify({ completed }),
+      }),
+  });
+
+  const deleteMutation = useApiMutation({
+    url: "/api/exercises",
+    method: "DELETE",
+  });
 
   async function toggleComplete(ex) {
     const done = !ex.mine_done;
@@ -41,20 +70,27 @@ export default function Exercises({ user, initialExercises, playerCount }) {
           : e
       )
     );
-    await fetch(`/api/exercises/${ex.id}/complete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: done }),
-    });
+    try {
+      await completeMutation.mutateAsync({ id: ex.id, completed: done });
+    } catch {
+      setItems((cur) =>
+        cur.map((e) =>
+          e.id === ex.id
+            ? { ...e, mine_done: ex.mine_done, completed_count: ex.completed_count }
+            : e
+        )
+      );
+    }
   }
 
   async function remove(ex) {
+    const prev = items;
     setItems((cur) => cur.filter((e) => e.id !== ex.id));
-    await fetch("/api/exercises", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: ex.id }),
-    });
+    try {
+      await deleteMutation.mutateAsync({ id: ex.id });
+    } catch {
+      setItems(prev);
+    }
   }
 
   function onSaved() {
@@ -64,7 +100,6 @@ export default function Exercises({ user, initialExercises, playerCount }) {
 
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-navy-900 p-6 text-white shadow-soft">
         <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="relative flex items-center justify-between gap-4">
@@ -81,174 +116,181 @@ export default function Exercises({ user, initialExercises, playerCount }) {
             )}
           </div>
           {isCoach && (
-            <button onClick={() => setEditor({})} className="btn shrink-0 bg-white text-blue-700 hover:bg-blue-50">
+            <Button onClick={() => setEditor({})} className="shrink-0 bg-white text-blue-700 hover:bg-blue-50">
               + New
-            </button>
+            </Button>
           )}
         </div>
         {!isCoach && items.length > 0 && (
-          <div className="relative mt-4 h-2.5 w-full overflow-hidden rounded-full bg-white/20">
-            <div
-              className="h-2.5 rounded-full bg-white transition-all"
-              style={{ width: `${(myDone / items.length) * 100}%` }}
-            />
-          </div>
+          <Progress
+            value={(myDone / items.length) * 100}
+            className="relative mt-4 h-2.5 bg-white/20"
+          />
         )}
       </section>
 
-      {/* Category filter */}
       <div className="mt-4 flex flex-wrap gap-2">
         {["All", ...CATEGORIES].map((c) => (
-          <button
+          <Button
             key={c}
+            size="sm"
+            variant={filter === c ? "default" : "outline"}
             onClick={() => setFilter(c)}
-            className={`chip ring-1 transition ${
-              filter === c
-                ? "bg-brand-600 text-white ring-brand-600"
-                : "bg-white text-navy-600 ring-navy-100 hover:bg-navy-50"
-            }`}
+            className="rounded-full"
           >
             {c === "All" ? "All" : `${CAT_ICON[c]} ${c}`}
-          </button>
+          </Button>
         ))}
       </div>
 
-      {/* List */}
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {filtered.length === 0 && (
           <p className="text-sm text-navy-400">No exercises in this category yet.</p>
         )}
         {filtered.map((ex) => (
-          <div key={ex.id} className="card animate-pop-in flex flex-col">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{CAT_ICON[ex.category] || "🏐"}</span>
-                <h3 className="font-bold text-navy-900">{ex.title}</h3>
-              </div>
-              <span className={`chip ${DIFF_STYLE[ex.difficulty] || DIFF_STYLE.Beginner}`}>
-                {ex.difficulty}
-              </span>
-            </div>
-
-            {ex.instructions && <p className="mt-2 text-sm text-navy-600">{ex.instructions}</p>}
-
-            <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-              <span className="chip bg-blue-50 text-blue-700">{ex.category}</span>
-              {ex.reps && <span className="chip bg-navy-50 text-navy-600">🔁 {ex.reps}</span>}
-            </div>
-
-            {ex.coach_notes && (
-              <p className="mt-2 rounded-lg bg-blue-50 p-2 text-xs text-blue-800">
-                📋 Coach note: {ex.coach_notes}
-              </p>
-            )}
-
-            {/* Team progress */}
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-[11px] text-navy-400">
-                <span>Team progress</span>
-                <span>
-                  {ex.completed_count}/{playerCount} done
+          <Card key={ex.id} className="animate-pop-in flex flex-col">
+            <CardContent className="flex flex-col p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{CAT_ICON[ex.category] || "🏐"}</span>
+                  <h3 className="font-bold text-navy-900">{ex.title}</h3>
+                </div>
+                <span className={`chip ${DIFF_STYLE[ex.difficulty] || DIFF_STYLE.Beginner}`}>
+                  {ex.difficulty}
                 </span>
               </div>
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-navy-100">
-                <div
-                  className="h-1.5 rounded-full bg-gradient-to-r from-brand-400 to-brand-700"
-                  style={{ width: `${playerCount ? (ex.completed_count / playerCount) * 100 : 0}%` }}
+
+              {ex.instructions && <p className="mt-2 text-sm text-navy-600">{ex.instructions}</p>}
+
+              <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                <Badge className="bg-blue-50 text-blue-700">{ex.category}</Badge>
+                {ex.reps && <Badge variant="secondary">🔁 {ex.reps}</Badge>}
+              </div>
+
+              {ex.coach_notes && (
+                <p className="mt-2 rounded-lg bg-blue-50 p-2 text-xs text-blue-800">
+                  📋 Coach note: {ex.coach_notes}
+                </p>
+              )}
+
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-[11px] text-navy-400">
+                  <span>Team progress</span>
+                  <span>
+                    {ex.completed_count}/{playerCount} done
+                  </span>
+                </div>
+                <Progress
+                  value={playerCount ? (ex.completed_count / playerCount) * 100 : 0}
+                  className="mt-1 h-1.5"
                 />
               </div>
-            </div>
 
-            {/* Actions */}
-            <div className="mt-3 flex items-center gap-2">
-              {!isCoach && (
-                <button
-                  onClick={() => toggleComplete(ex)}
-                  className={`btn flex-1 ${
-                    ex.mine_done
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-brand-600 text-white hover:bg-brand-700"
-                  }`}
-                >
-                  {ex.mine_done ? "✓ Completed" : "Mark complete"}
-                </button>
-              )}
-              {isCoach && (
-                <>
-                  <button onClick={() => setEditor(ex)} className="btn-ghost flex-1">
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => remove(ex)}
-                    className="btn bg-blue-50 text-blue-600 hover:bg-blue-100"
+              <div className="mt-3 flex items-center gap-2">
+                {!isCoach && (
+                  <Button
+                    onClick={() => toggleComplete(ex)}
+                    className={`flex-1 ${
+                      ex.mine_done
+                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                        : ""
+                    }`}
+                    variant={ex.mine_done ? "secondary" : "default"}
                   >
-                    Delete
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+                    {ex.mine_done ? "✓ Completed" : "Mark complete"}
+                  </Button>
+                )}
+                {isCoach && (
+                  <>
+                    <Button variant="ghost" onClick={() => setEditor(ex)} className="flex-1">
+                      Edit
+                    </Button>
+                    <Button variant="soft" onClick={() => remove(ex)}>
+                      Delete
+                    </Button>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {editor && <ExerciseEditor exercise={editor} onClose={() => setEditor(null)} onSaved={onSaved} />}
+      {editor && (
+        <ExerciseEditor
+          exercise={editor}
+          open
+          onOpenChange={(open) => !open && setEditor(null)}
+          onSaved={onSaved}
+        />
+      )}
     </div>
   );
 }
 
-function ExerciseEditor({ exercise, onClose, onSaved }) {
-  const isEdit = !!exercise.id;
+function ExerciseEditor({ exercise, open, onOpenChange, onSaved }) {
+  const isEdit = !!exercise?.id;
   const [form, setForm] = useState({
-    title: exercise.title || "",
-    instructions: exercise.instructions || "",
-    reps: exercise.reps || "",
-    difficulty: exercise.difficulty || "Beginner",
-    category: exercise.category || "Skills",
-    coach_notes: exercise.coach_notes || "",
+    title: exercise?.title || "",
+    instructions: exercise?.instructions || "",
+    reps: exercise?.reps || "",
+    difficulty: exercise?.difficulty || "Beginner",
+    category: exercise?.category || "Skills",
+    coach_notes: exercise?.coach_notes || "",
   });
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const saveMutation = useApiMutation({
+    url: "/api/exercises",
+    method: isEdit ? "PATCH" : "POST",
+  });
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   async function save() {
     if (!form.title.trim()) return setError("Title is required.");
-    setSaving(true);
     setError("");
-    const res = await fetch("/api/exercises", {
-      method: isEdit ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(isEdit ? { id: exercise.id, ...form } : form),
-    });
-    setSaving(false);
-    if (!res.ok) {
-      const d = await res.json();
-      return setError(d.error || "Could not save.");
+    try {
+      await saveMutation.mutateAsync(isEdit ? { id: exercise.id, ...form } : form);
+      onSaved();
+    } catch (err) {
+      setError(err.message || "Could not save.");
     }
-    onSaved();
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-4">
-      <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 md:rounded-2xl">
-        <h2 className="text-lg font-bold text-navy-900">{isEdit ? "Edit exercise" : "New exercise"}</h2>
-        <div className="mt-3 space-y-3">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit exercise" : "New exercise"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
           <div>
-            <label className="label">Title</label>
-            <input value={form.title} onChange={set("title")} className="input" placeholder="Passing drills" />
+            <Label>Title</Label>
+            <Input value={form.title} onChange={set("title")} className="mt-1.5" placeholder="Passing drills" />
           </div>
           <div>
-            <label className="label">Instructions</label>
-            <textarea value={form.instructions} onChange={set("instructions")} rows={3} className="input" placeholder="Bump a volleyball against a wall 30 times in a row…" />
+            <Label>Instructions</Label>
+            <Textarea
+              value={form.instructions}
+              onChange={set("instructions")}
+              rows={3}
+              className="mt-1.5"
+              placeholder="Bump a volleyball against a wall 30 times in a row…"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Repetitions</label>
-              <input value={form.reps} onChange={set("reps")} className="input" placeholder="30 reps / 3 sets" />
+              <Label>Repetitions</Label>
+              <Input value={form.reps} onChange={set("reps")} className="mt-1.5" placeholder="30 reps / 3 sets" />
             </div>
             <div>
-              <label className="label">Difficulty</label>
-              <select value={form.difficulty} onChange={set("difficulty")} className="input">
+              <Label>Difficulty</Label>
+              <select
+                value={form.difficulty}
+                onChange={set("difficulty")}
+                className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+              >
                 {DIFFICULTIES.map((d) => (
                   <option key={d}>{d}</option>
                 ))}
@@ -256,28 +298,37 @@ function ExerciseEditor({ exercise, onClose, onSaved }) {
             </div>
           </div>
           <div>
-            <label className="label">Category</label>
-            <select value={form.category} onChange={set("category")} className="input">
+            <Label>Category</Label>
+            <select
+              value={form.category}
+              onChange={set("category")}
+              className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+            >
               {CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="label">Coach notes</label>
-            <input value={form.coach_notes} onChange={set("coach_notes")} className="input" placeholder="Focus on platform angle" />
+            <Label>Coach notes</Label>
+            <Input
+              value={form.coach_notes}
+              onChange={set("coach_notes")}
+              className="mt-1.5"
+              placeholder="Focus on platform angle"
+            />
           </div>
         </div>
-        {error && <p className="mt-2 text-sm text-blue-600">{error}</p>}
-        <div className="mt-4 flex gap-2">
-          <button onClick={onClose} className="btn-ghost flex-1">
+        {error && <p className="text-sm text-blue-600">{error}</p>}
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">
             Cancel
-          </button>
-          <button onClick={save} disabled={saving} className="btn-primary flex-1">
-            {saving ? "Saving…" : isEdit ? "Save changes" : "Create exercise"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+          <Button onClick={save} disabled={saveMutation.isPending} className="flex-1">
+            {saveMutation.isPending ? "Saving…" : isEdit ? "Save changes" : "Create exercise"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

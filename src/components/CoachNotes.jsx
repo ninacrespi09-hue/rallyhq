@@ -3,48 +3,50 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { fmtDate } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useApiMutation } from "@/hooks/use-api";
 
 export default function CoachNotes({ playerId, notes, canEdit }) {
   const router = useRouter();
   const [text, setText] = useState("");
-  const [saving, setSaving] = useState(false);
 
-  async function add() {
+  const addMutation = useApiMutation({ url: `/api/players/${playerId}/notes` });
+  const removeMutation = useApiMutation({ url: `/api/players/${playerId}/notes`, method: "DELETE" });
+
+  function add() {
     if (!text.trim()) return;
-    setSaving(true);
-    await fetch(`/api/players/${playerId}/notes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ note: text }),
-    });
-    setSaving(false);
-    setText("");
-    router.refresh();
+    addMutation.mutate(
+      { note: text },
+      {
+        onSuccess: () => {
+          setText("");
+          router.refresh();
+        },
+      }
+    );
   }
 
-  async function remove(noteId) {
-    await fetch(`/api/players/${playerId}/notes`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ noteId }),
-    });
-    router.refresh();
+  function remove(noteId) {
+    removeMutation.mutate(
+      { noteId },
+      { onSuccess: () => router.refresh() }
+    );
   }
 
   return (
     <div>
       {canEdit && (
         <div className="mb-3 flex gap-2">
-          <input
+          <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Add a note about this player…"
-            className="input"
             onKeyDown={(e) => e.key === "Enter" && add()}
           />
-          <button onClick={add} disabled={saving} className="btn-primary shrink-0">
-            {saving ? "…" : "Add"}
-          </button>
+          <Button onClick={add} disabled={addMutation.isPending} className="shrink-0">
+            {addMutation.isPending ? "…" : "Add"}
+          </Button>
         </div>
       )}
 

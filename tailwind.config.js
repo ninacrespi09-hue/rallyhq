@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ["class"],
   content: ["./src/**/*.{js,jsx,ts,tsx,mdx}"],
   theme: {
     extend: {
@@ -7,7 +8,39 @@ module.exports = {
         sans: ["Verdana", "Geneva", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
-        // Primary brand scale = blue
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
         brand: {
           50: "#eff6ff",
           100: "#dbeafe",
@@ -20,7 +53,6 @@ module.exports = {
           800: "#1e40af",
           900: "#1e3a8a",
         },
-        // Deep navy for surfaces, headings, and the sidebar
         navy: {
           50: "#eef2f9",
           100: "#d8e1f0",
@@ -40,6 +72,9 @@ module.exports = {
         },
       },
       borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
         "4xl": "2rem",
         "5xl": "2.5rem",
       },
@@ -50,6 +85,14 @@ module.exports = {
         inset: "inset 0 1px 0 rgba(255,255,255,0.6)",
       },
       keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
         "pop-in": {
           from: { opacity: "0", transform: "translateY(10px) scale(0.98)" },
           to: { opacity: "1", transform: "none" },
@@ -64,11 +107,13 @@ module.exports = {
         },
       },
       animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
         "pop-in": "pop-in 0.35s ease both",
         rise: "rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
         float: "float 6s ease-in-out infinite",
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };

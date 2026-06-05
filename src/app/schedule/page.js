@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { getDb } from "@/lib/db";
 import { fmtDateTime, getEventStyle } from "@/lib/format";
 import EventCreator from "@/components/EventCreator";
@@ -36,21 +39,23 @@ export default async function SchedulePage({ searchParams }) {
       />
 
       {user.role === "coach" && (
-        <section className="card mt-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="font-bold text-navy-900">Upload Schedule</h2>
-              <p className="mt-1 text-sm text-navy-500">
-                Upload a photo of your schedule and RallyHQ will help fill in upcoming events automatically.
-              </p>
+        <Card className="mt-4">
+          <CardContent>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="font-bold text-navy-900">Upload Schedule</h2>
+                <p className="mt-1 text-sm text-navy-500">
+                  Upload a photo of your schedule and RallyHQ will help fill in upcoming events automatically.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <Button asChild className="w-full sm:w-auto">
+                  <Link href="/schedule/upload">Upload Schedule Photo</Link>
+                </Button>
+              </div>
             </div>
-            <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-              <Link href="/schedule/upload" className="btn-primary w-full sm:w-auto text-center">
-                Upload Schedule Photo
-              </Link>
-            </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       )}
 
       <Legend />
@@ -135,9 +140,11 @@ function TypeView({ type, label, isCoach, teamId }) {
   return (
     <>
       {empty && (
-        <div className="card text-sm text-navy-400">
-          No {label.toLowerCase()} scheduled yet.
-        </div>
+        <Card>
+          <CardContent className="text-sm text-navy-400">
+            No {label.toLowerCase()} scheduled yet.
+          </CardContent>
+        </Card>
       )}
       {upcoming.length > 0 && (
         <>
@@ -224,23 +231,18 @@ function CalendarView({ monthParam, teamId }) {
   const next = month === 11 ? `${year + 1}-01` : `${year}-${String(month + 2).padStart(2, "0")}`;
 
   return (
-    <div className="card">
+    <Card>
+      <CardContent>
       <div className="mb-4 flex items-center justify-between">
-        <Link
-          href={`/schedule?view=calendar&month=${prev}`}
-          className="btn-ghost px-3 py-1.5 text-sm"
-        >
-          ← Prev
-        </Link>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/schedule?view=calendar&month=${prev}`}>← Prev</Link>
+        </Button>
         <h2 className="text-lg font-extrabold text-navy-900">
           {MONTHS[month]} {year}
         </h2>
-        <Link
-          href={`/schedule?view=calendar&month=${next}`}
-          className="btn-ghost px-3 py-1.5 text-sm"
-        >
-          Next →
-        </Link>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/schedule?view=calendar&month=${next}`}>Next →</Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">
@@ -286,7 +288,8 @@ function CalendarView({ monthParam, teamId }) {
           );
         })}
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -299,17 +302,15 @@ function ViewTabs({ view }) {
         const href = v.key === "upcoming" ? "/schedule" : `/schedule?view=${v.key}`;
         const active = view === v.key;
         return (
-          <Link
+          <Button
             key={v.key}
-            href={href}
-            className={`chip ring-1 transition ${
-              active
-                ? "bg-brand-600 text-white ring-brand-600"
-                : "bg-white text-navy-600 ring-navy-100 hover:bg-navy-50"
-            }`}
+            variant={active ? "default" : "outline"}
+            size="sm"
+            className="rounded-full"
+            asChild
           >
-            {v.label}
-          </Link>
+            <Link href={href}>{v.label}</Link>
+          </Button>
         );
       })}
     </div>
@@ -338,26 +339,28 @@ function Legend() {
 function EventRow({ e, past, isCoach }) {
   const s = getEventStyle(e.type);
   return (
-    <div className={`card flex items-center gap-3 ${s.ring} ${s.bg}`}>
-      <Link href={`/schedule/${e.id}`} className="flex flex-1 items-center gap-3 min-w-0">
-        <span className={`h-10 w-1.5 shrink-0 rounded-full ${s.bar}`} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate font-semibold text-navy-800">{e.title}</span>
-            <span className={`chip ${s.chip}`}>{s.label}</span>
+    <Card className={`flex items-center gap-3 ${s.ring} ${s.bg}`}>
+      <CardContent className="flex w-full items-center gap-3">
+        <Link href={`/schedule/${e.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+          <span className={`h-10 w-1.5 shrink-0 rounded-full ${s.bar}`} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="truncate font-semibold text-navy-800">{e.title}</span>
+              <Badge className={s.chip}>{s.label}</Badge>
+            </div>
+            <div className="text-xs text-navy-400">
+              {fmtDateTime(e.start_time)}
+              {e.location ? ` · ${e.location}` : ""}
+            </div>
           </div>
-          <div className="text-xs text-navy-400">
-            {fmtDateTime(e.start_time)}
-            {e.location ? ` · ${e.location}` : ""}
-          </div>
-        </div>
-        {past && e.result && (
-          <span className={`chip ${e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
-            {e.result} {e.our_score}-{e.opp_score}
-          </span>
-        )}
-      </Link>
-      {isCoach && <QuickDelete id={e.id} />}
-    </div>
+          {past && e.result && (
+            <Badge className={e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}>
+              {e.result} {e.our_score}-{e.opp_score}
+            </Badge>
+          )}
+        </Link>
+        {isCoach && <QuickDelete id={e.id} />}
+      </CardContent>
+    </Card>
   );
 }

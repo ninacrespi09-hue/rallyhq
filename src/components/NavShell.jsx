@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import TeamCodeCard from "./TeamCodeCard";
-import RallyPetFloating from "./RallyPetFloating";
-import { navPrimaryForRole, navSecondaryForRole, isCoach } from "@/lib/permissions";
+import { Button } from "@/components/ui/button";
+import { navPrimaryForRole, navSecondaryForRole, navMobileForRole, isCoach } from "@/lib/permissions";
 
 export default function NavShell({ user, children }) {
   const pathname = usePathname();
@@ -12,7 +12,7 @@ export default function NavShell({ user, children }) {
 
   const primary = navPrimaryForRole(user.role);
   const secondary = navSecondaryForRole(user.role);
-  const navCols = primary.length === 4 ? "grid-cols-4" : "grid-cols-5";
+  const mobileNav = navMobileForRole(user.role);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -57,33 +57,34 @@ export default function NavShell({ user, children }) {
             <Link href="/profile" className="text-sm font-medium text-blue-100">
               {user.name.split(" ")[0]}
             </Link>
-            <button onClick={logout} className="text-sm text-blue-200/70">
+            <Button variant="ghost" size="sm" onClick={logout} className="h-auto px-0 text-sm text-blue-200/70 hover:bg-transparent hover:text-white">
               Logout
-            </button>
+            </Button>
           </div>
         </header>
 
-        <main className="relative flex-1 w-auto md:w-full max-w-5xl mx-3 md:mx-auto my-3 md:my-6 rounded-[2rem] px-5 py-6 md:px-9 md:py-9 pb-24 md:pb-9">
+        <main className="relative flex-1 w-auto md:w-full max-w-5xl mx-3 md:mx-auto my-3 md:my-6 rounded-[2rem] px-5 py-6 md:px-9 md:py-9 pb-[4.5rem] md:pb-9">
           {children}
         </main>
 
-        {/* Mobile bottom nav */}
-        <nav className={`md:hidden fixed bottom-0 inset-x-0 z-10 grid ${navCols} border-t border-navy-100 bg-white/95 backdrop-blur`}>
-          {primary.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium ${
-                isActive(n.href) ? "text-brand-600" : "text-navy-300"
-              }`}
-            >
-              <span className="text-lg leading-none">{n.icon}</span>
-              {n.label}
-            </Link>
-          ))}
+        {/* Mobile bottom nav — all home tabs, horizontally scrollable */}
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-10 border-t border-navy-100 bg-white/95 backdrop-blur safe-area-pb">
+          <div className="flex overflow-x-auto scrollbar-none">
+            {mobileNav.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={`flex min-w-[4.25rem] shrink-0 flex-col items-center gap-0.5 px-2 py-2 text-[10px] font-medium ${
+                  isActive(n.href) ? "text-brand-600" : "text-navy-300"
+                }`}
+              >
+                <span className="text-lg leading-none">{n.icon}</span>
+                {n.label}
+              </Link>
+            ))}
+          </div>
         </nav>
       </div>
-      <RallyPetFloating />
     </div>
   );
 }
@@ -117,12 +118,14 @@ function UserCard({ user, onLogout }) {
           <div className="text-xs capitalize text-blue-200/70">{user.role}</div>
         </div>
       </Link>
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={onLogout}
-        className="mt-3 w-full text-left text-xs font-medium text-blue-200/60 hover:text-white"
+        className="mt-3 h-auto w-full justify-start px-0 text-xs font-medium text-blue-200/60 hover:bg-transparent hover:text-white"
       >
         Sign out
-      </button>
+      </Button>
     </div>
   );
 }

@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useApiMutation } from "@/hooks/use-api";
 
 // invert=true means low value = bad (soreness), low value = good otherwise
 const SCALES = [
@@ -106,8 +110,9 @@ export default function CheckinForm({ existing }) {
     existing?.sore_areas ? existing.sore_areas.split(",") : []
   );
   const [note, setNote] = useState(existing?.note ?? "");
-  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const mutation = useApiMutation({ url: "/api/checkins" });
 
   function toggleArea(a) {
     setAreas((cur) =>
@@ -115,20 +120,18 @@ export default function CheckinForm({ existing }) {
     );
   }
 
-  async function submit() {
-    setSaving(true);
+  function submit() {
     setSaved(false);
-    const res = await fetch("/api/checkins", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...vals, injury, sore_areas: areas.join(","), note }),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setSaved(true);
-      router.refresh();
-      setTimeout(() => setSaved(false), 2500);
-    }
+    mutation.mutate(
+      { ...vals, injury, sore_areas: areas.join(","), note },
+      {
+        onSuccess: () => {
+          setSaved(true);
+          router.refresh();
+          setTimeout(() => setSaved(false), 2500);
+        },
+      }
+    );
   }
 
   return (
@@ -175,20 +178,19 @@ export default function CheckinForm({ existing }) {
       </div>
 
       <div>
-        <label className="label">Notes for the coach (optional)</label>
-        <textarea
+        <Label>Notes for the coach (optional)</Label>
+        <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
-          className="input"
           placeholder="Tweaked my ankle in the last set…"
         />
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={submit} disabled={saving} className="btn-primary">
-          {saving ? "Saving…" : existing ? "Update check-in" : "Submit check-in"}
-        </button>
+        <Button onClick={submit} disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving…" : existing ? "Update check-in" : "Submit check-in"}
+        </Button>
         {saved && (
           <span className="text-sm font-medium text-emerald-600">✓ Saved</span>
         )}

@@ -1,74 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { STATS } from "@/lib/statDefs";
-
+import { DataTable } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 export default function Leaderboard({ players }) {
   const [sortKey, setSortKey] = useState("kills");
 
-  const sorted = [...players].sort((a, b) => b[sortKey] - a[sortKey]);
+  const sorted = useMemo(
+    () => [...players].sort((a, b) => b[sortKey] - a[sortKey]),
+    [players, sortKey]
+  );
 
-  return (
-    <div className="card overflow-hidden">
-      {/* Sort controls */}
-      <div className="mb-3 flex flex-wrap gap-2">
-        {STATS.map((s) => (
-          <button
-            key={s.key}
-            onClick={() => setSortKey(s.key)}
-            className={`chip ring-1 transition ${
-              sortKey === s.key
-                ? "bg-brand-600 text-white ring-brand-600"
-                : "bg-white text-navy-600 ring-navy-100 hover:bg-navy-50"
+  const columns = useMemo(
+    () => [
+      {
+        id: "rank",
+        header: "#",
+        cell: ({ row }) => <span className="font-bold text-navy-300">{row.index + 1}</span>,
+      },
+      {
+        id: "player",
+        header: "Player",
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <div>
+              <Link href={`/players/${p.id}`} className="font-medium text-navy-800 hover:text-brand-600">
+                {p.name}
+              </Link>
+              <div className="text-xs text-muted-foreground">{p.position}</div>
+            </div>
+          );
+        },
+      },
+      ...STATS.map((s) => ({
+        id: s.key,
+        header: () => (
+          <span className={sortKey === s.key ? "text-brand-600" : ""}>{s.label}</span>
+        ),
+        cell: ({ row }) => (
+          <span
+            className={`block text-center ${
+              sortKey === s.key ? "font-bold text-brand-600" : "text-navy-600"
             }`}
           >
-            {s.label}
-          </button>
-        ))}
-      </div>
+            {row.original[s.key]}
+          </span>
+        ),
+      })),
+    ],
+    [sortKey]
+  );
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-navy-400">
-              <th className="py-2">#</th>
-              <th>Player</th>
-              {STATS.map((s) => (
-                <th
-                  key={s.key}
-                  className={`px-2 text-center ${sortKey === s.key ? "text-brand-600" : ""}`}
-                >
-                  {s.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((p, i) => (
-              <tr key={p.id} className="border-t border-navy-100">
-                <td className="py-2 font-bold text-navy-300">{i + 1}</td>
-                <td>
-                  <Link href={`/players/${p.id}`} className="font-medium text-navy-800 hover:text-brand-600">
-                    {p.name}
-                  </Link>
-                  <div className="text-xs text-navy-400">{p.position}</div>
-                </td>
-                {STATS.map((s) => (
-                  <td
-                    key={s.key}
-                    className={`px-2 text-center ${
-                      sortKey === s.key ? "font-bold text-brand-600" : "text-navy-600"
-                    }`}
-                  >
-                    {p[s.key]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-5">
+        <div className="mb-3 flex flex-wrap gap-2">
+          {STATS.map((s) => (
+            <Button
+              key={s.key}
+              size="sm"
+              variant={sortKey === s.key ? "default" : "outline"}
+              onClick={() => setSortKey(s.key)}
+              className="rounded-full"
+            >
+              {s.label}
+            </Button>
+          ))}
+        </div>
+        <div className="overflow-x-auto">
+          <DataTable columns={columns} data={sorted} className="min-w-[520px] border-0 bg-transparent" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

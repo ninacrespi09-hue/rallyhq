@@ -1,8 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SHEET_STAT_KEYS } from "@/lib/statSheetDefs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DataTable } from "@/components/ui/data-table";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SCAN_TIMEOUT_MS = 30000;
 
@@ -197,6 +211,72 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
     setMatch((m) => ({ ...m, set_scores: [...(m.set_scores || []), ""] }));
   }
 
+  const columns = useMemo(
+    () => [
+      {
+        id: "name",
+        header: "Player",
+        cell: ({ row }) => (
+          <Input
+            value={row.original.name}
+            onChange={(e) => updateRow(row.index, "name", e.target.value)}
+            className="min-w-[120px]"
+            placeholder="Name"
+          />
+        ),
+      },
+      {
+        id: "jersey",
+        header: "#",
+        cell: ({ row }) => (
+          <Input
+            value={row.original.jersey_number}
+            onChange={(e) => updateRow(row.index, "jersey_number", e.target.value)}
+            className="w-16"
+            placeholder="#"
+          />
+        ),
+      },
+      {
+        id: "roster",
+        header: "Roster match",
+        cell: ({ row }) => (
+          <select
+            value={row.original.user_id ?? ""}
+            onChange={(e) =>
+              updateRow(row.index, "user_id", e.target.value ? Number(e.target.value) : null)
+            }
+            className="flex h-10 w-full min-w-[140px] rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+          >
+            <option value="">Not linked</option>
+            {roster.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+                {p.jersey_number != null ? ` (#${p.jersey_number})` : ""}
+              </option>
+            ))}
+          </select>
+        ),
+      },
+      ...SHEET_STAT_KEYS.map((col) => ({
+        id: col.key,
+        header: () => <span className="block text-center">{col.label}</span>,
+        cell: ({ row }) => (
+          <Input
+            type={col.type === "text" ? "text" : "number"}
+            min={col.type === "text" ? undefined : "0"}
+            step={col.type === "text" ? "0.1" : "1"}
+            value={row.original[col.key] ?? ""}
+            onChange={(e) => updateRow(row.index, col.key, e.target.value)}
+            className="w-20 text-center"
+            placeholder="—"
+          />
+        ),
+      })),
+    ],
+    [roster, rows]
+  );
+
   async function saveStats() {
     const linked = rows.filter((r) => r.user_id);
     const unlinked = rows
@@ -267,215 +347,159 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
   return (
     <>
       {!manualOnly && (
-      <section className="card">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="font-bold text-navy-900">Upload Stat Sheet</h2>
-            <p className="mt-1 text-sm text-navy-500">
-              Upload a photo of your volleyball stat sheet and RallyHQ will help fill in the stats automatically.
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={scanning}
-              className="btn-primary w-full sm:w-auto"
-            >
-              {scanning ? "Scanning…" : "Upload Stat Sheet"}
-            </button>
-            <button type="button" onClick={openManualEntry} className="text-xs font-semibold text-brand-600">
-              Enter manually instead
-            </button>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="font-bold text-navy-900">Upload Stat Sheet</h2>
+                <p className="mt-1 text-sm text-navy-500">
+                  Upload a photo of your volleyball stat sheet and RallyHQ will help fill in the stats automatically.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={scanning}
+                  className="w-full sm:w-auto"
+                >
+                  {scanning ? "Scanning…" : "Upload Stat Sheet"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={openManualEntry}
+                  className="h-auto p-0 text-xs font-semibold text-brand-600"
+                >
+                  Enter manually instead
+                </Button>
+              </div>
+            </div>
 
-        {info && !previewOpen && <p className="mt-3 text-sm text-emerald-700">{info}</p>}
-        {error && !previewOpen && <p className="mt-3 text-sm text-blue-700">{error}</p>}
-      </section>
+            {info && !previewOpen && <p className="mt-3 text-sm text-emerald-700">{info}</p>}
+            {error && !previewOpen && <p className="mt-3 text-sm text-blue-700">{error}</p>}
+          </CardContent>
+        </Card>
       )}
 
       {manualOnly && info && !previewOpen && <p className="text-sm text-emerald-700">{info}</p>}
 
-      {previewOpen && (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
-          <div className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-t-3xl bg-white md:rounded-2xl">
-            <div className="border-b border-navy-50 p-5">
-              <h3 className="text-lg font-bold text-navy-900">
-                {manualOnly ? "Enter stats" : "Review scanned stats"}
-              </h3>
-              <p className="mt-1 text-sm text-navy-400">
-                {manualOnly
-                  ? "Fill in match details and player stats, then save."
-                  : `${previewName ? `From ${previewName}. ` : ""}Edit anything that looks wrong, then save.`}
-              </p>
-              {info && <p className="mt-2 text-sm text-navy-500">{info}</p>}
+      <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SheetContent side="bottom" className="flex max-h-[92vh] flex-col gap-0 p-0 md:left-1/2 md:top-1/2 md:max-w-5xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:border">
+          <SheetHeader className="border-b border-navy-50 p-5 text-left">
+            <SheetTitle>{manualOnly ? "Enter stats" : "Review scanned stats"}</SheetTitle>
+            <SheetDescription>
+              {manualOnly
+                ? "Fill in match details and player stats, then save."
+                : `${previewName ? `From ${previewName}. ` : ""}Edit anything that looks wrong, then save.`}
+            </SheetDescription>
+            {info && <p className="mt-2 text-sm text-navy-500">{info}</p>}
+          </SheetHeader>
+
+          <ScrollArea className="flex-1 p-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <Label>Match date</Label>
+                <Input
+                  type="date"
+                  value={match.date}
+                  onChange={(e) => updateMatch("date", e.target.value)}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label>Opponent</Label>
+                <Input
+                  value={match.opponent}
+                  onChange={(e) => updateMatch("opponent", e.target.value)}
+                  className="mt-1.5"
+                  placeholder="Opponent team"
+                />
+              </div>
+              <div>
+                <Label>Sets won (us)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={match.our_score}
+                  onChange={(e) => updateMatch("our_score", e.target.value)}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label>Sets won (them)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={match.opp_score}
+                  onChange={(e) => updateMatch("opp_score", e.target.value)}
+                  className="mt-1.5"
+                />
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <label className="label">Match date</label>
-                  <input
-                    type="date"
-                    value={match.date}
-                    onChange={(e) => updateMatch("date", e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label">Opponent</label>
-                  <input
-                    value={match.opponent}
-                    onChange={(e) => updateMatch("opponent", e.target.value)}
-                    className="input"
-                    placeholder="Opponent team"
-                  />
-                </div>
-                <div>
-                  <label className="label">Sets won (us)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={match.our_score}
-                    onChange={(e) => updateMatch("our_score", e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label">Sets won (them)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={match.opp_score}
-                    onChange={(e) => updateMatch("opp_score", e.target.value)}
-                    className="input"
-                  />
-                </div>
+            <div className="mt-4">
+              <div className="mb-2 flex items-center justify-between">
+                <Label className="mb-0">Set scores</Label>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={addSetScore}
+                  className="h-auto p-0 text-xs font-semibold text-brand-600"
+                >
+                  + Add set
+                </Button>
               </div>
-
-              <div className="mt-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <label className="label mb-0">Set scores</label>
-                  <button type="button" onClick={addSetScore} className="text-xs font-semibold text-brand-600">
-                    + Add set
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(match.set_scores?.length ? match.set_scores : [""]).map((score, i) => (
-                    <input
-                      key={i}
-                      value={score}
-                      onChange={(e) => updateSetScore(i, e.target.value)}
-                      className="input w-24"
-                      placeholder="25-20"
-                    />
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {(match.set_scores?.length ? match.set_scores : [""]).map((score, i) => (
+                  <Input
+                    key={i}
+                    value={score}
+                    onChange={(e) => updateSetScore(i, e.target.value)}
+                    className="w-24"
+                    placeholder="25-20"
+                  />
+                ))}
               </div>
-
-              <div className="mt-5 overflow-x-auto">
-                <table className="w-full min-w-[880px] text-sm">
-                  <thead>
-                    <tr className="text-left text-xs uppercase tracking-wide text-navy-400">
-                      <th className="py-2 pr-2">Player</th>
-                      <th className="px-2">#</th>
-                      <th className="px-2">Roster match</th>
-                      {SHEET_STAT_KEYS.map((col) => (
-                        <th key={col.key} className="px-2 text-center">
-                          {col.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, index) => (
-                      <tr key={index} className="border-t border-navy-50">
-                        <td className="py-2 pr-2">
-                          <input
-                            value={row.name}
-                            onChange={(e) => updateRow(index, "name", e.target.value)}
-                            className="input min-w-[120px]"
-                            placeholder="Name"
-                          />
-                        </td>
-                        <td className="px-2">
-                          <input
-                            value={row.jersey_number}
-                            onChange={(e) => updateRow(index, "jersey_number", e.target.value)}
-                            className="input w-16"
-                            placeholder="#"
-                          />
-                        </td>
-                        <td className="px-2">
-                          <select
-                            value={row.user_id ?? ""}
-                            onChange={(e) =>
-                              updateRow(index, "user_id", e.target.value ? Number(e.target.value) : null)
-                            }
-                            className="input min-w-[140px]"
-                          >
-                            <option value="">Not linked</option>
-                            {roster.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                                {p.jersey_number != null ? ` (#${p.jersey_number})` : ""}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        {SHEET_STAT_KEYS.map((col) => (
-                          <td key={col.key} className="px-2">
-                            <input
-                              type={col.type === "text" ? "text" : "number"}
-                              min={col.type === "text" ? undefined : "0"}
-                              step={col.type === "text" ? "0.1" : "1"}
-                              value={row[col.key] ?? ""}
-                              onChange={(e) => updateRow(index, col.key, e.target.value)}
-                              className="input w-20 text-center"
-                              placeholder="—"
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {error && <p className="mt-3 text-sm text-blue-700">{error}</p>}
             </div>
 
-            <div className="flex gap-2 border-t border-navy-50 p-5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (manualOnly) {
-                    router.push("/stats");
-                    return;
-                  }
-                  setPreviewOpen(false);
-                  setError("");
-                }}
-                className="btn-ghost flex-1"
-              >
-                Cancel
-              </button>
-              <button type="button" onClick={saveStats} disabled={saving} className="btn-primary flex-1">
-                {saving ? "Saving…" : "Save Stats"}
-              </button>
+            <div className="mt-5 overflow-x-auto">
+              <DataTable columns={columns} data={rows} className="min-w-[880px] border-0 bg-transparent" />
             </div>
-          </div>
-        </div>
-      )}
+
+            {error && <p className="mt-3 text-sm text-blue-700">{error}</p>}
+          </ScrollArea>
+
+          <SheetFooter className="flex-row gap-2 border-t border-navy-50 p-5">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                if (manualOnly) {
+                  router.push("/stats");
+                  return;
+                }
+                setPreviewOpen(false);
+                setError("");
+              }}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={saveStats} disabled={saving} className="flex-1">
+              {saving ? "Saving…" : "Save Stats"}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

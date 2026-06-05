@@ -54,6 +54,32 @@ export function navSecondaryForRole(role) {
   return role === ROLES.PARENT ? NAV_SECONDARY_PARENT : NAV_SECONDARY;
 }
 
+/** Full mobile bottom bar — matches home Explore cards + Home, AI, Dashboard. */
+export const NAV_MOBILE = [
+  { href: "/", label: "Home", icon: "🏠" },
+  { href: "/schedule", label: "Schedule", icon: "📅" },
+  { href: "/stats", label: "Stats", icon: "📊" },
+  { href: "/players", label: "Players", icon: "🏐" },
+  { href: "/checkin", label: "Wellness", icon: "🩺" },
+  { href: "/exercises", label: "Exercises", icon: "💪" },
+  { href: "/chat", label: "Chat", icon: "💬" },
+  { href: "/gallery", label: "Gallery", icon: "📷" },
+  { href: "/ai-coach", label: "AI", icon: "🤖" },
+  { href: "/dashboard", label: "Dashboard", icon: "📋" },
+];
+
+export const NAV_MOBILE_PARENT = [
+  { href: "/", label: "Home", icon: "🏠" },
+  { href: "/schedule", label: "Schedule", icon: "📅" },
+  { href: "/gallery", label: "Gallery", icon: "📷" },
+  { href: "/players", label: "Team", icon: "🏐" },
+  { href: "/dashboard", label: "Dashboard", icon: "📋" },
+];
+
+export function navMobileForRole(role) {
+  return role === ROLES.PARENT ? NAV_MOBILE_PARENT : NAV_MOBILE;
+}
+
 const PARENT_BLOCKED_PREFIXES = [
   "/stats",
   "/exercises",

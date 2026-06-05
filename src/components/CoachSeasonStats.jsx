@@ -3,6 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATS } from "@/lib/statDefs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { useApiMutation } from "@/hooks/use-api";
 
 export default function CoachSeasonStats({ playerId, playerName, totals }) {
   const router = useRouter();
@@ -12,8 +25,12 @@ export default function CoachSeasonStats({ playerId, playerName, totals }) {
     STATS.forEach((s) => (v[s.key] = totals[s.key] ?? 0));
     return v;
   });
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const saveMutation = useApiMutation({
+    url: `/api/players/${playerId}/stats`,
+    method: "POST",
+  });
 
   function openEditor() {
     const v = {};
@@ -25,74 +42,68 @@ export default function CoachSeasonStats({ playerId, playerName, totals }) {
 
   async function save(e) {
     e.preventDefault();
-    setSaving(true);
     setError("");
-    const res = await fetch(`/api/players/${playerId}/stats`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(vals),
-    });
-    const data = await res.json().catch(() => ({}));
-    setSaving(false);
-    if (!res.ok) {
-      setError(data.error || "Could not save season statistics.");
-      return;
+    try {
+      await saveMutation.mutateAsync(vals);
+      setOpen(false);
+      router.refresh();
+    } catch (err) {
+      setError(err.message || "Could not save season statistics.");
     }
-    setOpen(false);
-    router.refresh();
   }
 
   return (
     <>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="font-bold text-navy-900">Season Statistics</h2>
-        <button type="button" onClick={openEditor} className="text-xs font-semibold text-brand-600">
+        <Button variant="link" size="sm" onClick={openEditor} className="h-auto p-0 text-xs font-semibold text-brand-600">
           Edit
-        </button>
+        </Button>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {STATS.map((s) => (
-          <div key={s.key} className="rounded-xl bg-navy-50 p-3 text-center">
-            <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
-          </div>
+          <Card key={s.key} className="border-0 bg-navy-50 shadow-none">
+            <CardContent className="p-3 text-center">
+              <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
-          <form
-            onSubmit={save}
-            className="w-full max-w-md rounded-t-3xl bg-white p-5 md:rounded-2xl"
-          >
-            <h3 className="text-lg font-bold text-navy-900">{playerName}</h3>
-            <p className="mb-4 text-sm text-navy-400">Update season totals</p>
-            <div className="grid grid-cols-2 gap-3">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <form onSubmit={save}>
+            <DialogHeader>
+              <DialogTitle>{playerName}</DialogTitle>
+              <DialogDescription>Update season totals</DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-3 py-4">
               {STATS.map((s) => (
                 <div key={s.key}>
-                  <label className="label">{s.label}</label>
-                  <input
+                  <Label>{s.label}</Label>
+                  <Input
                     type="number"
                     min="0"
                     value={vals[s.key]}
                     onChange={(e) => setVals((v) => ({ ...v, [s.key]: e.target.value }))}
-                    className="input"
+                    className="mt-1.5"
                   />
                 </div>
               ))}
             </div>
-            {error && <p className="mt-3 text-sm text-blue-700">{error}</p>}
-            <div className="mt-4 flex gap-2">
-              <button type="button" onClick={() => setOpen(false)} className="btn-ghost flex-1">
+            {error && <p className="text-sm text-blue-700">{error}</p>}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">
                 Cancel
-              </button>
-              <button type="submit" disabled={saving} className="btn-primary flex-1">
-                {saving ? "Saving…" : "Save season stats"}
-              </button>
-            </div>
+              </Button>
+              <Button type="submit" disabled={saveMutation.isPending} className="flex-1">
+                {saveMutation.isPending ? "Saving…" : "Save season stats"}
+              </Button>
+            </DialogFooter>
           </form>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

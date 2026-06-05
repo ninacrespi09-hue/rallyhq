@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { blockParentApi } from "@/lib/permissions";
-import { awardWellnessCheckin } from "@/lib/rallyPet";
-
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
@@ -32,8 +30,6 @@ export async function POST(req) {
     sore_areas: sore_areas || null,
     note: note || null,
   });
-
-  awardWellnessCheckin(user.id, day);
 
   return NextResponse.json({ ok: true });
 }

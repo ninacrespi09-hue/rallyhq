@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getCurrentUser } from "@/lib/auth";
+import { Badge } from "@/components/ui/badge";
 import { eventTeamId } from "@/lib/tenancy";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
@@ -48,7 +49,7 @@ export default async function EventPage({ params }) {
       <div className="mb-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <span className={`chip ${s.chip}`}>{s.label}</span>
+            <Badge className={s.chip}>{s.label}</Badge>
             <h1 className="mt-2 text-2xl font-extrabold text-navy-900">
               {event.title}
               {isGame && event.opponent ? ` vs ${event.opponent}` : ""}

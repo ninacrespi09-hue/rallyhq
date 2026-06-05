@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export default function Announcer() {
   const router = useRouter();
@@ -27,9 +32,7 @@ export default function Announcer() {
 
   if (!open)
     return (
-      <button onClick={() => setOpen(true)} className="btn-primary">
-        + Post
-      </button>
+      <Button onClick={() => setOpen(true)}>+ Post</Button>
     );
 
   return (
@@ -43,27 +46,30 @@ export default function Announcer() {
             ["exercise", "💪 Exercise"],
             ["info", "ℹ️ Info"],
           ].map(([val, label]) => (
-            <button
+            <Button
               key={val}
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setCategory(val)}
-              className={`rounded-xl py-2 text-xs font-semibold ring-1 transition ${
-                category === val ? "bg-brand-600 text-white ring-brand-600" : "bg-white text-navy-500 ring-navy-100"
-              }`}
+              className={cn(
+                "h-auto rounded-xl py-2 text-xs font-semibold ring-1",
+                category === val ? "bg-brand-600 text-white ring-brand-600 hover:bg-brand-600" : "bg-white text-navy-500 ring-navy-100 hover:bg-white"
+              )}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="label">Title</label>
-            <input name="title" required className="input" placeholder="Practice moved to 6pm" />
+            <Label>Title</Label>
+            <Input name="title" required placeholder="Practice moved to 6pm" />
           </div>
           <div>
-            <label className="label">Message</label>
-            <textarea name="body" required rows={4} className="input" placeholder="Write your message…" />
+            <Label>Message</Label>
+            <Textarea name="body" required rows={4} placeholder="Write your message…" />
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-navy-700">
             <input
@@ -77,12 +83,12 @@ export default function Announcer() {
         </div>
 
         <div className="mt-4 flex gap-2">
-          <button type="button" onClick={() => setOpen(false)} className="btn-ghost flex-1">
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">
             Cancel
-          </button>
-          <button disabled={saving} className="btn-primary flex-1">
+          </Button>
+          <Button disabled={saving} className="flex-1">
             {saving ? "Posting…" : "Post to team"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

@@ -1,6 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { userTeamId } from "@/lib/tenancy";
 import NavShell from "@/components/NavShell";
 import Avatar from "@/components/Avatar";
@@ -75,7 +77,7 @@ export default async function PlayerProfile({ params }) {
             <div className="flex items-center gap-2">
               <h1 className="truncate text-2xl font-black">{player.name}</h1>
               {player.jersey_number != null && (
-                <span className="chip bg-white/20 text-white">#{player.jersey_number}</span>
+                <Badge className="bg-white/20 text-white">#{player.jersey_number}</Badge>
               )}
             </div>
             <div className="mt-1 text-sm text-blue-100">{player.position || "Player"}</div>
@@ -93,147 +95,165 @@ export default async function PlayerProfile({ params }) {
       </div>
 
       {/* Season statistics (full names) */}
-      <section className="mt-4 card">
-        {isCoach(user) ? (
-          <CoachSeasonStats playerId={player.id} playerName={player.name} totals={totals} />
-        ) : (
-          <>
-            <h2 className="mb-3 font-bold text-navy-900">Season Statistics</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-              {STATS.map((s) => (
-                <div key={s.key} className="rounded-xl bg-navy-50 p-3 text-center">
-                  <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </section>
+      <Card className="mt-4">
+        <CardContent>
+          {isCoach(user) ? (
+            <CoachSeasonStats playerId={player.id} playerName={player.name} totals={totals} />
+          ) : (
+            <>
+              <h2 className="mb-3 font-bold text-navy-900">Season Statistics</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                {STATS.map((s) => (
+                  <div key={s.key} className="rounded-xl bg-navy-50 p-3 text-center">
+                    <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <section className="card">
-          <h2 className="mb-3 font-bold text-navy-900">Statistic Breakdown</h2>
-          <BarChart data={statBars} />
-        </section>
-        <section className="card">
-          <h2 className="mb-3 font-bold text-navy-900">Kills Trend (recent games)</h2>
-          {trend.length ? <LineChart points={trend} /> : <p className="text-sm text-navy-400">No games yet.</p>}
-        </section>
+        <Card>
+          <CardContent>
+            <h2 className="mb-3 font-bold text-navy-900">Statistic Breakdown</h2>
+            <BarChart data={statBars} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <h2 className="mb-3 font-bold text-navy-900">Kills Trend (recent games)</h2>
+            {trend.length ? <LineChart points={trend} /> : <p className="text-sm text-navy-400">No games yet.</p>}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Strengths + improvements — hidden from parents (may include wellness context) */}
       {!parentView && (
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <section className="card">
-          <h2 className="mb-2 font-bold text-emerald-700">💪 Strengths</h2>
-          <ul className="space-y-1.5 text-sm text-navy-700">
-            {strengths.map((s, i) => (
-              <li key={i} className="flex gap-2"><span>✓</span>{s}</li>
-            ))}
-          </ul>
-        </section>
-        <section className="card">
-          <h2 className="mb-2 font-bold text-blue-700">🎯 Areas for Improvement</h2>
-          <ul className="space-y-1.5 text-sm text-navy-700">
-            {improvements.map((s, i) => (
-              <li key={i} className="flex gap-2"><span>↗</span>{s}</li>
-            ))}
-          </ul>
-        </section>
+        <Card>
+          <CardContent>
+            <h2 className="mb-2 font-bold text-emerald-700">💪 Strengths</h2>
+            <ul className="space-y-1.5 text-sm text-navy-700">
+              {strengths.map((s, i) => (
+                <li key={i} className="flex gap-2"><span>✓</span>{s}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <h2 className="mb-2 font-bold text-blue-700">🎯 Areas for Improvement</h2>
+            <ul className="space-y-1.5 text-sm text-navy-700">
+              {improvements.map((s, i) => (
+                <li key={i} className="flex gap-2"><span>↗</span>{s}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       </div>
       )}
 
       {/* Recent game statistics */}
-      <section className="mt-4 card overflow-x-auto">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="font-bold text-navy-900">Recent Game Statistics</h2>
-          {isCoach(user) && games.length > 0 && (
-            <span className="text-xs text-navy-400">Tap Edit to update any game</span>
-          )}
-        </div>
-        {isCoach(user) ? (
-          <CoachPlayerStats player={player} games={games} />
-        ) : games.length === 0 ? (
-          <p className="text-sm text-navy-400">No games recorded yet.</p>
-        ) : (
-          <table className="w-full min-w-[520px] text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-navy-400">
-                <th className="py-2">Game</th>
-                {STATS.map((s) => (
-                  <th key={s.key} className="px-2 text-center">{s.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {games.map((g) => (
-                <tr key={g.id} className="border-t border-navy-100">
-                  <td className="py-2">
-                    <div className="font-medium text-navy-800">{g.opponent || g.title}</div>
-                    <div className="text-xs text-navy-400">{fmtDate(g.start_time)}</div>
-                  </td>
+      <Card className="mt-4 overflow-x-auto">
+        <CardContent>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="font-bold text-navy-900">Recent Game Statistics</h2>
+            {isCoach(user) && games.length > 0 && (
+              <span className="text-xs text-navy-400">Tap Edit to update any game</span>
+            )}
+          </div>
+          {isCoach(user) ? (
+            <CoachPlayerStats player={player} games={games} />
+          ) : games.length === 0 ? (
+            <p className="text-sm text-navy-400">No games recorded yet.</p>
+          ) : (
+            <table className="w-full min-w-[520px] text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-navy-400">
+                  <th className="py-2">Game</th>
                   {STATS.map((s) => (
-                    <td key={s.key} className="px-2 text-center text-navy-600">{g[s.key]}</td>
+                    <th key={s.key} className="px-2 text-center">{s.label}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+              </thead>
+              <tbody>
+                {games.map((g) => (
+                  <tr key={g.id} className="border-t border-navy-100">
+                    <td className="py-2">
+                      <div className="font-medium text-navy-800">{g.opponent || g.title}</div>
+                      <div className="text-xs text-navy-400">{fmtDate(g.start_time)}</div>
+                    </td>
+                    {STATS.map((s) => (
+                      <td key={s.key} className="px-2 text-center text-navy-600">{g[s.key]}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Wellness + injury history — coaches and players only */}
       {!parentView && (
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <section className="card">
-          <h2 className="mb-3 font-bold text-navy-900">Wellness History</h2>
-          {wellnessNotes.map((note, i) => (
-            <p key={i} className="mb-3 text-sm text-navy-600">{note}</p>
-          ))}
-          {wHistory.length === 0 ? (
-            <p className="text-sm text-navy-400">No check-ins yet.</p>
-          ) : (
-            <div className="space-y-1.5">
-              {wHistory.map((w) => (
-                <div key={w.date} className="flex items-center gap-2 rounded-lg bg-navy-50/60 px-3 py-1.5 text-xs">
-                  <span className="w-20 font-medium text-navy-600">{w.date}</span>
-                  <span className="text-navy-500">Energy {w.energy} · Soreness {w.soreness} · Mood {w.mood}</span>
-                  {w.injury ? <span className="ml-auto chip bg-blue-100 text-blue-700">injury</span> : null}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-        <section className="card">
-          <h2 className="mb-3 font-bold text-navy-900">Injury History</h2>
-          {injuryNote && <p className="mb-3 text-sm text-navy-600">{injuryNote}</p>}
-          {injuries.length === 0 ? (
-            <p className="text-sm text-emerald-700">✓ No injuries reported.</p>
-          ) : (
-            <div className="space-y-2">
-              {injuries.map((inj, i) => (
-                <div key={i} className="rounded-lg bg-blue-50 px-3 py-2 text-sm ring-1 ring-blue-100">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-blue-700">{inj.areas || "Injury"}</span>
-                    <span className="ml-auto text-xs text-navy-400">{inj.date}</span>
+        <Card>
+          <CardContent>
+            <h2 className="mb-3 font-bold text-navy-900">Wellness History</h2>
+            {wellnessNotes.map((note, i) => (
+              <p key={i} className="mb-3 text-sm text-navy-600">{note}</p>
+            ))}
+            {wHistory.length === 0 ? (
+              <p className="text-sm text-navy-400">No check-ins yet.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {wHistory.map((w) => (
+                  <div key={w.date} className="flex items-center gap-2 rounded-lg bg-navy-50/60 px-3 py-1.5 text-xs">
+                    <span className="w-20 font-medium text-navy-600">{w.date}</span>
+                    <span className="text-navy-500">Energy {w.energy} · Soreness {w.soreness} · Mood {w.mood}</span>
+                    {w.injury ? <Badge className="ml-auto bg-blue-100 text-blue-700">injury</Badge> : null}
                   </div>
-                  {inj.note && <p className="mt-0.5 text-xs text-navy-600">{inj.note}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <h2 className="mb-3 font-bold text-navy-900">Injury History</h2>
+            {injuryNote && <p className="mb-3 text-sm text-navy-600">{injuryNote}</p>}
+            {injuries.length === 0 ? (
+              <p className="text-sm text-emerald-700">✓ No injuries reported.</p>
+            ) : (
+              <div className="space-y-2">
+                {injuries.map((inj, i) => (
+                  <div key={i} className="rounded-lg bg-blue-50 px-3 py-2 text-sm ring-1 ring-blue-100">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-blue-700">{inj.areas || "Injury"}</span>
+                      <span className="ml-auto text-xs text-navy-400">{inj.date}</span>
+                    </div>
+                    {inj.note && <p className="mt-0.5 text-xs text-navy-600">{inj.note}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
       )}
 
       {/* Coach notes — coaches and players only */}
       {!parentView && (
-      <section className="mt-4 card">
-        <h2 className="mb-3 font-bold text-navy-900">📋 Coach Notes</h2>
-        <CoachNotes playerId={player.id} notes={notes} canEdit={isCoach(user)} />
-      </section>
+      <Card className="mt-4">
+        <CardContent>
+          <h2 className="mb-3 font-bold text-navy-900">📋 Coach Notes</h2>
+          <CoachNotes playerId={player.id} notes={notes} canEdit={isCoach(user)} />
+        </CardContent>
+      </Card>
       )}
     </NavShell>
   );
@@ -241,22 +261,26 @@ export default async function PlayerProfile({ params }) {
 
 function Metric({ label, value }) {
   return (
-    <div className="card text-center">
-      <div className="text-2xl font-extrabold text-navy-900">{value}</div>
-      <div className="text-xs font-medium uppercase tracking-wide text-navy-400">{label}</div>
-    </div>
+    <Card>
+      <CardContent className="text-center">
+        <div className="text-2xl font-extrabold text-navy-900">{value}</div>
+        <div className="text-xs font-medium uppercase tracking-wide text-navy-400">{label}</div>
+      </CardContent>
+    </Card>
   );
 }
 
 function MetricRing({ label, value, color, suffix = "" }) {
   return (
-    <div className="card flex flex-col items-center justify-center">
-      {value == null ? (
-        <div className="text-sm text-navy-400">No data</div>
-      ) : (
-        <Ring value={value} color={color} size={60} label={`${value}${suffix}`} />
-      )}
-      <div className="mt-1 text-xs font-medium uppercase tracking-wide text-navy-400">{label}</div>
-    </div>
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center">
+        {value == null ? (
+          <div className="text-sm text-navy-400">No data</div>
+        ) : (
+          <Ring value={value} color={color} size={60} label={`${value}${suffix}`} />
+        )}
+        <div className="mt-1 text-xs font-medium uppercase tracking-wide text-navy-400">{label}</div>
+      </CardContent>
+    </Card>
   );
 }

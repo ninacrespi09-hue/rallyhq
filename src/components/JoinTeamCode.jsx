@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function JoinTeamCode({ joinRole = "player" }) {
   const router = useRouter();
@@ -32,14 +35,13 @@ export default function JoinTeamCode({ joinRole = "player" }) {
           : "Enter your team code from your coach, or use their invite link."}
       </p>
       <div className="mt-3">
-        <label className="label">Enter team code</label>
-        <input
+        <Label>Enter team code</Label>
+        <Input
           value={code}
           onChange={(e) => {
             setCode(e.target.value);
             if (error) setError("");
           }}
-          className="input"
           placeholder="e.g. WOLVES2025"
           style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
         />
@@ -47,9 +49,9 @@ export default function JoinTeamCode({ joinRole = "player" }) {
       {error && (
         <div className="mt-2 rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-900">{error}</div>
       )}
-      <button type="submit" className="btn-primary mt-3 w-full">
+      <Button type="submit" className="mt-3 w-full">
         {isParent ? "Join as parent" : "Join team"}
-      </button>
+      </Button>
     </form>
   );
 }

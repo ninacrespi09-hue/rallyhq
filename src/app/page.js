@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { Badge } from "@/components/ui/badge";
 import NavShell from "@/components/NavShell";
 import TeamCodeBadge from "@/components/TeamCodeBadge";
 import { upcomingEvents, teamWellness, todaysCheckin } from "@/lib/queries";
@@ -163,25 +164,22 @@ export default async function Landing() {
 
           <div className="mt-5 flex flex-wrap gap-2">
             {nextEvent && (
-              <Link
-                href={`/schedule/${nextEvent.id}`}
-                className="chip bg-white/80 text-navy-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white"
-              >
-                <span className={`mr-1.5 h-2 w-2 rounded-full ${getEventStyle(nextEvent.type).dot}`} />
-                Next: {nextEvent.title} · {fmtDate(nextEvent.start_time)}
+              <Link href={`/schedule/${nextEvent.id}`}>
+                <Badge className="cursor-pointer bg-white/80 text-navy-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white">
+                  <span className={`mr-1.5 h-2 w-2 rounded-full ${getEventStyle(nextEvent.type).dot}`} />
+                  Next: {nextEvent.title} · {fmtDate(nextEvent.start_time)}
+                </Badge>
               </Link>
             )}
-            <Link
-              href="/schedule"
-              className="chip bg-white/70 text-blue-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white"
-            >
-              📅 Full schedule
+            <Link href="/schedule">
+              <Badge className="cursor-pointer bg-white/70 text-blue-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white">
+                📅 Full schedule
+              </Badge>
             </Link>
-            <Link
-              href="/schedule?view=upcoming"
-              className="chip bg-white/70 text-blue-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white"
-            >
-              ⏭️ Upcoming
+            <Link href="/schedule?view=upcoming">
+              <Badge className="cursor-pointer bg-white/70 text-blue-700 ring-1 ring-blue-200 backdrop-blur transition hover:bg-white">
+                ⏭️ Upcoming
+              </Badge>
             </Link>
           </div>
         </div>

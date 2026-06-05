@@ -3,6 +3,20 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getEventStyle } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SCAN_TIMEOUT_MS = 45000;
 
@@ -183,198 +197,208 @@ export default function ScheduleUpload({ compact = false }) {
       />
 
       {compact ? (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => fileRef.current?.click()}
           disabled={scanning}
-          className="btn-ghost ring-1 ring-navy-100"
         >
           {scanning ? "Scanning…" : "Upload schedule"}
-        </button>
+        </Button>
       ) : (
-        <section className="card">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="font-bold text-navy-900">Upload Schedule Photo</h2>
-              <p className="mt-1 text-sm text-navy-500">
-                Upload a photo of your schedule and RallyHQ will help fill in upcoming events automatically.
-              </p>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="font-bold text-navy-900">Upload Schedule Photo</h2>
+                <p className="mt-1 text-sm text-navy-500">
+                  Upload a photo of your schedule and RallyHQ will help fill in upcoming events automatically.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <Button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={scanning}
+                  className="w-full sm:w-auto"
+                >
+                  {scanning ? "Scanning…" : "Upload Schedule Photo"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={openManual}
+                  className="h-auto p-0 text-xs font-semibold text-brand-600"
+                >
+                  Enter events manually instead
+                </Button>
+              </div>
             </div>
-            <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={scanning}
-                className="btn-primary w-full sm:w-auto"
-              >
-                {scanning ? "Scanning…" : "Upload Schedule Photo"}
-              </button>
-              <button type="button" onClick={openManual} className="text-xs font-semibold text-brand-600">
-                Enter events manually instead
-              </button>
-            </div>
-          </div>
 
-          {info && !open && <p className="mt-3 text-sm text-emerald-700">{info}</p>}
-          {error && !open && <p className="mt-3 text-sm text-blue-700">{error}</p>}
-        </section>
+            {info && !open && <p className="mt-3 text-sm text-emerald-700">{info}</p>}
+            {error && !open && <p className="mt-3 text-sm text-blue-700">{error}</p>}
+          </CardContent>
+        </Card>
       )}
 
       {info && compact && !open && <span className="sr-only">{info}</span>}
 
-      {open && (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
-          <div className="flex max-h-[92vh] w-full max-w-2xl flex-col rounded-t-3xl bg-white md:rounded-2xl">
-            <div className="border-b border-navy-50 p-5">
-              <h3 className="text-lg font-bold text-navy-900">Review schedule</h3>
-              <p className="mt-1 text-sm text-navy-400">
-                {previewName ? `From ${previewName}. ` : ""}
-                {info}
-                {source === "mock" && (
-                  <span className="block text-xs text-navy-400">Using sample data — edit before saving.</span>
-                )}
-              </p>
-            </div>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="bottom" className="flex max-h-[92vh] flex-col gap-0 p-0 md:left-1/2 md:top-1/2 md:max-w-2xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:border">
+          <SheetHeader className="border-b border-navy-50 p-5 text-left">
+            <SheetTitle>Review schedule</SheetTitle>
+            <SheetDescription>
+              {previewName ? `From ${previewName}. ` : ""}
+              {info}
+              {source === "mock" && (
+                <span className="block text-xs text-navy-400">Using sample data — edit before saving.</span>
+              )}
+            </SheetDescription>
+          </SheetHeader>
 
-            <div className="flex-1 space-y-3 overflow-y-auto p-5">
+          <ScrollArea className="flex-1 p-5">
+            <div className="space-y-3 pr-3">
               {events.map((ev, index) => {
                 const s = getEventStyle(ev.type);
                 const typeLabel = SCHEDULE_EVENT_TYPES.find((t) => t.key === ev.type)?.label || s.label;
                 return (
-                  <div
+                  <Card
                     key={ev.key}
-                    className={`card space-y-3 ${ev.included ? s.ring : "opacity-60"} ${ev.included ? s.bg : ""}`}
+                    className={`space-y-3 ${ev.included ? s.ring : "opacity-60"} ${ev.included ? s.bg : ""}`}
                   >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={ev.included}
-                        onChange={(e) => updateEvent(index, { included: e.target.checked })}
-                        className="h-4 w-4 rounded accent-brand-600"
-                      />
-                      <span className={`chip ${s.chip}`}>{typeLabel}</span>
-                      {events.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeEvent(index)}
-                          className="ml-auto text-xs font-semibold text-navy-400 hover:text-blue-600"
+                    <CardContent className="space-y-3 p-4">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={ev.included}
+                          onChange={(e) => updateEvent(index, { included: e.target.checked })}
+                          className="h-4 w-4 rounded accent-brand-600"
+                        />
+                        <span className={`chip ${s.chip}`}>{typeLabel}</span>
+                        {events.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="link"
+                            onClick={() => removeEvent(index)}
+                            className="ml-auto h-auto p-0 text-xs font-semibold text-navy-400 hover:text-blue-600"
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label>Type</Label>
+                        <select
+                          value={ev.type}
+                          onChange={(e) => updateEvent(index, { type: e.target.value })}
+                          className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
                         >
-                          Remove
-                        </button>
+                          {SCHEDULE_EVENT_TYPES.map((t) => (
+                            <option key={t.key} value={t.key}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <Label>Title</Label>
+                        <Input
+                          value={ev.title}
+                          onChange={(e) => updateEvent(index, { title: e.target.value })}
+                          className="mt-1.5"
+                          placeholder="Team Practice"
+                        />
+                      </div>
+
+                      {(ev.type === "game" || ev.type === "tournament") && (
+                        <div>
+                          <Label>Opponent</Label>
+                          <Input
+                            value={ev.opponent}
+                            onChange={(e) => updateEvent(index, { opponent: e.target.value })}
+                            className="mt-1.5"
+                            placeholder="Lincoln High"
+                          />
+                        </div>
                       )}
-                    </div>
 
-                    <div>
-                      <label className="label">Type</label>
-                      <select
-                        value={ev.type}
-                        onChange={(e) => updateEvent(index, { type: e.target.value })}
-                        className="input"
-                      >
-                        {SCHEDULE_EVENT_TYPES.map((t) => (
-                          <option key={t.key} value={t.key}>
-                            {t.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label>Date</Label>
+                          <Input
+                            type="date"
+                            value={ev.date}
+                            onChange={(e) => updateEvent(index, { date: e.target.value })}
+                            className="mt-1.5"
+                          />
+                        </div>
+                        <div>
+                          <Label>Location</Label>
+                          <Input
+                            value={ev.location}
+                            onChange={(e) => updateEvent(index, { location: e.target.value })}
+                            className="mt-1.5"
+                            placeholder="Main Gym"
+                          />
+                        </div>
+                      </div>
 
-                    <div>
-                      <label className="label">Title</label>
-                      <input
-                        value={ev.title}
-                        onChange={(e) => updateEvent(index, { title: e.target.value })}
-                        className="input"
-                        placeholder="Team Practice"
-                      />
-                    </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label>Start</Label>
+                          <Input
+                            type="time"
+                            value={ev.start_time}
+                            onChange={(e) => updateEvent(index, { start_time: e.target.value })}
+                            className="mt-1.5"
+                          />
+                        </div>
+                        <div>
+                          <Label>End</Label>
+                          <Input
+                            type="time"
+                            value={ev.end_time}
+                            onChange={(e) => updateEvent(index, { end_time: e.target.value })}
+                            className="mt-1.5"
+                          />
+                        </div>
+                      </div>
 
-                    {(ev.type === "game" || ev.type === "tournament") && (
                       <div>
-                        <label className="label">Opponent</label>
-                        <input
-                          value={ev.opponent}
-                          onChange={(e) => updateEvent(index, { opponent: e.target.value })}
-                          className="input"
-                          placeholder="Lincoln High"
+                        <Label>Notes</Label>
+                        <Textarea
+                          value={ev.notes}
+                          onChange={(e) => updateEvent(index, { notes: e.target.value })}
+                          rows={2}
+                          className="mt-1.5"
+                          placeholder="Optional details"
                         />
                       </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="label">Date</label>
-                        <input
-                          type="date"
-                          value={ev.date}
-                          onChange={(e) => updateEvent(index, { date: e.target.value })}
-                          className="input"
-                        />
-                      </div>
-                      <div>
-                        <label className="label">Location</label>
-                        <input
-                          value={ev.location}
-                          onChange={(e) => updateEvent(index, { location: e.target.value })}
-                          className="input"
-                          placeholder="Main Gym"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="label">Start</label>
-                        <input
-                          type="time"
-                          value={ev.start_time}
-                          onChange={(e) => updateEvent(index, { start_time: e.target.value })}
-                          className="input"
-                        />
-                      </div>
-                      <div>
-                        <label className="label">End</label>
-                        <input
-                          type="time"
-                          value={ev.end_time}
-                          onChange={(e) => updateEvent(index, { end_time: e.target.value })}
-                          className="input"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="label">Notes</label>
-                      <textarea
-                        value={ev.notes}
-                        onChange={(e) => updateEvent(index, { notes: e.target.value })}
-                        rows={2}
-                        className="input"
-                        placeholder="Optional details"
-                      />
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
 
-              <button type="button" onClick={addEvent} className="btn-ghost w-full text-sm">
+              <Button type="button" variant="ghost" onClick={addEvent} className="w-full text-sm">
                 + Add another event
-              </button>
+              </Button>
             </div>
+          </ScrollArea>
 
-            {error && <p className="px-5 pb-2 text-sm text-blue-700">{error}</p>}
+          {error && <p className="px-5 pb-2 text-sm text-blue-700">{error}</p>}
 
-            <div className="flex gap-2 border-t border-navy-50 p-5">
-              <button type="button" onClick={() => setOpen(false)} className="btn-ghost flex-1">
-                Cancel
-              </button>
-              <button type="button" onClick={saveEvents} disabled={saving} className="btn-primary flex-1">
-                {saving ? "Saving…" : "Save to schedule"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          <SheetFooter className="flex-row gap-2 border-t border-navy-50 p-5">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="button" onClick={saveEvents} disabled={saving} className="flex-1">
+              {saving ? "Saving…" : "Save to schedule"}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

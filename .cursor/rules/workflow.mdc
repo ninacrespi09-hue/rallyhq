@@ -1,0 +1,18 @@
+# RallyHQ workflow
+
+**Branch strategy:** Work directly on `main`. No feature branches unless explicitly requested for a large isolated experiment.
+
+- Commit and push to `main` regularly.
+- `design-fixed-before-schedule-upload` and other design backup branches are archived — do not treat them as the source of truth.
+
+## UI stack
+
+- **shadcn/ui** for primitives (`src/components/ui/`)
+- **TanStack Query** for client-side data fetching and mutations
+- **TanStack Table** for data tables
+- **Tailwind CSS** for styling — fully allowed and encouraged
+- Preserve RallyHQ's blue/navy baby-blue look via theme tokens in `globals.css`
+
+## Before editing
+
+List files you plan to modify. Backend-only changes need no special approval.

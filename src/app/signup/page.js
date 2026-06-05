@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import JoinTeamCode from "@/components/JoinTeamCode";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default async function SignupPage() {
   const user = await getCurrentUser();
@@ -14,28 +16,30 @@ export default async function SignupPage() {
         <span className="text-2xl font-extrabold tracking-tight text-navy-900">RallyHQ</span>
       </div>
 
-      <div className="w-full max-w-sm card text-center">
-        <h1 className="text-lg font-bold text-navy-900">Join RallyHQ</h1>
-        <p className="mt-2 text-sm text-navy-500">
-          Players and parents join with a team code. Coaches create their own separate team.
-        </p>
+      <Card className="w-full max-w-sm">
+        <CardContent className="text-center">
+          <h1 className="text-lg font-bold text-navy-900">Join RallyHQ</h1>
+          <p className="mt-2 text-sm text-navy-500">
+            Players and parents join with a team code. Coaches create their own separate team.
+          </p>
 
-        <div className="mt-6 space-y-3 text-left">
-          <JoinTeamCode joinRole="player" />
-          <JoinTeamCode joinRole="parent" />
+          <div className="mt-6 space-y-3 text-left">
+            <JoinTeamCode joinRole="player" />
+            <JoinTeamCode joinRole="parent" />
 
-          <Link href="/signup/coach" className="btn-primary block w-full text-center">
-            🏆 I&apos;m a coach — create my team
-          </Link>
-        </div>
+            <Button asChild className="w-full">
+              <Link href="/signup/coach">🏆 I&apos;m a coach — create my team</Link>
+            </Button>
+          </div>
 
-        <p className="mt-5 text-sm text-navy-500">
-          Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-blue-700">
-            Sign in
-          </Link>
-        </p>
-      </div>
+          <p className="mt-5 text-sm text-navy-500">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-blue-700">
+              Sign in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

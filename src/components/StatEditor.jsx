@@ -2,6 +2,17 @@
 
 import { useState } from "react";
 import { STATS } from "@/lib/statDefs";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useApiMutation } from "@/hooks/use-api";
 
 export default function StatEditor({ eventId, playerName, playerId, existing, onClose, onSaved }) {
   const [vals, setVals] = useState(() => {
@@ -9,61 +20,59 @@ export default function StatEditor({ eventId, playerName, playerId, existing, on
     STATS.forEach((c) => (v[c.key] = existing?.[c.key] ?? 0));
     return v;
   });
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  async function save() {
-    setSaving(true);
+  const mutation = useApiMutation({ url: `/api/events/${eventId}/stats` });
+
+  function save() {
     setError("");
-    const res = await fetch(`/api/events/${eventId}/stats`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    mutation.mutate(
+      {
         user_id: playerId,
         ...vals,
         assists: existing?.assists ?? 0,
         errors: existing?.errors ?? 0,
         service_receptions: existing?.service_receptions ?? 0,
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setSaving(false);
-    if (!res.ok) {
-      setError(data.error || "Could not save stats.");
-      return;
-    }
-    onSaved();
+      },
+      {
+        onSuccess: () => onSaved(),
+        onError: (err) => {
+          setError(err.message || "Could not save stats.");
+        },
+      }
+    );
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
-      <div className="w-full max-w-md rounded-t-3xl bg-white p-5 md:rounded-2xl">
-        <h3 className="text-lg font-bold text-navy-900">{playerName}</h3>
-        <p className="mb-4 text-sm text-navy-400">Record stats for this game</p>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md gap-0 p-5">
+        <DialogHeader>
+          <DialogTitle>{playerName}</DialogTitle>
+          <DialogDescription>Record stats for this game</DialogDescription>
+        </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           {STATS.map((c) => (
             <div key={c.key}>
-              <label className="label">{c.label}</label>
-              <input
+              <Label>{c.label}</Label>
+              <Input
                 type="number"
                 min="0"
                 value={vals[c.key]}
                 onChange={(e) => setVals((v) => ({ ...v, [c.key]: e.target.value }))}
-                className="input"
               />
             </div>
           ))}
         </div>
         {error && <p className="mt-3 text-sm text-blue-700">{error}</p>}
         <div className="mt-4 flex gap-2">
-          <button onClick={onClose} className="btn-ghost flex-1">
+          <Button variant="ghost" onClick={onClose} className="flex-1">
             Cancel
-          </button>
-          <button onClick={save} disabled={saving} className="btn-primary flex-1">
-            {saving ? "Saving…" : "Save stats"}
-          </button>
+          </Button>
+          <Button onClick={save} disabled={mutation.isPending} className="flex-1">
+            {mutation.isPending ? "Saving…" : "Save stats"}
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,9 +1,23 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { canUploadMedia } from "@/lib/permissions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { apiFetch } from "@/hooks/use-api";
 
-// Action moments — these are the gallery's four tabs.
 const MOMENTS = ["Serving", "Setting", "Hitting", "Digging"];
 const TAB_META = {
   Serving: { icon: "🏐", gradient: "from-sky-400 to-blue-600" },
@@ -34,6 +48,19 @@ export default function Gallery({ user, media, events }) {
     [items, tab]
   );
 
+  const likeMutation = useMutation({
+    mutationFn: (id) => apiFetch(`/api/media/${id}/like`, { method: "POST" }),
+  });
+
+  const patchMutation = useMutation({
+    mutationFn: ({ id, body }) =>
+      apiFetch(`/api/media/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => apiFetch(`/api/media/${id}`, { method: "DELETE" }),
+  });
+
   function flash(msg) {
     setToast(msg);
     setTimeout(() => setToast(""), 2000);
@@ -47,39 +74,43 @@ export default function Gallery({ user, media, events }) {
   async function toggleLike(item) {
     const optimistic = { liked: item.liked ? 0 : 1, like_count: item.like_count + (item.liked ? -1 : 1) };
     patchItem(item.id, optimistic);
-    const res = await fetch(`/api/media/${item.id}/like`, { method: "POST" });
-    if (res.ok) {
-      const d = await res.json();
+    try {
+      const d = await likeMutation.mutateAsync(item.id);
       patchItem(item.id, { liked: d.liked ? 1 : 0, like_count: d.count });
+    } catch {
+      patchItem(item.id, { liked: item.liked, like_count: item.like_count });
     }
   }
 
   async function toggleFavorite(item) {
     const fav = item.favorite ? 0 : 1;
     patchItem(item.id, { favorite: fav });
-    await fetch(`/api/media/${item.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ favorite: fav }),
-    });
+    try {
+      await patchMutation.mutateAsync({ id: item.id, body: { favorite: fav } });
+    } catch {
+      patchItem(item.id, { favorite: item.favorite });
+    }
   }
 
   async function remove(item) {
     setItems((cur) => cur.filter((m) => m.id !== item.id));
     setLightbox(null);
-    await fetch(`/api/media/${item.id}`, { method: "DELETE" });
-    flash("Photo removed");
+    try {
+      await deleteMutation.mutateAsync(item.id);
+      flash("Photo removed");
+    } catch {
+      setItems((cur) => [...cur, item]);
+    }
   }
 
   function onUploaded(newItem) {
-    setItems((cur) => [newItem, ...cur]); // newest first
+    setItems((cur) => [newItem, ...cur]);
     setUploadOpen(false);
     flash("Photo added to the reel 🎉");
   }
 
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-soft sm:p-8">
         <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
         <div className="relative flex items-center justify-between gap-4">
@@ -94,17 +125,16 @@ export default function Gallery({ user, media, events }) {
             </p>
           </div>
           {canUpload && (
-          <button
-            onClick={() => setUploadOpen(true)}
-            className="btn shrink-0 bg-white text-blue-700 shadow-sm hover:bg-blue-50"
-          >
-            <CameraIcon className="h-4 w-4" /> Upload
-          </button>
+            <Button
+              onClick={() => setUploadOpen(true)}
+              className="shrink-0 bg-white text-blue-700 shadow-sm hover:bg-blue-50"
+            >
+              <CameraIcon className="h-4 w-4" /> Upload
+            </Button>
           )}
         </div>
       </section>
 
-      {/* Tab bubbles — same size and style as the homepage navigation cards */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {MOMENTS.map((m) => {
           const count = countsByMoment[m];
@@ -132,20 +162,21 @@ export default function Gallery({ user, media, events }) {
         })}
       </div>
 
-      {/* Photos — only shown after a bubble is tapped */}
       <div className="mt-4">
         {!tab ? null : filtered.length === 0 ? (
-          <div className="card text-center text-sm text-navy-400">
-            No {tab.toLowerCase()} shots yet.
-            {canUpload ? (
-              <>
-                {" "}
-                Tap <b className="text-navy-600">Upload</b> to add one!
-              </>
-            ) : (
-              " Check back after the next game."
-            )}
-          </div>
+          <Card>
+            <CardContent className="p-5 text-center text-sm text-navy-400">
+              No {tab.toLowerCase()} shots yet.
+              {canUpload ? (
+                <>
+                  {" "}
+                  Tap <b className="text-navy-600">Upload</b> to add one!
+                </>
+              ) : (
+                " Check back after the next game."
+              )}
+            </CardContent>
+          </Card>
         ) : (
           <div className="columns-2 gap-3 sm:columns-3 lg:columns-4 [column-fill:_balance]">
             {filtered.map((m, i) => (
@@ -162,20 +193,23 @@ export default function Gallery({ user, media, events }) {
         )}
       </div>
 
-      {lightbox && (
-        <Lightbox
-          item={lightbox}
-          canDelete={user.role === "coach" || lightbox.uploaded_by === user.id}
-          onClose={() => setLightbox(null)}
-          onLike={() => toggleLike(lightbox)}
-          onFav={() => toggleFavorite(lightbox)}
-          onDelete={() => remove(lightbox)}
-        />
-      )}
+      <Lightbox
+        item={lightbox}
+        open={!!lightbox}
+        onOpenChange={(open) => !open && setLightbox(null)}
+        canDelete={lightbox && (user.role === "coach" || lightbox.uploaded_by === user.id)}
+        onLike={() => lightbox && toggleLike(lightbox)}
+        onFav={() => lightbox && toggleFavorite(lightbox)}
+        onDelete={() => lightbox && remove(lightbox)}
+      />
 
-      {uploadOpen && (
-        <Uploader user={user} events={events} onClose={() => setUploadOpen(false)} onUploaded={onUploaded} />
-      )}
+      <Uploader
+        user={user}
+        events={events}
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onUploaded={onUploaded}
+      />
 
       {toast && (
         <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-navy-900 px-4 py-2 text-sm font-medium text-white shadow-glow md:bottom-8">
@@ -230,56 +264,51 @@ function MediaCard({ m, index, onOpen, onLike, onFav }) {
   );
 }
 
-function Lightbox({ item, canDelete, onClose, onLike, onFav, onDelete }) {
+function Lightbox({ item, open, onOpenChange, canDelete, onLike, onFav, onDelete }) {
+  if (!item) return null;
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div className="relative flex max-h-[95vh] w-full max-w-4xl flex-col" onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className="absolute right-2 top-2 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/50 text-white hover:bg-black/70"
-        >
-          ✕
-        </button>
-        <img
-          src={item.url}
-          alt={item.caption || "Action shot"}
-          decoding="async"
-          className="mx-auto max-h-[78vh] w-auto rounded-2xl object-contain"
-        />
-        <div className="mt-3 rounded-2xl bg-white p-4">
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              {item.caption && <h3 className="truncate font-bold text-navy-900">{item.caption}</h3>}
-              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-navy-400">
-                {item.category && item.category !== "Action" && (
-                  <span className="chip bg-blue-50 text-blue-700">{item.category}</span>
-                )}
-                {item.event_title && <span>{item.event_title}</span>}
-                {item.uploader_name && <span>· by {item.uploader_name}</span>}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl border-0 bg-transparent p-3 shadow-none">
+        <div className="relative flex max-h-[95vh] w-full flex-col">
+          <img
+            src={item.url}
+            alt={item.caption || "Action shot"}
+            decoding="async"
+            className="mx-auto max-h-[78vh] w-auto rounded-2xl object-contain"
+          />
+          <Card className="mt-3">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="min-w-0 flex-1">
+                {item.caption && <h3 className="truncate font-bold text-navy-900">{item.caption}</h3>}
+                <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-navy-400">
+                  {item.category && item.category !== "Action" && (
+                    <Badge className="bg-blue-50 text-blue-700">{item.category}</Badge>
+                  )}
+                  {item.event_title && <span>{item.event_title}</span>}
+                  {item.uploader_name && <span>· by {item.uploader_name}</span>}
+                </div>
               </div>
-            </div>
-            <button onClick={onLike} className="btn-ghost">
-              {item.liked ? "❤️" : "🤍"} {item.like_count}
-            </button>
-            <button onClick={onFav} className="btn-ghost">
-              {item.favorite ? "⭐" : "☆"}
-            </button>
-            {canDelete && (
-              <button onClick={onDelete} className="btn bg-blue-50 text-blue-600 hover:bg-blue-100">
-                🗑
-              </button>
-            )}
-          </div>
+              <Button variant="ghost" onClick={onLike}>
+                {item.liked ? "❤️" : "🤍"} {item.like_count}
+              </Button>
+              <Button variant="ghost" onClick={onFav}>
+                {item.favorite ? "⭐" : "☆"}
+              </Button>
+              {canDelete && (
+                <Button variant="soft" onClick={onDelete}>
+                  🗑
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function Uploader({ user, events, onClose, onUploaded }) {
+function Uploader({ user, events, open, onOpenChange, onUploaded }) {
   const fileRef = useRef(null);
   const [preview, setPreview] = useState("");
   const [ratio, setRatio] = useState(1);
@@ -287,8 +316,19 @@ function Uploader({ user, events, onClose, onUploaded }) {
   const [moment, setMoment] = useState("Serving");
   const [eventId, setEventId] = useState("");
   const [favorite, setFavorite] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const uploadMutation = useMutation({
+    mutationFn: async (fd) => {
+      const res = await fetch("/api/media", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        const err = new Error(data.error || "Upload failed.");
+        throw err;
+      }
+      return data;
+    },
+  });
 
   function onPick(e) {
     const f = e.target.files?.[0];
@@ -303,7 +343,6 @@ function Uploader({ user, events, onClose, onUploaded }) {
   async function submit() {
     const file = fileRef.current?.files?.[0];
     if (!file) return setError("Please choose a photo.");
-    setSaving(true);
     setError("");
 
     const fd = new FormData();
@@ -314,40 +353,42 @@ function Uploader({ user, events, onClose, onUploaded }) {
     fd.append("ratio", String(ratio));
     if (eventId) fd.append("event_id", eventId);
 
-    const res = await fetch("/api/media", { method: "POST", body: fd });
-    const data = await res.json();
-    setSaving(false);
-    if (!res.ok) return setError(data.error || "Upload failed.");
-
-    const ev = events.find((x) => String(x.id) === String(eventId));
-    onUploaded({
-      id: data.id,
-      url: data.url,
-      caption,
-      category: moment,
-      favorite: favorite ? 1 : 0,
-      event_id: eventId ? Number(eventId) : null,
-      event_title: ev?.title || null,
-      event_type: ev?.type || null,
-      uploaded_by: user.id,
-      uploader_role: user.role,
-      uploader_name: user.name,
-      like_count: 0,
-      liked: 0,
-      ratio,
-    });
+    try {
+      const data = await uploadMutation.mutateAsync(fd);
+      const ev = events.find((x) => String(x.id) === String(eventId));
+      onUploaded({
+        id: data.id,
+        url: data.url,
+        caption,
+        category: moment,
+        favorite: favorite ? 1 : 0,
+        event_id: eventId ? Number(eventId) : null,
+        event_title: ev?.title || null,
+        event_type: ev?.type || null,
+        uploaded_by: user.id,
+        uploader_role: user.role,
+        uploader_name: user.name,
+        like_count: 0,
+        liked: 0,
+        ratio,
+      });
+    } catch (err) {
+      setError(err.message || "Upload failed.");
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-4">
-      <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 md:rounded-2xl">
-        <h2 className="text-lg font-bold text-navy-900">Upload action shot</h2>
-        <p className="mt-0.5 text-xs text-navy-400">Game &amp; tournament highlights only 🏐</p>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Upload action shot</DialogTitle>
+          <DialogDescription>Game &amp; tournament highlights only 🏐</DialogDescription>
+        </DialogHeader>
 
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="mt-3 flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 text-blue-600"
+          className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 text-blue-600"
         >
           {preview ? (
             <img src={preview} alt="preview" className="h-full w-full object-cover" />
@@ -359,23 +400,36 @@ function Uploader({ user, events, onClose, onUploaded }) {
         </button>
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPick} />
 
-        <div className="mt-3 space-y-3">
+        <div className="space-y-3">
           <div>
-            <label className="label">Caption</label>
-            <input value={caption} onChange={(e) => setCaption(e.target.value)} className="input" placeholder="Cross-court kill on set point 🔥" />
+            <Label>Caption</Label>
+            <Input
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              className="mt-1.5"
+              placeholder="Cross-court kill on set point 🔥"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Moment</label>
-              <select value={moment} onChange={(e) => setMoment(e.target.value)} className="input">
+              <Label>Moment</Label>
+              <select
+                value={moment}
+                onChange={(e) => setMoment(e.target.value)}
+                className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+              >
                 {MOMENTS.map((m) => (
                   <option key={m}>{m}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="label">Game / Tournament</label>
-              <select value={eventId} onChange={(e) => setEventId(e.target.value)} className="input">
+              <Label>Game / Tournament</Label>
+              <select
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value)}
+                className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+              >
                 <option value="">None</option>
                 {events.map((ev) => (
                   <option key={ev.id} value={ev.id}>
@@ -386,23 +440,28 @@ function Uploader({ user, events, onClose, onUploaded }) {
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-navy-700">
-            <input type="checkbox" checked={favorite} onChange={(e) => setFavorite(e.target.checked)} className="h-4 w-4 rounded accent-brand-600" />
+            <input
+              type="checkbox"
+              checked={favorite}
+              onChange={(e) => setFavorite(e.target.checked)}
+              className="h-4 w-4 rounded accent-brand-600"
+            />
             ⭐ Mark as favorite
           </label>
         </div>
 
-        {error && <p className="mt-2 text-sm text-blue-600">{error}</p>}
+        {error && <p className="text-sm text-blue-600">{error}</p>}
 
-        <div className="mt-4 flex gap-2">
-          <button onClick={onClose} className="btn-ghost flex-1">
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">
             Cancel
-          </button>
-          <button onClick={submit} disabled={saving} className="btn-primary flex-1">
-            {saving ? "Uploading…" : "Upload"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+          <Button onClick={submit} disabled={uploadMutation.isPending} className="flex-1">
+            {uploadMutation.isPending ? "Uploading…" : "Upload"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

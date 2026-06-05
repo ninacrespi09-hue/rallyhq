@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import NavShell from "@/components/NavShell";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { getDb } from "@/lib/db";
 import CheckinForm from "@/components/CheckinForm";
 import PageHeader from "@/components/PageHeader";
@@ -29,24 +31,26 @@ export default async function CheckinPage() {
 
       <CheckinForm existing={today} />
 
-      <section className="mt-6 card">
-        <h2 className="mb-3 font-bold text-navy-900">Last 14 days</h2>
-        {history.length === 0 ? (
-          <p className="text-sm text-navy-400">No check-ins yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {history.map((h) => (
-              <div key={h.id} className="flex items-center gap-3 rounded-xl bg-navy-50 px-3 py-2 text-sm">
-                <span className="w-24 font-medium text-navy-600">{h.date}</span>
-                <Bar label="Sore" value={h.soreness} invert />
-                <Bar label="Energy" value={h.energy} />
-                <Bar label="Mood" value={h.mood} />
-                {h.injury ? <span className="chip bg-blue-100 text-blue-700">injury</span> : null}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <Card className="mt-6">
+        <CardContent>
+          <h2 className="mb-3 font-bold text-navy-900">Last 14 days</h2>
+          {history.length === 0 ? (
+            <p className="text-sm text-navy-400">No check-ins yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {history.map((h) => (
+                <div key={h.id} className="flex items-center gap-3 rounded-xl bg-navy-50 px-3 py-2 text-sm">
+                  <span className="w-24 font-medium text-navy-600">{h.date}</span>
+                  <Bar label="Sore" value={h.soreness} invert />
+                  <Bar label="Energy" value={h.energy} />
+                  <Bar label="Mood" value={h.mood} />
+                  {h.injury ? <Badge className="bg-blue-100 text-blue-700">injury</Badge> : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </NavShell>
   );
 }

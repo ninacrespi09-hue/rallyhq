@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { SEVERITY_STYLES } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function InsightsPanel({ initial, scope }) {
   const [data, setData] = useState(initial);
@@ -20,33 +23,37 @@ export default function InsightsPanel({ initial, scope }) {
 
   return (
     <div className="space-y-4">
-      <button onClick={generate} disabled={loading} className="btn-primary">
+      <Button onClick={generate} disabled={loading}>
         {loading ? "Analyzing check-ins…" : data ? "Re-run analysis" : "Generate insights"}
-      </button>
+      </Button>
 
       {error && <p className="text-sm text-blue-600">{error}</p>}
 
       {!data && !loading && (
-        <div className="card text-sm text-navy-400">
-          No analysis yet. Tap <b className="text-navy-600">Generate insights</b> to analyze recent check-ins.
-        </div>
+        <Card>
+          <CardContent className="text-sm text-navy-400">
+            No analysis yet. Tap <b className="text-navy-600">Generate insights</b> to analyze recent check-ins.
+          </CardContent>
+        </Card>
       )}
 
       {data && (
         <>
-          <div className="card border-l-4 border-brand-500">
-            <div className="flex items-center gap-2">
-              <h2 className="font-bold text-navy-900">Summary</h2>
-              <span
-                className={`chip ${
-                  data.source === "claude" ? "bg-violet-100 text-violet-700" : "bg-navy-50 text-navy-500"
-                }`}
-              >
-                {data.source === "claude" ? "✦ Claude" : "rule-based"}
-              </span>
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-navy-700">{data.summary}</p>
-          </div>
+          <Card className="border-l-4 border-brand-500">
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <h2 className="font-bold text-navy-900">Summary</h2>
+                <Badge
+                  className={
+                    data.source === "claude" ? "bg-violet-100 text-violet-700" : "bg-navy-50 text-navy-500"
+                  }
+                >
+                  {data.source === "claude" ? "✦ Claude" : "rule-based"}
+                </Badge>
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-navy-700">{data.summary}</p>
+            </CardContent>
+          </Card>
 
           {data.flags?.length > 0 ? (
             <div className="space-y-2">
@@ -54,22 +61,26 @@ export default function InsightsPanel({ initial, scope }) {
                 Flags ({data.flags.length})
               </h2>
               {data.flags.map((f, i) => (
-                <div key={i} className="card">
-                  <div className="flex items-center gap-2">
-                    <span className={`chip capitalize ${SEVERITY_STYLES[f.severity] || SEVERITY_STYLES.low}`}>
-                      {f.severity}
-                    </span>
-                    <span className="font-semibold text-navy-800">{f.title}</span>
-                    {f.player && scope === "team" && (
-                      <span className="ml-auto text-xs font-medium text-navy-400">{f.player}</span>
-                    )}
-                  </div>
-                  <p className="mt-1.5 text-sm text-navy-600">{f.detail}</p>
-                </div>
+                <Card key={i}>
+                  <CardContent>
+                    <div className="flex items-center gap-2">
+                      <Badge className={`capitalize ${SEVERITY_STYLES[f.severity] || SEVERITY_STYLES.low}`}>
+                        {f.severity}
+                      </Badge>
+                      <span className="font-semibold text-navy-800">{f.title}</span>
+                      {f.player && scope === "team" && (
+                        <span className="ml-auto text-xs font-medium text-navy-400">{f.player}</span>
+                      )}
+                    </div>
+                    <p className="mt-1.5 text-sm text-navy-600">{f.detail}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : (
-            <div className="card text-sm text-emerald-700">✓ No concerns flagged. Everyone looks good!</div>
+            <Card>
+              <CardContent className="text-sm text-emerald-700">✓ No concerns flagged. Everyone looks good!</CardContent>
+            </Card>
           )}
         </>
       )}

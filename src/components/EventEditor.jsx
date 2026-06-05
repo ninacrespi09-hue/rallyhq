@@ -2,6 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useApiMutation } from "@/hooks/use-api";
 
 const TYPES = [
   { key: "practice",     label: "Practice" },
@@ -15,30 +27,30 @@ export default function EventEditor({ event }) {
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [type, setType] = useState(event.type || "practice");
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
-  async function save(e) {
+  const saveMutation = useApiMutation({ url: `/api/events/${event.id}`, method: "PATCH" });
+  const deleteMutation = useApiMutation({ url: `/api/events/${event.id}`, method: "DELETE" });
+
+  function save(e) {
     e.preventDefault();
-    setSaving(true);
     const fd = new FormData(e.currentTarget);
     const body = Object.fromEntries(fd.entries());
     body.type = type;
-    await fetch(`/api/events/${event.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+    saveMutation.mutate(body, {
+      onSuccess: () => {
+        setOpen(false);
+        router.refresh();
+      },
     });
-    setSaving(false);
-    setOpen(false);
-    router.refresh();
   }
 
-  async function del() {
-    setDeleting(true);
-    await fetch(`/api/events/${event.id}`, { method: "DELETE" });
-    router.push("/schedule");
-    router.refresh();
+  function del() {
+    deleteMutation.mutate(null, {
+      onSuccess: () => {
+        router.push("/schedule");
+        router.refresh();
+      },
+    });
   }
 
   // Format datetime-local value from ISO string
@@ -47,19 +59,24 @@ export default function EventEditor({ event }) {
   return (
     <>
       <div className="flex shrink-0 gap-2">
-        <button onClick={() => setOpen(true)} className="btn-ghost text-sm">
+        <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
           ✏️ Edit
-        </button>
-        <button onClick={() => setConfirmDelete(true)} className="btn text-sm bg-blue-100 text-blue-800 hover:bg-blue-200">
+        </Button>
+        <Button
+          size="sm"
+          className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+          onClick={() => setConfirmDelete(true)}
+        >
           🗑 Delete
-        </button>
+        </Button>
       </div>
 
-      {/* Edit modal */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-4">
-          <form onSubmit={save} className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 md:rounded-2xl">
-            <h2 className="text-lg font-bold text-navy-900">Edit event</h2>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[92vh] max-w-md gap-0 overflow-y-auto p-5">
+          <form onSubmit={save}>
+            <DialogHeader>
+              <DialogTitle>Edit event</DialogTitle>
+            </DialogHeader>
 
             <div className="my-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {TYPES.map((t) => (
@@ -73,55 +90,60 @@ export default function EventEditor({ event }) {
 
             <div className="space-y-3">
               <div>
-                <label className="label">Title</label>
-                <input name="title" required className="input" defaultValue={event.title} />
+                <Label>Title</Label>
+                <Input name="title" required defaultValue={event.title} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">Start</label>
-                  <input name="start_time" type="datetime-local" required className="input" defaultValue={toLocal(event.start_time)} />
+                  <Label>Start</Label>
+                  <Input name="start_time" type="datetime-local" required defaultValue={toLocal(event.start_time)} />
                 </div>
                 <div>
-                  <label className="label">End</label>
-                  <input name="end_time" type="datetime-local" className="input" defaultValue={toLocal(event.end_time)} />
+                  <Label>End</Label>
+                  <Input name="end_time" type="datetime-local" defaultValue={toLocal(event.end_time)} />
                 </div>
               </div>
               <div>
-                <label className="label">Location</label>
-                <input name="location" className="input" defaultValue={event.location || ""} placeholder="Main Gym" />
+                <Label>Location</Label>
+                <Input name="location" defaultValue={event.location || ""} placeholder="Main Gym" />
               </div>
               <div>
-                <label className="label">Notes</label>
-                <textarea name="notes" rows={2} className="input" defaultValue={event.notes || ""} />
+                <Label>Notes</Label>
+                <Textarea name="notes" rows={2} defaultValue={event.notes || ""} />
               </div>
             </div>
 
             <div className="mt-4 flex gap-2">
-              <button type="button" onClick={() => setOpen(false)} className="btn-ghost flex-1">Cancel</button>
-              <button disabled={saving} className="btn-primary flex-1">{saving ? "Saving…" : "Save changes"}</button>
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">Cancel</Button>
+              <Button type="submit" disabled={saveMutation.isPending} className="flex-1">
+                {saveMutation.isPending ? "Saving…" : "Save changes"}
+              </Button>
             </div>
           </form>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Delete confirmation */}
-      {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center">
-            <div className="text-3xl mb-3">🗑</div>
-            <h2 className="text-lg font-bold text-navy-900">Delete this event?</h2>
-            <p className="mt-1 text-sm text-navy-500">
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="max-w-sm text-center">
+          <div className="text-3xl mb-3">🗑</div>
+          <DialogHeader className="text-center sm:text-center">
+            <DialogTitle>Delete this event?</DialogTitle>
+            <DialogDescription>
               <b>{event.title}</b> will be permanently removed along with its attendance and stats.
-            </p>
-            <div className="mt-5 flex gap-3">
-              <button onClick={() => setConfirmDelete(false)} className="btn-ghost flex-1">Cancel</button>
-              <button onClick={del} disabled={deleting} className="btn flex-1 bg-blue-700 text-white hover:bg-blue-800">
-                {deleting ? "Deleting…" : "Yes, delete"}
-              </button>
-            </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-5 flex gap-3">
+            <Button variant="ghost" onClick={() => setConfirmDelete(false)} className="flex-1">Cancel</Button>
+            <Button
+              onClick={del}
+              disabled={deleteMutation.isPending}
+              className="flex-1 bg-blue-700 text-white hover:bg-blue-800"
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Yes, delete"}
+            </Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

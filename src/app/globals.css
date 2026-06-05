@@ -3,19 +3,41 @@
 @tailwind utilities;
 
 /* ============================================================================
-   RallyHQ design system
-   Tokens, type, and component primitives. Blue / navy / baby-blue, sporty + calm.
+   RallyHQ design system — shadcn/ui + brand tokens
    ========================================================================== */
 
-:root {
-  color-scheme: light;
-  --line: rgba(30, 58, 138, 0.14); /* hairline navy */
-}
-
 @layer base {
+  :root {
+    color-scheme: light;
+    --background: 205 85% 92%;
+    --foreground: 222 47% 11%;
+    --card: 214 100% 97%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 95% 93%;
+    --secondary-foreground: 222 47% 20%;
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 214 95% 93%;
+    --accent-foreground: 222 47% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 82%;
+    --input: 214 32% 82%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+    --line: rgba(30, 58, 138, 0.14);
+  }
+
+  * {
+    @apply border-border;
+  }
+
   body {
-    @apply font-sans text-navy-800 antialiased;
-    /* Baby-blue canvas with a faint top sheen for depth. */
+    @apply bg-background text-foreground font-sans antialiased;
     background-color: #cfe8fb;
     background-image: linear-gradient(180deg, #e3f1fd 0%, #cfe8fb 38%);
     background-attachment: fixed;
@@ -32,26 +54,20 @@
     background: rgba(37, 99, 235, 0.18);
   }
 
-  /* Consistent, accessible focus ring */
   :focus-visible {
-    outline: 2px solid rgba(37, 99, 235, 0.55);
-    outline-offset: 2px;
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
 @layer components {
-  /* ---- Buttons ------------------------------------------------------------ */
+  /* Legacy aliases — map to shadcn primitives for gradual migration */
   .btn {
     @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
            transition-[transform,box-shadow,background-color,color] duration-200 active:scale-[0.97]
            disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn text-white shadow-glow;
-    background-image: linear-gradient(135deg, #2f6bff, #1e3a8a);
-  }
-  .btn-primary:hover {
-    background-image: linear-gradient(135deg, #1d4ed8, #142141);
+    @apply btn bg-primary text-primary-foreground shadow-glow hover:bg-primary/90;
   }
   .btn-ghost {
     @apply btn text-navy-700 ring-1 ring-blue-400 hover:ring-blue-500;
@@ -64,21 +80,16 @@
     @apply btn bg-brand-50 text-brand-700 ring-1 ring-brand-100 hover:bg-brand-100;
   }
 
-  /* ---- Surfaces ----------------------------------------------------------- */
   .card {
-    @apply rounded-2xl p-5 shadow-soft ring-1 ring-blue-400/50;
-    background: rgba(59, 130, 246, 0.38); /* blue-500/38 */
-    backdrop-filter: blur(8px);
+    @apply rounded-2xl border border-blue-400/50 bg-card/80 p-5 text-card-foreground shadow-soft backdrop-blur-sm;
   }
   .card-interactive {
     @apply transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift;
   }
   .panel {
-    @apply rounded-3xl p-5 ring-1 ring-blue-400/50 backdrop-blur;
-    background: rgba(59, 130, 246, 0.32);
+    @apply rounded-3xl border border-blue-400/50 bg-card/70 p-5 backdrop-blur;
   }
 
-  /* ---- Chips / badges ----------------------------------------------------- */
   .chip {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
   }
@@ -86,17 +97,14 @@
     @apply inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-100;
   }
 
-  /* ---- Forms -------------------------------------------------------------- */
   .label {
     @apply mb-1 block text-sm font-medium text-navy-600;
   }
   .input {
-    @apply w-full rounded-xl border border-navy-100 bg-white px-3.5 py-2.5 text-sm text-navy-800
-           shadow-[inset_0_1px_0_rgba(13,23,48,0.02)] outline-none transition
-           placeholder:text-navy-300 focus:border-transparent focus:ring-2 focus:ring-brand-400;
+    @apply flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm
+           transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
   }
 
-  /* ---- Typography helpers ------------------------------------------------- */
   .eyebrow {
     @apply text-xs font-bold uppercase tracking-[0.14em] text-brand-600;
   }
@@ -107,7 +115,6 @@
     @apply bg-gradient-to-r from-brand-600 to-cyan-500 bg-clip-text text-transparent;
   }
 
-  /* ---- Stat tile ---------------------------------------------------------- */
   .stat-tile {
     @apply rounded-xl bg-navy-50 p-3 text-center;
   }
@@ -120,7 +127,17 @@
 }
 
 @layer utilities {
-  .animate-delay-1 { animation-delay: 60ms; }
-  .animate-delay-2 { animation-delay: 120ms; }
-  .animate-delay-3 { animation-delay: 180ms; }
+  .animate-delay-1 { animation-delay: 0.08s; }
+  .animate-delay-2 { animation-delay: 0.16s; }
+  .animate-delay-3 { animation-delay: 0.24s; }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }

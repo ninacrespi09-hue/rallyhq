@@ -13,7 +13,6 @@ export function getDb() {
     ensureEventRsvpsTable(db);
     ensureChatTables(db);
     ensurePollTables(db);
-    ensureRallyPetTables(db);
     ensureIndexes(db);
     return db;
   }
@@ -30,51 +29,8 @@ export function getDb() {
   ensureEventRsvpsTable(db);
   ensureChatTables(db);
   ensurePollTables(db);
-  ensureRallyPetTables(db);
   ensureIndexes(db);
   return db;
-}
-
-/** Per-user floating RallyPet preference, growth, and position. */
-function ensureRallyPetTables(db) {
-  const exists = db
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'user_rally_pets'")
-    .get();
-
-  if (!exists) {
-    db.exec(`
-      CREATE TABLE user_rally_pets (
-        user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-        animal      TEXT NOT NULL DEFAULT 'dog',
-        pos_x       REAL,
-        pos_y       REAL,
-        xp          INTEGER NOT NULL DEFAULT 0,
-        level       INTEGER NOT NULL DEFAULT 1,
-        mood        TEXT NOT NULL DEFAULT 'okay',
-        last_active TEXT,
-        updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-    `);
-  } else {
-    const col = (name) =>
-      db.prepare(`PRAGMA table_info(user_rally_pets)`).all().some((c) => c.name === name);
-    if (!col("xp")) db.exec(`ALTER TABLE user_rally_pets ADD COLUMN xp INTEGER NOT NULL DEFAULT 0`);
-    if (!col("level")) db.exec(`ALTER TABLE user_rally_pets ADD COLUMN level INTEGER NOT NULL DEFAULT 1`);
-    if (!col("mood")) db.exec(`ALTER TABLE user_rally_pets ADD COLUMN mood TEXT NOT NULL DEFAULT 'okay'`);
-    if (!col("last_active")) db.exec(`ALTER TABLE user_rally_pets ADD COLUMN last_active TEXT`);
-  }
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS rally_pet_xp_log (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      source     TEXT NOT NULL,
-      ref_key    TEXT NOT NULL,
-      points     INTEGER NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      UNIQUE(user_id, source, ref_key)
-    );
-  `);
 }
 
 /** Hot-path indexes for mobile query performance. */

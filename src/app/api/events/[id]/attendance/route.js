@@ -3,8 +3,6 @@ import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { eventTeamId, userTeamId, forbiddenTeam } from "@/lib/tenancy";
 import { blockParentApi, isCoach } from "@/lib/permissions";
-import { awardEventAttendance } from "@/lib/rallyPet";
-
 // Coaches set attendance for any player; players may set their own.
 export async function POST(req, { params }) {
   const user = await getCurrentUser();
@@ -30,13 +28,6 @@ export async function POST(req, { params }) {
        ON CONFLICT(event_id, user_id) DO UPDATE SET status = excluded.status`
     )
     .run(Number(id), targetId, status);
-
-  if (status === "present" || status === "late") {
-    const target = getDb().prepare(`SELECT role FROM users WHERE id = ?`).get(targetId);
-    if (target?.role === "player") {
-      awardEventAttendance(targetId, Number(id));
-    }
-  }
 
   return NextResponse.json({ ok: true });
 }

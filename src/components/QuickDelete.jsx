@@ -2,29 +2,44 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useApiMutation } from "@/hooks/use-api";
 
 export default function QuickDelete({ id }) {
   const router = useRouter();
   const [confirm, setConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
-  async function del(e) {
+  const deleteMutation = useApiMutation({ url: `/api/events/${id}`, method: "DELETE" });
+
+  function del(e) {
     e.preventDefault();
     e.stopPropagation();
-    setDeleting(true);
-    await fetch(`/api/events/${id}`, { method: "DELETE" });
-    router.refresh();
+    deleteMutation.mutate(null, {
+      onSuccess: () => router.refresh(),
+    });
   }
 
   if (confirm) {
     return (
       <div className="flex shrink-0 gap-1.5" onClick={(e) => e.preventDefault()}>
-        <button onClick={() => setConfirm(false)} className="chip bg-white text-navy-500 ring-1 ring-navy-200">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setConfirm(false)}
+          className="chip h-auto rounded-full bg-white px-2.5 py-0.5 text-xs text-navy-500 ring-1 ring-navy-200"
+        >
           Cancel
-        </button>
-        <button onClick={del} disabled={deleting} className="chip bg-blue-700 text-white">
-          {deleting ? "…" : "Delete"}
-        </button>
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={del}
+          disabled={deleteMutation.isPending}
+          className="chip h-auto rounded-full bg-blue-700 px-2.5 py-0.5 text-xs text-white"
+        >
+          {deleteMutation.isPending ? "…" : "Delete"}
+        </Button>
       </div>
     );
   }

@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { wellnessLevel, LEVEL_STYLE, levelRank, RECOVERY_NEEDS } from "@/lib/wellness";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useApiMutation } from "@/hooks/use-api";
 
 const SCALES = [
   { key: "soreness", label: "Soreness", emoji: "🤕", low: "None", high: "Severe", invert: true },
@@ -17,20 +23,22 @@ const NEEDS = RECOVERY_NEEDS;
 export default function PostGameWellness({ event, user, players, submissions, mine }) {
   const isCoach = user.role === "coach";
   return (
-    <section className="card border-l-4 border-brand-500">
-      <div className="flex items-center justify-between">
-        <h2 className="font-bold text-navy-900">🩺 Post-game wellness</h2>
-        <span className="text-xs text-navy-400">
-          {submissions.length}/{players.length} submitted
-        </span>
-      </div>
+    <Card className="border-l-4 border-brand-500">
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-navy-900">🩺 Post-game wellness</h2>
+          <span className="text-xs text-navy-400">
+            {submissions.length}/{players.length} submitted
+          </span>
+        </div>
 
-      {isCoach ? (
-        <CoachSummary submissions={submissions} players={players} />
-      ) : (
-        <PlayerForm event={event} mine={mine} />
-      )}
-    </section>
+        {isCoach ? (
+          <CoachSummary submissions={submissions} players={players} />
+        ) : (
+          <PlayerForm event={event} mine={mine} />
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -48,32 +56,31 @@ function PlayerForm({ event, mine }) {
   const [areas, setAreas] = useState(mine?.sore_areas ? mine.sore_areas.split(",") : []);
   const [needs, setNeeds] = useState(mine?.recovery_needs ? mine.recovery_needs.split(",") : []);
   const [note, setNote] = useState(mine?.note ?? "");
-  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const mutation = useApiMutation({ url: `/api/events/${event.id}/wellness` });
 
   const toggle = (setter) => (item) =>
     setter((cur) => (cur.includes(item) ? cur.filter((x) => x !== item) : [...cur, item]));
 
-  async function submit() {
-    setSaving(true);
+  function submit() {
     setSaved(false);
-    const res = await fetch(`/api/events/${event.id}/wellness`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    mutation.mutate(
+      {
         ...vals,
         injury,
         sore_areas: areas.join(","),
         recovery_needs: needs.join(","),
         note,
-      }),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setSaved(true);
-      router.refresh();
-      setTimeout(() => setSaved(false), 2500);
-    }
+      },
+      {
+        onSuccess: () => {
+          setSaved(true);
+          router.refresh();
+          setTimeout(() => setSaved(false), 2500);
+        },
+      }
+    );
   }
 
   return (
@@ -146,7 +153,7 @@ function PlayerForm({ event, mine }) {
       </div>
 
       <div>
-        <label className="label">What recovery do you need?</label>
+        <Label>What recovery do you need?</Label>
         <div className="flex flex-wrap gap-2">
           {NEEDS.map((nd) => (
             <button
@@ -166,20 +173,19 @@ function PlayerForm({ event, mine }) {
       </div>
 
       <div>
-        <label className="label">Note for the coach (optional)</label>
-        <textarea
+        <Label>Note for the coach (optional)</Label>
+        <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
-          className="input"
           placeholder="Left shoulder felt tight serving in set 3…"
         />
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={submit} disabled={saving} className="btn-primary">
-          {saving ? "Saving…" : mine ? "Update wellness" : "Submit wellness"}
-        </button>
+        <Button onClick={submit} disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving…" : mine ? "Update wellness" : "Submit wellness"}
+        </Button>
         {saved && <span className="text-sm font-medium text-emerald-600">✓ Saved</span>}
       </div>
     </div>
@@ -215,7 +221,7 @@ function CoachSummary({ submissions, players }) {
               <div className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${st.dot}`} />
                 <span className="font-semibold text-navy-800">{s.name}</span>
-                <span className={`chip ${st.chip}`}>{st.label}</span>
+                <Badge className={st.chip}>{st.label}</Badge>
                 <span className="ml-auto text-xs text-navy-400">
                   Sore {s.soreness} · Energy {s.energy} · Recovery {s.recovery}
                 </span>
@@ -223,9 +229,9 @@ function CoachSummary({ submissions, players }) {
               {s.recovery_needs && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {s.recovery_needs.split(",").map((n) => (
-                    <span key={n} className="chip bg-white text-navy-600 ring-1 ring-navy-100">
+                    <Badge key={n} variant="outline" className="bg-white text-navy-600 ring-1 ring-navy-100">
                       {n}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               )}
