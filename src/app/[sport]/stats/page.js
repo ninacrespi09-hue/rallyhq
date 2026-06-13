@@ -11,12 +11,9 @@ import { BarChart, LineChart, RecordDonut } from "@/components/Charts";
 import PageHeader from "@/components/PageHeader";
 import { teamRecord } from "@/lib/queries";
 import { teamStatTotals, teamTrends, teamLeaderboard } from "@/lib/stats";
-import { blockParent } from "@/lib/parentPages";
-
 export default async function StatsPage({ params, searchParams }) {
   const { sport } = await params;
   const { user, teamId } = await getSportPageContext(sport);
-  blockParent(user);
 
   const STATS = statsForSport(sport);
   const cfg = getSportConfig(sport);

@@ -14,9 +14,9 @@ export default function NavShell({ user, children, sport: sportProp }) {
   const sport = sportProp || sportFromPathname(pathname);
   const sportCfg = sport ? getSportConfig(sport) : null;
 
-  const primary = navPrimaryForRole(user.role, sport);
-  const secondary = navSecondaryForRole(user.role, sport);
-  const mobileNav = navMobileForRole(user.role, sport);
+  const primary = navPrimaryForRole(user.role, sport, user);
+  const secondary = navSecondaryForRole(user.role, sport, user);
+  const mobileNav = navMobileForRole(user.role, sport, user);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });

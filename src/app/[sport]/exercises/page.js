@@ -4,12 +4,9 @@ import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
 import { contentTeamExpr, eventTeamExpr } from "@/lib/teamScope";
 import Exercises from "@/components/Exercises";
-import { blockParent } from "@/lib/parentPages";
-
 export default async function ExercisesPage({ params, searchParams }) {
   const { sport } = await params;
   const { user, teamId } = await getSportPageContext(sport);
-  blockParent(user);
 
   const db = getDb();
   const exercises = db

@@ -59,7 +59,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
       return setError(data.error || "Something went wrong.");
     }
     if (body.email) localStorage.setItem(SAVED_EMAIL_KEY, body.email);
-    router.push("/");
+    router.push(data.redirect || "/");
     router.refresh();
   }
 

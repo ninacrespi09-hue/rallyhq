@@ -118,6 +118,41 @@ export default function EventDetail({ event, user, players, initialAttendance, i
             </div>
           )}
 
+          {parent && canRsvp(user) && (
+            <div className="mt-4 rounded-xl bg-navy-50 p-3">
+              <p className="text-sm font-semibold text-navy-800">Your RSVP</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {RSVP_OPTIONS.map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRsvpStatus(user.id, key)}
+                    className={cn(
+                      "h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 transition hover:bg-white",
+                      rsvp[user.id] === key ? RSVP_STYLE[key] : "bg-white text-navy-500 ring-navy-100"
+                    )}
+                  >
+                    {label}
+                  </Button>
+                ))}
+                {rsvp[user.id] && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearRsvp(user.id)}
+                    className="h-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy-400 ring-1 ring-navy-100 hover:bg-white"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+              <p className="mt-2 text-xs text-navy-400">Let the coach know if your athlete can attend.</p>
+            </div>
+          )}
+
           {!parent && (
             <div className="mt-3 space-y-2">
               {players.map((p) => {

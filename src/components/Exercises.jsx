@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import { isCoach, isPlayer } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,7 +37,8 @@ const CAT_ICON = {
 
 export default function Exercises({ user, initialExercises, playerCount }) {
   const router = useRouter();
-  const isCoach = user.role === "coach";
+  const coach = isCoach(user);
+  const player = isPlayer(user);
   const [items, setItems] = useState(initialExercises);
   const [filter, setFilter] = useState("All");
   const [editor, setEditor] = useState(null);
@@ -106,22 +108,25 @@ export default function Exercises({ user, initialExercises, playerCount }) {
           <div>
             <div className="text-sm font-semibold text-blue-100">💪 Recommended Exercises</div>
             <h1 className="mt-1 text-2xl font-black sm:text-3xl">Train Smarter</h1>
-            {!isCoach && (
+            {!coach && player && (
               <p className="mt-1 text-sm text-blue-100">
                 You've completed <b className="text-white">{myDone}</b> of {items.length} exercises.
               </p>
             )}
-            {isCoach && (
+            {!coach && !player && (
+              <p className="mt-1 text-sm text-blue-100">View assigned conditioning for your athlete.</p>
+            )}
+            {coach && (
               <p className="mt-1 text-sm text-blue-100">{items.length} exercises assigned to the team.</p>
             )}
           </div>
-          {isCoach && (
+          {coach && (
             <Button onClick={() => setEditor({})} className="shrink-0 bg-white text-blue-700 hover:bg-blue-50">
               + New
             </Button>
           )}
         </div>
-        {!isCoach && items.length > 0 && (
+        {player && items.length > 0 && (
           <Progress
             value={(myDone / items.length) * 100}
             className="relative mt-4 h-2.5 bg-white/20"
@@ -187,7 +192,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
               </div>
 
               <div className="mt-3 flex items-center gap-2">
-                {!isCoach && (
+                {player && (
                   <Button
                     onClick={() => toggleComplete(ex)}
                     className={`flex-1 ${
@@ -200,7 +205,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
                     {ex.mine_done ? "✓ Completed" : "Mark complete"}
                   </Button>
                 )}
-                {isCoach && (
+                {coach && (
                   <>
                     <Button variant="ghost" onClick={() => setEditor(ex)} className="flex-1">
                       Edit

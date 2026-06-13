@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { sportPath } from "./sportPaths";
 import { getSportConfig } from "./sports";
+import { canAccessAllSports } from "./userSportPreference";
 
 export const ROLES = {
   COACH: "coach",
@@ -32,6 +33,8 @@ export const NAV_PRIMARY = [
 export const NAV_PARENT = [
   { href: "/", label: "Home", icon: "🏠" },
   { href: "/schedule", label: "Schedule", icon: "📅" },
+  { href: "/stats", label: "Stats", icon: "📊" },
+  { href: "/exercises", label: "Exercises", icon: "💪" },
   { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/players", label: "Team", icon: "🏐" },
 ];
@@ -64,9 +67,16 @@ export const NAV_MOBILE = [
 export const NAV_MOBILE_PARENT = [
   { href: "/", label: "Home", icon: "🏠" },
   { href: "/schedule", label: "Schedule", icon: "📅" },
+  { href: "/stats", label: "Stats", icon: "📊" },
+  { href: "/exercises", label: "Exercises", icon: "💪" },
   { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/players", label: "Team", icon: "🏐" },
 ];
+
+function filterNavForUser(items, user) {
+  if (canAccessAllSports(user)) return items;
+  return items.filter((item) => item.href !== "/schedule/all");
+}
 
 export function prefixNavForSport(items, sport) {
   if (!sport) return items;
@@ -80,24 +90,22 @@ export function prefixNavForSport(items, sport) {
   });
 }
 
-export function navPrimaryForRole(role, sport) {
+export function navPrimaryForRole(role, sport, user) {
   const base = role === ROLES.PARENT ? NAV_PARENT : NAV_PRIMARY;
-  return prefixNavForSport(base, sport);
+  return prefixNavForSport(filterNavForUser(base, user), sport);
 }
 
-export function navSecondaryForRole(role, sport) {
+export function navSecondaryForRole(role, sport, user) {
   const base = role === ROLES.PARENT ? NAV_SECONDARY_PARENT : NAV_SECONDARY;
-  return prefixNavForSport(base, sport);
+  return prefixNavForSport(filterNavForUser(base, user), sport);
 }
 
-export function navMobileForRole(role, sport) {
+export function navMobileForRole(role, sport, user) {
   const base = role === ROLES.PARENT ? NAV_MOBILE_PARENT : NAV_MOBILE;
-  return prefixNavForSport(base, sport);
+  return prefixNavForSport(filterNavForUser(base, user), sport);
 }
 
 const PARENT_BLOCKED_PREFIXES = [
-  "/stats",
-  "/exercises",
   "/ai-coach",
   "/checkin",
   "/wellness-kit",
@@ -146,9 +154,9 @@ export function canEditEventParticipation(user) {
   return isCoach(user) || isPlayer(user);
 }
 
-/** Pre-event RSVP — players only (not parents or coaches). */
+/** Pre-event RSVP — players and parents (read-only accounts can still RSVP). */
 export function canRsvp(user) {
-  return isPlayer(user);
+  return isPlayer(user) || isParent(user);
 }
 
 export function canManageRsvp(user) {

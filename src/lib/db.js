@@ -15,6 +15,7 @@ export function getDb() {
     ensurePollTables(db);
     ensureWellnessKitTable(db);
     ensureMultiSportTables(db);
+    ensureSportPreferenceColumn(db);
     ensureContentTeamIds(db);
     ensureIndexes(db);
     return db;
@@ -34,6 +35,7 @@ export function getDb() {
   ensurePollTables(db);
   ensureWellnessKitTable(db);
   ensureMultiSportTables(db);
+  ensureSportPreferenceColumn(db);
   ensureContentTeamIds(db);
   ensureIndexes(db);
   return db;
@@ -98,6 +100,22 @@ function ensureMultiSportTables(db) {
      ON CONFLICT(user_id, sport) DO NOTHING`
   );
   for (const u of users) insert.run(u.user_id, u.sport, u.team_id);
+}
+
+/** User's chosen sport scope (volleyball | basketball | soccer | all). */
+function ensureSportPreferenceColumn(db) {
+  const has = (table, col) =>
+    db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === col);
+  if (!has("users", "sport_preference")) {
+    db.exec("ALTER TABLE users ADD COLUMN sport_preference TEXT");
+    db.exec(`
+      UPDATE users SET sport_preference = COALESCE(
+        (SELECT t.sport FROM teams t WHERE t.id = users.team_id),
+        'volleyball'
+      ) WHERE sport_preference IS NULL
+    `);
+  }
+  db.prepare("UPDATE users SET sport_preference = 'all' WHERE email = 'coach@rallyhq.dev'").run();
 }
 
 /** Optional team_id on content tables so multi-sport coaches don't share data across sports. */

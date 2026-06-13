@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { hashPassword, createSession, normalizeEmail, isValidEmail } from "@/lib/auth";
+import { homePathForUser, normalizeSportPreference, SPORT_PREF_ALL } from "@/lib/userSportPreference";
+import { isSportId } from "@/lib/sports";
 
 export async function POST(req) {
-  const { name, email, password: rawPassword, role, team_name, team_code, position, jersey_number, sport } =
-    await req.json();
+  const {
+    name,
+    email,
+    password: rawPassword,
+    role,
+    team_name,
+    team_code,
+    position,
+    jersey_number,
+    sport,
+    sport_preference,
+  } = await req.json();
   const password = (rawPassword || "").trim();
 
   if (!name || !email || !password)
@@ -22,9 +34,12 @@ export async function POST(req) {
       { status: 409 }
     );
 
+  const pref = normalizeSportPreference(sport_preference || sport, "volleyball");
+  const signupRole = role === "coach" ? "coach" : role === "parent" ? "parent" : "player";
   let teamId = null;
+  let teamSport = sport && isSportId(sport) ? sport : "volleyball";
 
-  if (role === "coach") {
+  if (signupRole === "coach") {
     if (!team_name?.trim())
       return NextResponse.json({ error: "Team name is required." }, { status: 400 });
     if (!team_code?.trim())
@@ -38,35 +53,40 @@ export async function POST(req) {
     if (taken)
       return NextResponse.json({ error: "That team code is already taken. Choose a different one." }, { status: 409 });
 
-    const t = db.prepare("INSERT INTO teams (name, code, sport) VALUES (?, ?, ?)").run(team_name.trim(), code, sport || "volleyball");
+    if (pref !== SPORT_PREF_ALL && sport && !isSportId(sport)) {
+      return NextResponse.json({ error: "Invalid sport." }, { status: 400 });
+    }
+
+    const coachSport = pref === SPORT_PREF_ALL ? teamSport : pref;
+    const t = db.prepare("INSERT INTO teams (name, code, sport) VALUES (?, ?, ?)").run(team_name.trim(), code, coachSport);
     teamId = t.lastInsertRowid;
-  } else if (role === "player" || role === "parent") {
+    teamSport = coachSport;
+  } else {
     if (!team_code?.trim())
-      return NextResponse.json(
-        { error: "Team code is required. Ask your coach for your team code." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Team code is required. Ask your coach for your team code." }, { status: 400 });
 
     const code = team_code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-    const team = db.prepare("SELECT id FROM teams WHERE code = ?").get(code);
+    const team = db.prepare("SELECT id, sport FROM teams WHERE code = ?").get(code);
     if (!team)
+      return NextResponse.json({ error: "That team code is not valid. Check with your coach and try again." }, { status: 404 });
+
+    if (pref !== SPORT_PREF_ALL && team.sport !== pref) {
       return NextResponse.json(
-        { error: "That team code is not valid. Check with your coach and try again." },
-        { status: 404 }
+        { error: `That code is for a ${team.sport} team. Choose ${team.sport} when signing up.` },
+        { status: 400 }
       );
+    }
 
     teamId = team.id;
-  } else {
-    return NextResponse.json({ error: "Invalid signup role." }, { status: 400 });
+    teamSport = team.sport;
   }
 
-  const signupRole = role === "coach" ? "coach" : role === "parent" ? "parent" : "player";
-
   const hash = await hashPassword(password);
+  const savedPref = pref === SPORT_PREF_ALL ? SPORT_PREF_ALL : teamSport;
   const info = db
     .prepare(
-      `INSERT INTO users (name, email, password_hash, role, team_id, position, jersey_number)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (name, email, password_hash, role, team_id, position, jersey_number, sport_preference)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       name.trim(),
@@ -75,12 +95,11 @@ export async function POST(req) {
       signupRole,
       teamId,
       signupRole === "player" ? position || null : null,
-      signupRole === "player" && jersey_number ? Number(jersey_number) : null
+      signupRole === "player" && jersey_number ? Number(jersey_number) : null,
+      savedPref
     );
 
   if (teamId) {
-    const teamSport =
-      db.prepare("SELECT sport FROM teams WHERE id = ?").get(teamId)?.sport || sport || "volleyball";
     db.prepare(
       `INSERT INTO user_sport_teams (user_id, sport, team_id) VALUES (?, ?, ?)
        ON CONFLICT(user_id, sport) DO NOTHING`
@@ -88,5 +107,14 @@ export async function POST(req) {
   }
 
   await createSession(info.lastInsertRowid);
-  return NextResponse.json({ ok: true });
+
+  const user = db
+    .prepare(
+      `SELECT u.id, u.role, COALESCE(u.sport_preference, 'volleyball') AS sport_preference,
+              COALESCE(t.sport, 'volleyball') AS team_sport
+       FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.id = ?`
+    )
+    .get(info.lastInsertRowid);
+
+  return NextResponse.json({ ok: true, redirect: homePathForUser(user) });
 }

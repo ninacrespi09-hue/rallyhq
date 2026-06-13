@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { verifyPassword, createSession, normalizeEmail, isValidEmail } from "@/lib/auth";
+import { homePathForUser } from "@/lib/userSportPreference";
+
 export async function POST(req) {
   const { email, password: rawPassword } = await req.json();
   const password = (rawPassword || "").trim();
@@ -31,5 +33,14 @@ export async function POST(req) {
   }
 
   await createSession(user.id);
-  return NextResponse.json({ ok: true });
+
+  const profile = db
+    .prepare(
+      `SELECT u.id, u.role, COALESCE(u.sport_preference, t.sport, 'volleyball') AS sport_preference,
+              COALESCE(t.sport, 'volleyball') AS team_sport
+       FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.id = ?`
+    )
+    .get(user.id);
+
+  return NextResponse.json({ ok: true, redirect: homePathForUser(profile) });
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { canAccessAllSports, homePathForUser } from "@/lib/userSportPreference";
 import NavShell from "@/components/NavShell";
 import PageHeader from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ const SPORT_BADGE = {
 export default async function AllSportsSchedulePage({ searchParams }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (!canAccessAllSports(user)) redirect(homePathForUser(user));
 
   const sp = (await searchParams) || {};
   const filter = SPORT_IDS.includes(sp.sport) || sp.sport === "all" ? sp.sport : "all";

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getDb } from "./db";
 import { isSportId } from "./sports";
 import { resolveTeamId, SPORT_COOKIE } from "./sportTeams";
+import { SPORT_PREF_COOKIE, normalizeSportPreference } from "./userSportPreference";
 
 const COOKIE = "rallyhq_session";
 const COOKIE_OPTS = {
@@ -43,9 +44,15 @@ export async function createSession(userId) {
     .sign(secret);
 
   const jar = await cookies();
+  const pref =
+    getDb().prepare("SELECT sport_preference FROM users WHERE id = ?").get(userId)?.sport_preference ||
+    "volleyball";
   jar.set(COOKIE, token, {
     ...COOKIE_OPTS,
-    // ~10 years — stays logged in on this device until sign out
+    maxAge: 60 * 60 * 24 * 365 * 10,
+  });
+  jar.set(SPORT_PREF_COOKIE, normalizeSportPreference(pref), {
+    ...COOKIE_OPTS,
     maxAge: 60 * 60 * 24 * 365 * 10,
   });
 }
@@ -54,6 +61,8 @@ export async function createSession(userId) {
 export async function destroySession() {
   const jar = await cookies();
   jar.set(COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
+  jar.set(SPORT_PREF_COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
+  jar.set(SPORT_COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
 }
 
 function applyActiveSportTeam(user, sport) {
@@ -95,6 +104,7 @@ export async function getCurrentUser() {
     const user = db
       .prepare(
         `SELECT u.id, u.name, u.email, u.role, u.team_id, u.position, u.jersey_number, u.height_cm, u.bio,
+                COALESCE(u.sport_preference, t.sport, 'volleyball') AS sport_preference,
                 t.name AS team_name, t.code AS team_code, COALESCE(t.sport, 'volleyball') AS team_sport
          FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.id = ?`
       )

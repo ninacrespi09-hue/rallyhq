@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { POSITIONS } from "@/lib/format";
+import { getPositionsForSport } from "@/lib/sports";
+import { SPORT_PREF_CHOICES } from "@/lib/userSportPreference";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,9 @@ export default function ProfileForm({ user }) {
   const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [position, setPosition] = useState(user.position || "");
+  const [sportPreference, setSportPreference] = useState(user.sport_preference || "volleyball");
   const isPlayer = user.role === "player";
+  const positions = getPositionsForSport(user.team_sport || user.active_sport || "volleyball");
 
   const mutation = useApiMutation({ url: "/api/profile" });
 
@@ -31,9 +34,10 @@ export default function ProfileForm({ user }) {
     const fd = new FormData(e.currentTarget);
     const body = Object.fromEntries(fd.entries());
     mutation.mutate(body, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         setSaved(true);
         router.refresh();
+        if (data?.redirect) router.push(data.redirect);
         setTimeout(() => setSaved(false), 2500);
       },
     });
@@ -47,6 +51,26 @@ export default function ProfileForm({ user }) {
             <Label>Login email</Label>
             <Input value={user.email} readOnly className="bg-navy-50 text-navy-500" />
             <p className="mt-1 text-xs text-navy-400">Use this email to sign back in after signing out.</p>
+          </div>
+
+          <div>
+            <Label>Sport focus</Label>
+            <input type="hidden" name="sport_preference" value={sportPreference} />
+            <Select value={sportPreference} onValueChange={setSportPreference}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SPORT_PREF_CHOICES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.icon} {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-navy-400">
+              Choose one sport or all sports. This controls which schedules and teams you see after login.
+            </p>
           </div>
 
           <div>
@@ -69,7 +93,7 @@ export default function ProfileForm({ user }) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">—</SelectItem>
-                      {POSITIONS.map((p) => (
+                      {positions.map((p) => (
                         <SelectItem key={p} value={p}>
                           {p}
                         </SelectItem>
