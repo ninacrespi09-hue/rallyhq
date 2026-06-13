@@ -38,13 +38,11 @@ export const NAV_SECONDARY = [
   { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/stats", label: "Team Stats", icon: "📊" },
   { href: "/checkin", label: "Wellness", icon: "🩺" },
+  { href: "/wellness-kit", label: "Wellness Kit", icon: "🎒" },
   { href: "/chat", label: "Chat", icon: "💬" },
-  { href: "/dashboard", label: "Dashboard", icon: "📋" },
 ];
 
-export const NAV_SECONDARY_PARENT = [
-  { href: "/dashboard", label: "Dashboard", icon: "📋" },
-];
+export const NAV_SECONDARY_PARENT = [];
 
 export function navPrimaryForRole(role) {
   return role === ROLES.PARENT ? NAV_PARENT : NAV_PRIMARY;
@@ -54,18 +52,18 @@ export function navSecondaryForRole(role) {
   return role === ROLES.PARENT ? NAV_SECONDARY_PARENT : NAV_SECONDARY;
 }
 
-/** Full mobile bottom bar — matches home Explore cards + Home, AI, Dashboard. */
+/** Full mobile bottom bar — matches home Explore cards + Home, AI. */
 export const NAV_MOBILE = [
   { href: "/", label: "Home", icon: "🏠" },
   { href: "/schedule", label: "Schedule", icon: "📅" },
   { href: "/stats", label: "Stats", icon: "📊" },
   { href: "/players", label: "Players", icon: "🏐" },
   { href: "/checkin", label: "Wellness", icon: "🩺" },
+  { href: "/wellness-kit", label: "Wellness Kit", icon: "🎒" },
   { href: "/exercises", label: "Exercises", icon: "💪" },
   { href: "/chat", label: "Chat", icon: "💬" },
   { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/ai-coach", label: "AI", icon: "🤖" },
-  { href: "/dashboard", label: "Dashboard", icon: "📋" },
 ];
 
 export const NAV_MOBILE_PARENT = [
@@ -73,7 +71,6 @@ export const NAV_MOBILE_PARENT = [
   { href: "/schedule", label: "Schedule", icon: "📅" },
   { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/players", label: "Team", icon: "🏐" },
-  { href: "/dashboard", label: "Dashboard", icon: "📋" },
 ];
 
 export function navMobileForRole(role) {
@@ -85,6 +82,7 @@ const PARENT_BLOCKED_PREFIXES = [
   "/exercises",
   "/ai-coach",
   "/checkin",
+  "/wellness-kit",
   "/insights",
   "/chat",
 ];

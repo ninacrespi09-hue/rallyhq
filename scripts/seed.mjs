@@ -9,6 +9,8 @@ const db = getDb();
 
 // ---- reset ----
 for (const t of [
+  "wellness_kit_suggestions",
+  "wellness_kit_items",
   "ai_insights",
   "media_likes",
   "media",
@@ -347,6 +349,40 @@ insertNote.run(playerIds[0], coachId, "Elite court vision. Work on back-row atta
 insertNote.run(playerIds[0], coachId, "Watch the shoulder load on serving days — manage reps.");
 insertNote.run(playerIds[2], coachId, "Most consistent attacker on the team. Ready for a leadership role.");
 
+// ---- wellness kit inventory ----
+const insertKitItem = db.prepare(
+  "INSERT INTO wellness_kit_items (team_id, item_name, quantity, sort_order, updated_by) VALUES (?, ?, ?, ?, ?)"
+);
+const KIT_ITEMS = [
+  ["Athletic tape", "6 rolls"],
+  ["Stretch bands", "4 sets"],
+  ["Ice packs", "12"],
+  ["Foam rollers", "2"],
+  ["Electrolyte packets", "24"],
+  ["Ankle braces", "4"],
+  ["Heat packs", "8"],
+  ["Massage balls", "3"],
+  ["Knee sleeves", "6"],
+  ["Blister care kit", "1"],
+];
+KIT_ITEMS.forEach(([name, qty], i) => insertKitItem.run(teamId, name, qty, i, coachId));
+
+// ---- player wellness kit suggestions ----
+const insertKitSuggestion = db.prepare(
+  "INSERT INTO wellness_kit_suggestions (user_id, suggestion) VALUES (?, ?)"
+);
+const KIT_SUGGESTIONS = [
+  [playerIds[0], "Portable massage gun for away tournaments"],
+  [playerIds[1], "Cooling towels for hot gyms"],
+  [playerIds[2], "Extra pre-wrap rolls"],
+  [playerIds[3], "Compression socks (medium)"],
+  [playerIds[4], "Muscle balm / tiger balm"],
+  [playerIds[5], "Grip tape for sweaty hands"],
+  [playerIds[6], "Resistance loop bands (heavy)"],
+  [playerIds[7], "Instant cold packs for travel"],
+];
+KIT_SUGGESTIONS.forEach(([uid, text]) => insertKitSuggestion.run(uid, text));
+
 console.log("✅ Seeded RallyHQ:");
 console.log(`   1 coach, ${players.length} players`);
 console.log(`   ${gameEventIds.length} past games + practices + upcoming events`);
@@ -355,6 +391,7 @@ console.log("   6 days of check-ins (with soreness/energy/injury trends)");
 console.log("   post-game wellness for the latest game (2 players need rest)");
 console.log("   9 game/tournament action shots (+ likes) + player avatars");
 console.log("   12 recommended exercises + completions");
+console.log("   10 wellness kit items + 8 player suggestions");
 console.log("   3 announcements + coach notes\n");
 console.log("Demo logins (password: password123):");
 console.log("   Coach : coach@rallyhq.dev");

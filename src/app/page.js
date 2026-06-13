@@ -39,6 +39,13 @@ const CARDS = [
     gradient: "from-sky-500 to-cyan-600",
   },
   {
+    href: "/wellness-kit",
+    title: "Wellness Kit",
+    subtitle: "Suggest items for your team kit",
+    icon: "🎒",
+    gradient: "from-teal-400 to-cyan-600",
+  },
+  {
     href: "/exercises",
     title: "Recommended Exercises",
     subtitle: "Drills, training & progress",
@@ -114,10 +121,10 @@ export default async function Landing() {
     : isCoach(user)
       ? wellness?.needRest?.length
         ? {
-            href: "/dashboard",
+            href: "/checkin",
             icon: "🩺",
             title: `${wellness.needRest.length} player${wellness.needRest.length > 1 ? "s" : ""} may need rest`,
-            sub: "Open the team wellness summary",
+            sub: "Review team wellness check-ins",
             gradient: "from-blue-500 to-blue-700",
           }
         : {

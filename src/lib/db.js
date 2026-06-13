@@ -13,6 +13,7 @@ export function getDb() {
     ensureEventRsvpsTable(db);
     ensureChatTables(db);
     ensurePollTables(db);
+    ensureWellnessKitTable(db);
     ensureIndexes(db);
     return db;
   }
@@ -29,6 +30,7 @@ export function getDb() {
   ensureEventRsvpsTable(db);
   ensureChatTables(db);
   ensurePollTables(db);
+  ensureWellnessKitTable(db);
   ensureIndexes(db);
   return db;
 }
@@ -46,6 +48,41 @@ function ensureIndexes(db) {
     CREATE INDEX IF NOT EXISTS idx_poll_votes_poll ON poll_votes(poll_id);
     CREATE INDEX IF NOT EXISTS idx_poll_options_poll ON poll_options(poll_id);
   `);
+}
+
+/** Wellness kit tables — player suggestions + coach-managed inventory. */
+function ensureWellnessKitTable(db) {
+  const suggestions = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'wellness_kit_suggestions'")
+    .get();
+  if (!suggestions) {
+    db.exec(`
+      CREATE TABLE wellness_kit_suggestions (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        suggestion TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+  }
+
+  const items = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'wellness_kit_items'")
+    .get();
+  if (!items) {
+    db.exec(`
+      CREATE TABLE wellness_kit_items (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        team_id    INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        item_name  TEXT NOT NULL,
+        quantity   TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        updated_by INTEGER REFERENCES users(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+  }
 }
 
 /** Team poll tables — added after initial schema. */
