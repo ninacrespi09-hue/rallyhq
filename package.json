@@ -6,7 +6,9 @@
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "node scripts/ensure-demo.mjs && next start",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "seed:rosters": "node scripts/seed-sport-rosters.mjs",
+    "seed:basketball": "node scripts/seed-basketball-demo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

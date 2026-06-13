@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getDb } from "./db";
+import { contentTeamExpr, eventTeamExpr } from "./teamScope";
 
-/** Team id for an event (via the coach who created it). */
+/** Team id for an event (prefers events.team_id). */
 export function eventTeamId(eventId) {
   return getDb()
     .prepare(
-      `SELECT u.team_id FROM events e JOIN users u ON u.id = e.created_by WHERE e.id = ?`
+      `SELECT ${eventTeamExpr("e")} AS team_id FROM events e WHERE e.id = ?`
     )
     .get(Number(eventId))?.team_id;
 }
@@ -15,13 +16,20 @@ export function userTeamId(userId) {
   return getDb().prepare("SELECT team_id FROM users WHERE id = ?").get(Number(userId))?.team_id;
 }
 
-/** Team id for content owned by a user (announcements, exercises, media). */
+/** Team id for content owned by a user (announcements, exercises, media, polls). */
 export function authorTeamId(table, id) {
-  const allowed = { announcements: "author_id", exercises: "created_by", media: "uploaded_by" };
+  const allowed = {
+    announcements: "author_id",
+    exercises: "created_by",
+    media: "uploaded_by",
+    polls: "author_id",
+  };
   const col = allowed[table];
   if (!col) return null;
   return getDb()
-    .prepare(`SELECT u.team_id FROM ${table} t JOIN users u ON u.id = t.${col} WHERE t.id = ?`)
+    .prepare(
+      `SELECT ${contentTeamExpr("t", col)} AS team_id FROM ${table} t WHERE t.id = ?`
+    )
     .get(Number(id))?.team_id;
 }
 

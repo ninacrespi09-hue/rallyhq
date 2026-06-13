@@ -19,11 +19,11 @@ import {
   wellnessNotesFromAi,
 } from "@/lib/playerCoachInsight";
 import { isCoach, isParent } from "@/lib/permissions";
+import { isSportId, getStatsForSport } from "@/lib/sports";
 import {
-  STATS,
   statTotals,
   recentGames,
-  killsTrend,
+  statTrend,
   attendancePct,
   wellnessScore,
   wellnessHistory,
@@ -34,6 +34,8 @@ import {
 export default async function PlayerProfile({ params, searchParams }) {
   const { sport } = await params;
   const { user, teamId } = await getSportPageContext(sport);
+  const SPORT_STATS = getStatsForSport(sport);
+  const primaryStat = SPORT_STATS[0];
 
   const { id } = await params;
   const db = getDb();
@@ -41,7 +43,29 @@ export default async function PlayerProfile({ params, searchParams }) {
     .prepare("SELECT id, name, position, jersey_number, height_cm, bio, photo_url FROM users WHERE id = ? AND role='player'")
     .get(Number(id));
   if (!player) notFound();
-  if (userTeamId(player.id) !== teamId) notFound();
+
+  const playerTeamId = userTeamId(player.id);
+  if (playerTeamId !== teamId) {
+    const playerSport = db.prepare("SELECT sport FROM teams WHERE id = ?").get(playerTeamId)?.sport;
+    if (playerSport && isSportId(playerSport) && playerSport !== sport) {
+      redirect(sportPath(playerSport, `players/${player.id}`));
+    }
+    return (
+      <NavShell user={user} sport={sport}>
+        <Link href={sportPath(sport, "players")} className="text-sm font-medium text-brand-600">
+          ← Back to Roster
+        </Link>
+        <Card className="mt-4">
+          <CardContent className="py-8 text-center">
+            <p className="font-semibold text-navy-800">This player isn&apos;t on your team</p>
+            <p className="mt-2 text-sm text-navy-500">
+              You can only view stats for players on your {sport} roster.
+            </p>
+          </CardContent>
+        </Card>
+      </NavShell>
+    );
+  }
 
   const totals = statTotals(player.id);
   const games = recentGames(player.id, 8);
@@ -50,7 +74,7 @@ export default async function PlayerProfile({ params, searchParams }) {
   const wHistory = wellnessHistory(player.id);
   const injuries = injuryHistory(player.id);
   const aiInsight = getLatestPlayerCoachInsight(player.id);
-  const statInsights = strengthsAndImprovements(player.id, teamId);
+  const statInsights = strengthsAndImprovements(player.id, teamId, SPORT_STATS);
   const { strengths, improvements } = profileInsightsFromAi(aiInsight, statInsights);
   const { wellnessNotes, injuryNote } = wellnessNotesFromAi(aiInsight, wellness, injuries);
   const notes = db
@@ -60,8 +84,8 @@ export default async function PlayerProfile({ params, searchParams }) {
     )
     .all(player.id);
 
-  const statBars = STATS.map((s) => ({ label: s.label, value: totals[s.key] }));
-  const trend = killsTrend(player.id, 8, games);
+  const statBars = SPORT_STATS.map((s) => ({ label: s.label, value: totals[s.key] }));
+  const trend = statTrend(player.id, primaryStat.key, 8, games);
   const parentView = isParent(user);
 
   return (
@@ -99,12 +123,12 @@ export default async function PlayerProfile({ params, searchParams }) {
       <Card className="mt-4">
         <CardContent>
           {isCoach(user) ? (
-            <CoachSeasonStats playerId={player.id} playerName={player.name} totals={totals} />
+            <CoachSeasonStats playerId={player.id} playerName={player.name} totals={totals} stats={SPORT_STATS} />
           ) : (
             <>
               <h2 className="mb-3 font-bold text-navy-900">Season Statistics</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                {STATS.map((s) => (
+                {SPORT_STATS.map((s) => (
                   <div key={s.key} className="rounded-xl bg-navy-50 p-3 text-center">
                     <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
@@ -126,7 +150,7 @@ export default async function PlayerProfile({ params, searchParams }) {
         </Card>
         <Card>
           <CardContent>
-            <h2 className="mb-3 font-bold text-navy-900">Kills Trend (recent games)</h2>
+            <h2 className="mb-3 font-bold text-navy-900">{primaryStat.label} Trend (recent games)</h2>
             {trend.length ? <LineChart points={trend} /> : <p className="text-sm text-navy-400">No games yet.</p>}
           </CardContent>
         </Card>
@@ -168,7 +192,7 @@ export default async function PlayerProfile({ params, searchParams }) {
             )}
           </div>
           {isCoach(user) ? (
-            <CoachPlayerStats player={player} games={games} />
+            <CoachPlayerStats player={player} games={games} stats={SPORT_STATS} />
           ) : games.length === 0 ? (
             <p className="text-sm text-navy-400">No games recorded yet.</p>
           ) : (
@@ -176,7 +200,7 @@ export default async function PlayerProfile({ params, searchParams }) {
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-navy-400">
                   <th className="py-2">Game</th>
-                  {STATS.map((s) => (
+                  {SPORT_STATS.map((s) => (
                     <th key={s.key} className="px-2 text-center">{s.label}</th>
                   ))}
                 </tr>
@@ -188,7 +212,7 @@ export default async function PlayerProfile({ params, searchParams }) {
                       <div className="font-medium text-navy-800">{g.opponent || g.title}</div>
                       <div className="text-xs text-navy-400">{fmtDate(g.start_time)}</div>
                     </td>
-                    {STATS.map((s) => (
+                    {SPORT_STATS.map((s) => (
                       <td key={s.key} className="px-2 text-center text-navy-600">{g[s.key]}</td>
                     ))}
                   </tr>

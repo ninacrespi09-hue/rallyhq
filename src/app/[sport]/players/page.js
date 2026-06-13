@@ -5,6 +5,7 @@ import NavShell from "@/components/NavShell";
 import PageHeader from "@/components/PageHeader";
 import { teamLeaderboard } from "@/lib/stats";
 import { isParent } from "@/lib/permissions";
+import { getStatsForSport } from "@/lib/sports";
 
 // Translucent blue shades so the overlapping circles blend where they meet.
 const CIRCLE_SHADES = [
@@ -23,6 +24,7 @@ export default async function PlayersPage({ params, searchParams }) {
   const { user, teamId } = await getSportPageContext(sport);
 
   const players = teamLeaderboard(teamId);
+  const primaryStat = getStatsForSport(sport)[0];
 
   // Group into rows of four (4 on top, 4 on the bottom for an 8-player roster).
   const rows = [];
@@ -42,6 +44,13 @@ export default async function PlayersPage({ params, searchParams }) {
 
       {/* Roster — overlapping translucent blue circles, four per row */}
       <h2 className="h-section mb-4">Roster</h2>
+      {players.length === 0 ? (
+        <p className="text-sm text-navy-400">
+          {!teamId
+            ? "You're not on a team for this sport yet. Ask your coach for a team code to join."
+            : "No players on this team yet. Share your team code so athletes can join this sport."}
+        </p>
+      ) : (
       <div>
         {rows.map((row, r) => (
           <div key={r} className={`flex ${r > 0 ? "-mt-5 sm:-mt-10 lg:-mt-12" : ""}`}>
@@ -64,6 +73,13 @@ export default async function PlayersPage({ params, searchParams }) {
                           #{p.jersey_number}
                         </div>
                       )}
+                      {p.games > 0 ? (
+                        <div className="mt-1 text-[10px] font-semibold text-white/80 sm:text-xs">
+                          {p[primaryStat.key]} {primaryStat.label}
+                        </div>
+                      ) : (
+                        <div className="mt-1 text-[10px] text-white/60 sm:text-xs">View stats</div>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -72,6 +88,7 @@ export default async function PlayersPage({ params, searchParams }) {
           </div>
         ))}
       </div>
+      )}
     </NavShell>
   );
 }

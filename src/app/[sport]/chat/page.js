@@ -1,5 +1,6 @@
 import { getSportPageContext } from "@/lib/sportPage";
 import { sportPath } from "@/lib/sportPaths";
+import { redirect } from "next/navigation";
 import NavShell from "@/components/NavShell";
 import PageHeader from "@/components/PageHeader";
 import GroupChat from "@/components/GroupChat";
@@ -13,7 +14,7 @@ export default async function ChatPage({ params, searchParams }) {
   blockParent(user);
   if (!canUseGroupChat(user)) redirect("/");
 
-  const rooms = listRoomsForUser(user.id);
+  const rooms = listRoomsForUser(user.id).filter((r) => r.team_id === teamId);
   const roster = chatEligibleUsers(teamId);
 
   return (

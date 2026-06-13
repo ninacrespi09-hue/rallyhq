@@ -7,7 +7,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import StatEditor from "./StatEditor";
 
-export default function CoachPlayerStats({ player, games }) {
+export default function CoachPlayerStats({ player, games, stats = STATS }) {
   const router = useRouter();
   const [editing, setEditing] = useState(null);
 
@@ -26,7 +26,7 @@ export default function CoachPlayerStats({ player, games }) {
           );
         },
       },
-      ...STATS.map((s) => ({
+      ...stats.map((s) => ({
         id: s.key,
         header: s.label,
         cell: ({ row }) => (
@@ -50,7 +50,7 @@ export default function CoachPlayerStats({ player, games }) {
         ),
       },
     ],
-    []
+    [stats]
   );
 
   if (!games.length) {

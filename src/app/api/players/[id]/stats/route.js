@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { userTeamId, forbiddenTeam } from "@/lib/tenancy";
+import { eventTeamExpr } from "@/lib/teamScope";
 import { STATS, statTotals } from "@/lib/stats";
 import { regeneratePlayerCoachInsight } from "@/lib/playerCoachInsight";
 
@@ -35,18 +36,18 @@ export async function POST(req, { params }) {
   if (rows.length === 0) {
     let eventId = db
       .prepare(
-        `SELECT e.id FROM events e JOIN users u ON u.id = e.created_by
-         WHERE u.team_id = ? AND e.title = 'Season stat entry' LIMIT 1`
+        `SELECT e.id FROM events e
+         WHERE ${eventTeamExpr("e")} = ? AND e.title = 'Season stat entry' LIMIT 1`
       )
       .get(user.team_id)?.id;
 
     if (!eventId) {
       eventId = db
         .prepare(
-          `INSERT INTO events (title, type, start_time, created_by, opponent)
-           VALUES ('Season stat entry', 'game', datetime('now'), ?, 'Coach entry')`
+          `INSERT INTO events (title, type, start_time, created_by, opponent, team_id)
+           VALUES ('Season stat entry', 'game', datetime('now'), ?, 'Coach entry', ?)`
         )
-        .run(user.id).lastInsertRowid;
+        .run(user.id, user.team_id).lastInsertRowid;
     }
 
     db.prepare(

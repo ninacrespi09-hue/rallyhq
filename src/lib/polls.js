@@ -1,23 +1,24 @@
 import { getDb } from "./db";
+import { contentTeamExpr } from "./teamScope";
 
 /** Team id for a poll via its author. */
 export function pollTeamId(pollId) {
   return getDb()
     .prepare(
-      `SELECT u.team_id FROM polls p JOIN users u ON u.id = p.author_id WHERE p.id = ?`
+      `SELECT ${contentTeamExpr("p", "author_id")} AS team_id FROM polls p WHERE p.id = ?`
     )
     .get(Number(pollId))?.team_id;
 }
 
 /** Create a poll with 2–5 choices. */
-export function createPoll({ authorId, question, choices, pinned = false }) {
+export function createPoll({ authorId, teamId, question, choices, pinned = false }) {
   const db = getDb();
   const tx = db.transaction(() => {
     const info = db
       .prepare(
-        `INSERT INTO polls (author_id, question, pinned) VALUES (?, ?, ?)`
+        `INSERT INTO polls (author_id, question, pinned, team_id) VALUES (?, ?, ?, ?)`
       )
-      .run(authorId, question.trim(), pinned ? 1 : 0);
+      .run(authorId, question.trim(), pinned ? 1 : 0, teamId || null);
     const pollId = info.lastInsertRowid;
     const insert = db.prepare(
       `INSERT INTO poll_options (poll_id, label, sort_order) VALUES (?, ?, ?)`
@@ -82,7 +83,7 @@ export function listTeamPolls(teamId) {
     .prepare(
       `SELECT p.*, u.name AS author FROM polls p
        JOIN users u ON u.id = p.author_id
-       WHERE u.team_id = ?
+       WHERE ${contentTeamExpr("p", "author_id")} = ?
        ORDER BY p.pinned DESC, p.created_at DESC
        LIMIT 50`
     )

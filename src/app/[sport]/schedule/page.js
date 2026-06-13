@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getDb } from "@/lib/db";
 import { fmtDateTime, getEventStyle } from "@/lib/format";
+import { eventTeamExpr } from "@/lib/teamScope";
 import EventCreator from "@/components/EventCreator";
 import PageHeader from "@/components/PageHeader";
 import QuickDelete from "@/components/QuickDelete";
@@ -58,15 +59,15 @@ export default async function SchedulePage({ params, searchParams }) {
       )}
 
       <Legend />
-      <ViewTabs view={view} />
+      <ViewTabs view={view} sport={sport} />
 
       <div className="mt-5">
         {view === "calendar" ? (
-          <CalendarView monthParam={sp.month} teamId={teamId} />
+          <CalendarView monthParam={sp.month} teamId={teamId} sport={sport} />
         ) : activeView.type ? (
-          <TypeView type={activeView.type} label={activeView.label} isCoach={user.role === "coach"} teamId={teamId} />
+          <TypeView type={activeView.type} label={activeView.label} isCoach={user.role === "coach"} teamId={teamId} sport={sport} />
         ) : (
-          <UpcomingView isCoach={user.role === "coach"} teamId={teamId} />
+          <UpcomingView isCoach={user.role === "coach"} teamId={teamId} sport={sport} />
         )}
       </div>
     </NavShell>
@@ -75,22 +76,19 @@ export default async function SchedulePage({ params, searchParams }) {
 
 /* -------------------------------- Sub views -------------------------------- */
 
-function UpcomingView({ isCoach, teamId }) {
+function UpcomingView({ isCoach, teamId, sport }) {
   const db = getDb();
-  const teamFilter = teamId
-    ? "JOIN users u ON u.id = e.created_by WHERE u.team_id = ? AND"
-    : "WHERE";
+  const teamWhere = teamId ? `WHERE ${eventTeamExpr("e")} = ? AND` : "WHERE";
   const upcoming = db
     .prepare(
-      `SELECT e.* FROM events e ${teamFilter} date(e.start_time) >= date('now') ORDER BY e.start_time ASC LIMIT 40`
+      `SELECT e.* FROM events e ${teamWhere} date(e.start_time) >= date('now') ORDER BY e.start_time ASC LIMIT 40`
     )
     .all(...(teamId ? [teamId] : []));
   const past = db
     .prepare(
       `SELECT e.*, r.result, r.our_score, r.opp_score
        FROM events e LEFT JOIN game_results r ON r.event_id = e.id
-       ${teamId ? "JOIN users u ON u.id = e.created_by" : ""}
-       WHERE ${teamId ? "u.team_id = ? AND" : ""} date(e.start_time) < date('now') ORDER BY e.start_time DESC LIMIT 20`
+       WHERE ${teamId ? `${eventTeamExpr("e")} = ? AND` : ""} date(e.start_time) < date('now') ORDER BY e.start_time DESC LIMIT 20`
     )
     .all(...(teamId ? [teamId] : []));
 
@@ -100,7 +98,7 @@ function UpcomingView({ isCoach, teamId }) {
       <div className="space-y-2">
         {upcoming.length === 0 && <p className="text-sm text-navy-400">No upcoming events.</p>}
         {upcoming.map((e) => (
-          <EventRow key={e.id} e={e} isCoach={isCoach} />
+          <EventRow key={e.id} e={e} isCoach={isCoach} sport={sport} />
         ))}
       </div>
 
@@ -108,20 +106,19 @@ function UpcomingView({ isCoach, teamId }) {
       <div className="space-y-2">
         {past.length === 0 && <p className="text-sm text-navy-400">No past events.</p>}
         {past.map((e) => (
-          <EventRow key={e.id} e={e} past isCoach={isCoach} />
+          <EventRow key={e.id} e={e} past isCoach={isCoach} sport={sport} />
         ))}
       </div>
     </>
   );
 }
 
-function TypeView({ type, label, isCoach, teamId }) {
+function TypeView({ type, label, isCoach, teamId, sport }) {
   const db = getDb();
-  const teamJoin = teamId ? "JOIN users u ON u.id = e.created_by" : "";
-  const teamWhere = teamId ? "u.team_id = ? AND" : "";
+  const teamWhere = teamId ? `${eventTeamExpr("e")} = ? AND` : "";
   const upcoming = db
     .prepare(
-      `SELECT e.* FROM events e ${teamJoin}
+      `SELECT e.* FROM events e
        WHERE ${teamWhere} e.type = ? AND date(e.start_time) >= date('now') ORDER BY e.start_time ASC LIMIT 40`
     )
     .all(...(teamId ? [teamId, type] : [type]));
@@ -129,7 +126,6 @@ function TypeView({ type, label, isCoach, teamId }) {
     .prepare(
       `SELECT e.*, r.result, r.our_score, r.opp_score
        FROM events e LEFT JOIN game_results r ON r.event_id = e.id
-       ${teamJoin}
        WHERE ${teamWhere} e.type = ? AND date(e.start_time) < date('now') ORDER BY e.start_time DESC LIMIT 20`
     )
     .all(...(teamId ? [teamId, type] : [type]));
@@ -150,7 +146,7 @@ function TypeView({ type, label, isCoach, teamId }) {
           <h2 className="h-section mb-2">Upcoming {label.toLowerCase()}</h2>
           <div className="space-y-2">
             {upcoming.map((e) => (
-              <EventRow key={e.id} e={e} isCoach={isCoach} />
+              <EventRow key={e.id} e={e} isCoach={isCoach} sport={sport} />
             ))}
           </div>
         </>
@@ -160,7 +156,7 @@ function TypeView({ type, label, isCoach, teamId }) {
           <h2 className="h-section mb-2 mt-8">Past {label.toLowerCase()}</h2>
           <div className="space-y-2">
             {past.map((e) => (
-              <EventRow key={e.id} e={e} past isCoach={isCoach} />
+              <EventRow key={e.id} e={e} past isCoach={isCoach} sport={sport} />
             ))}
           </div>
         </>
@@ -177,7 +173,7 @@ const MONTHS = [
 ];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function CalendarView({ monthParam, teamId }) {
+function CalendarView({ monthParam, teamId, sport }) {
   // Determine the month to show (YYYY-MM), defaulting to the current month.
   const now = new Date();
   let year = now.getFullYear();
@@ -197,8 +193,8 @@ function CalendarView({ monthParam, teamId }) {
   const events = teamId
     ? getDb()
         .prepare(
-          `SELECT e.* FROM events e JOIN users u ON u.id = e.created_by
-           WHERE u.team_id = ? AND e.start_time >= ? AND e.start_time < ?
+          `SELECT e.* FROM events e
+           WHERE ${eventTeamExpr("e")} = ? AND e.start_time >= ? AND e.start_time < ?
            ORDER BY e.start_time ASC`
         )
         .all(teamId, monthStart, monthEnd)
@@ -234,13 +230,13 @@ function CalendarView({ monthParam, teamId }) {
       <CardContent>
       <div className="mb-4 flex items-center justify-between">
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/schedule?view=calendar&month=${prev}`}>← Prev</Link>
+          <Link href={sportPath(sport, `schedule?view=calendar&month=${prev}`)}>← Prev</Link>
         </Button>
         <h2 className="text-lg font-extrabold text-navy-900">
           {MONTHS[month]} {year}
         </h2>
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/schedule?view=calendar&month=${next}`}>Next →</Link>
+          <Link href={sportPath(sport, `schedule?view=calendar&month=${next}`)}>Next →</Link>
         </Button>
       </div>
 
@@ -294,11 +290,14 @@ function CalendarView({ monthParam, teamId }) {
 
 /* --------------------------------- Pieces --------------------------------- */
 
-function ViewTabs({ view }) {
+function ViewTabs({ view, sport }) {
   return (
     <div className="mt-4 flex flex-wrap gap-2">
       {VIEWS.map((v) => {
-        const href = v.key === "upcoming" ? "/schedule" : `/schedule?view=${v.key}`;
+        const href =
+          v.key === "upcoming"
+            ? sportPath(sport, "schedule")
+            : sportPath(sport, `schedule?view=${v.key}`);
         const active = view === v.key;
         return (
           <Button
@@ -335,7 +334,7 @@ function Legend() {
   );
 }
 
-function EventRow({ e, past, isCoach }) {
+function EventRow({ e, past, isCoach, sport }) {
   const s = getEventStyle(e.type);
   return (
     <Card className={`flex items-center gap-3 ${s.ring} ${s.bg}`}>

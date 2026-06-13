@@ -1,6 +1,8 @@
 import { getDb } from "./db";
 import { isSportId } from "./sports";
 
+export const SPORT_COOKIE = "rallyhq_sport";
+
 /** Teams a user can access per sport (for multi-sport schedule + hubs). */
 export function getUserSportTeams(userId) {
   const db = getDb();

@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/dialog";
 import { useApiMutation } from "@/hooks/use-api";
 
-export default function CoachSeasonStats({ playerId, playerName, totals }) {
+export default function CoachSeasonStats({ playerId, playerName, totals, stats = STATS }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [vals, setVals] = useState(() => {
     const v = {};
-    STATS.forEach((s) => (v[s.key] = totals[s.key] ?? 0));
+    stats.forEach((s) => (v[s.key] = totals[s.key] ?? 0));
     return v;
   });
   const [error, setError] = useState("");
@@ -34,7 +34,7 @@ export default function CoachSeasonStats({ playerId, playerName, totals }) {
 
   function openEditor() {
     const v = {};
-    STATS.forEach((s) => (v[s.key] = totals[s.key] ?? 0));
+    stats.forEach((s) => (v[s.key] = totals[s.key] ?? 0));
     setVals(v);
     setError("");
     setOpen(true);
@@ -61,7 +61,7 @@ export default function CoachSeasonStats({ playerId, playerName, totals }) {
         </Button>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {STATS.map((s) => (
+        {stats.map((s) => (
           <Card key={s.key} className="border-0 bg-navy-50 shadow-none">
             <CardContent className="p-3 text-center">
               <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
@@ -79,7 +79,7 @@ export default function CoachSeasonStats({ playerId, playerName, totals }) {
               <DialogDescription>Update season totals</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-3 py-4">
-              {STATS.map((s) => (
+              {stats.map((s) => (
                 <div key={s.key}>
                   <Label>{s.label}</Label>
                   <Input

@@ -2,6 +2,8 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { getDb } from "./db";
+import { isSportId } from "./sports";
+import { resolveTeamId, SPORT_COOKIE } from "./sportTeams";
 
 const COOKIE = "rallyhq_session";
 const COOKIE_OPTS = {
@@ -54,6 +56,34 @@ export async function destroySession() {
   jar.set(COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
 }
 
+function applyActiveSportTeam(user, sport) {
+  if (!sport || !isSportId(sport)) return user;
+  const sportTeamId = resolveTeamId(user, sport);
+  if (!sportTeamId) {
+    return {
+      ...user,
+      primary_team_id: user.team_id,
+      active_sport: sport,
+      team_id: null,
+      team_name: null,
+      team_code: null,
+      team_sport: sport,
+    };
+  }
+  const team = getDb()
+    .prepare("SELECT name, code, sport FROM teams WHERE id = ?")
+    .get(sportTeamId);
+  return {
+    ...user,
+    primary_team_id: user.team_id,
+    active_sport: sport,
+    team_id: sportTeamId,
+    team_name: team?.name ?? user.team_name,
+    team_code: team?.code ?? user.team_code,
+    team_sport: team?.sport ?? sport,
+  };
+}
+
 /** Returns the logged-in user row (without password) or null. */
 export async function getCurrentUser() {
   const jar = await cookies();
@@ -69,7 +99,9 @@ export async function getCurrentUser() {
          FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.id = ?`
       )
       .get(payload.uid);
-    return user || null;
+    if (!user) return null;
+    const sport = jar.get(SPORT_COOKIE)?.value;
+    return applyActiveSportTeam(user, sport);
   } catch {
     return null;
   }

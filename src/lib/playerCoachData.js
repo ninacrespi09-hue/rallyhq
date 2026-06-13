@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { contentTeamExpr } from "./teamScope";
 import {
   statTotals,
   attendancePct,
@@ -46,14 +47,13 @@ export function buildPlayerCoachProfile(userId, teamId) {
     .prepare(
       `SELECT COUNT(*) AS c FROM exercise_completions ec
        JOIN exercises ex ON ex.id = ec.exercise_id
-       JOIN users u ON u.id = ex.created_by
-       WHERE ec.user_id = ? AND u.team_id = ?`
+       WHERE ec.user_id = ? AND ${contentTeamExpr("ex", "created_by")} = ?`
     )
     .get(userId, teamId)?.c ?? 0;
 
   const exercisesTotal = db
     .prepare(
-      `SELECT COUNT(*) AS c FROM exercises ex JOIN users u ON u.id = ex.created_by WHERE u.team_id = ?`
+      `SELECT COUNT(*) AS c FROM exercises ex WHERE ${contentTeamExpr("ex", "created_by")} = ?`
     )
     .get(teamId)?.c ?? 0;
 
@@ -64,8 +64,8 @@ export function buildPlayerCoachProfile(userId, teamId) {
                 SELECT 1 FROM exercise_completions ec
                 WHERE ec.exercise_id = e.id AND ec.user_id = ?
               ) AS completed
-       FROM exercises e JOIN users u ON u.id = e.created_by
-       WHERE u.team_id = ?
+       FROM exercises e
+       WHERE ${contentTeamExpr("e", "created_by")} = ?
        ORDER BY e.title`
     )
     .all(userId, teamId)

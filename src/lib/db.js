@@ -15,6 +15,7 @@ export function getDb() {
     ensurePollTables(db);
     ensureWellnessKitTable(db);
     ensureMultiSportTables(db);
+    ensureContentTeamIds(db);
     ensureIndexes(db);
     return db;
   }
@@ -33,6 +34,7 @@ export function getDb() {
   ensurePollTables(db);
   ensureWellnessKitTable(db);
   ensureMultiSportTables(db);
+  ensureContentTeamIds(db);
   ensureIndexes(db);
   return db;
 }
@@ -96,6 +98,30 @@ function ensureMultiSportTables(db) {
      ON CONFLICT(user_id, sport) DO NOTHING`
   );
   for (const u of users) insert.run(u.user_id, u.sport, u.team_id);
+}
+
+/** Optional team_id on content tables so multi-sport coaches don't share data across sports. */
+function ensureContentTeamIds(db) {
+  const has = (table, col) =>
+    db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === col);
+
+  const tables = [
+    { name: "exercises", owner: "created_by" },
+    { name: "announcements", owner: "author_id" },
+    { name: "media", owner: "uploaded_by" },
+    { name: "polls", owner: "author_id" },
+  ];
+
+  for (const { name, owner } of tables) {
+    if (!has(name, "team_id")) {
+      db.exec(`ALTER TABLE ${name} ADD COLUMN team_id INTEGER REFERENCES teams(id)`);
+      db.exec(`
+        UPDATE ${name} SET team_id = (
+          SELECT u.team_id FROM users u WHERE u.id = ${name}.${owner}
+        ) WHERE team_id IS NULL
+      `);
+    }
+  }
 }
 
 /** Wellness kit tables — player suggestions + coach-managed inventory. */

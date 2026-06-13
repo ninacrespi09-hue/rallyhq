@@ -14,8 +14,8 @@ export async function POST(req) {
 
   const info = getDb()
     .prepare(
-      `INSERT INTO exercises (title, instructions, reps, difficulty, category, coach_notes, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO exercises (title, instructions, reps, difficulty, category, coach_notes, created_by, team_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       title.trim(),
@@ -24,7 +24,8 @@ export async function POST(req) {
       difficulty || "Beginner",
       category || "Skills",
       coach_notes || null,
-      user.id
+      user.id,
+      user.team_id || null
     );
   return NextResponse.json({ ok: true, id: info.lastInsertRowid });
 }

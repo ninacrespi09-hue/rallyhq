@@ -16,10 +16,10 @@ export async function POST(req) {
   const cat = ["announcement", "exercise", "info"].includes(category) ? category : "announcement";
   getDb()
     .prepare(
-      `INSERT INTO announcements (author_id, title, body, category, pinned)
-       VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO announcements (author_id, title, body, category, pinned, team_id)
+       VALUES (?, ?, ?, ?, ?, ?)`
     )
-    .run(user.id, title.trim(), body.trim(), cat, pinned ? 1 : 0);
+    .run(user.id, title.trim(), body.trim(), cat, pinned ? 1 : 0, user.team_id || null);
 
   return NextResponse.json({ ok: true });
 }

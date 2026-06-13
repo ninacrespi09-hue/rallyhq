@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import NavShell from "@/components/NavShell";
 import TeamCodeBadge from "@/components/TeamCodeBadge";
 import { upcomingEvents, teamWellness, todaysCheckin } from "@/lib/queries";
+import { getDb } from "@/lib/db";
 import { fmtDate, getEventStyle } from "@/lib/format";
 import { isCoach, isParent, isPlayer } from "@/lib/permissions";
 import { getSportConfig } from "@/lib/sports";
@@ -98,6 +99,9 @@ const PARENT_CARDS = (sport) => [
 export default function SportHome({ user, sport }) {
   const cfg = getSportConfig(sport);
   const teamId = resolveTeamId(user, sport);
+  const teamRow = teamId
+    ? getDb().prepare("SELECT name, code FROM teams WHERE id = ?").get(teamId)
+    : null;
   const nextEvent = teamId ? upcomingEvents(1, teamId)[0] : null;
   const wellness = isCoach(user) && teamId ? teamWellness(teamId) : null;
   const checkin = isPlayer(user) ? todaysCheckin(user.id) : null;
@@ -171,9 +175,9 @@ export default function SportHome({ user, sport }) {
             </p>
           )}
 
-          {isCoach(user) && user.team_code && sport === user.team_sport && (
+          {isCoach(user) && teamRow && (
             <div className="mt-4">
-              <TeamCodeBadge code={user.team_code} teamName={user.team_name} isCoach />
+              <TeamCodeBadge code={teamRow.code} teamName={teamRow.name} isCoach />
             </div>
           )}
 

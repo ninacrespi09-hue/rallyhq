@@ -1,5 +1,6 @@
 import { getDb } from "./db";
 import { wellnessLevel, levelRank } from "./wellness";
+import { eventTeamExpr, contentTeamExpr } from "./teamScope";
 
 /** Aggregate season stat totals for one player. */
 export function playerStatTotals(userId) {
@@ -41,7 +42,7 @@ export function teamRecord(teamId) {
         `SELECT SUM(CASE WHEN r.result='W' THEN 1 ELSE 0 END) AS wins,
                 SUM(CASE WHEN r.result='L' THEN 1 ELSE 0 END) AS losses
          FROM game_results r JOIN events e ON e.id = r.event_id
-         JOIN users u ON u.id = e.created_by WHERE u.team_id = ?`
+         WHERE ${eventTeamExpr("e")} = ?`
       ).get(teamId)
     : db.prepare(
         `SELECT SUM(CASE WHEN result='W' THEN 1 ELSE 0 END) AS wins,
@@ -59,8 +60,8 @@ export function upcomingEvents(limit = 10, teamId) {
   }
   return getDb()
     .prepare(
-      `SELECT e.* FROM events e JOIN users u ON u.id = e.created_by
-       WHERE u.team_id = ? AND date(e.start_time) >= date('now')
+      `SELECT e.* FROM events e
+       WHERE ${eventTeamExpr("e")} = ? AND date(e.start_time) >= date('now')
        ORDER BY e.start_time ASC LIMIT ?`
     )
     .all(teamId, limit);
@@ -109,19 +110,15 @@ export function recentMedia(limit = 3, teamId) {
   return getDb()
     .prepare(
       `SELECT m.id, m.url, m.caption FROM media m
-       JOIN users u ON u.id = m.uploaded_by
-       WHERE u.team_id = ? ORDER BY m.created_at DESC, m.id DESC LIMIT ?`
+       WHERE ${contentTeamExpr("m", "uploaded_by")} = ?
+       ORDER BY m.created_at DESC, m.id DESC LIMIT ?`
     )
     .all(teamId, limit);
 }
 
-/** All players on a team. */
+/** All players on a team (empty if no team). */
 export function allPlayers(teamId) {
-  if (!teamId) {
-    return getDb()
-      .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' ORDER BY name")
-      .all();
-  }
+  if (!teamId) return [];
   return getDb()
     .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' AND team_id = ? ORDER BY name")
     .all(teamId);

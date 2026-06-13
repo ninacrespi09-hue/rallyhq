@@ -1,5 +1,6 @@
 import { getDb } from "./db";
 import { STATS } from "./statDefs";
+import { eventTeamExpr } from "./teamScope";
 
 // Re-export so server modules can keep importing STATS from "@/lib/stats".
 export { STATS };
@@ -16,17 +17,18 @@ export function statTotals(userId) {
     .get(userId);
 }
 
-/** Every player with season totals — optionally scoped to a team. */
+/** Every player with season totals — scoped to a team (empty if no team). */
 export function teamLeaderboard(teamId) {
-  const where = teamId ? "WHERE u.role = 'player' AND u.team_id = ?" : "WHERE u.role = 'player'";
+  if (!teamId) return [];
   return getDb()
     .prepare(
       `SELECT u.id, u.name, u.position, u.jersey_number, u.photo_url,
               COUNT(ps.id) AS games, ${SUMS}
        FROM users u LEFT JOIN player_stats ps ON ps.user_id = u.id
-       ${where} GROUP BY u.id ORDER BY u.name`
+       WHERE u.role = 'player' AND u.team_id = ?
+       GROUP BY u.id ORDER BY u.name`
     )
-    .all(...(teamId ? [teamId] : []));
+    .all(teamId);
 }
 
 /** Attendance percentage (present or late counts as attended). */
@@ -80,20 +82,25 @@ export function recentGames(userId, limit = 6) {
 }
 
 /** Kills-over-time points for the profile trend chart. Pass `games` to avoid a duplicate query. */
-export function killsTrend(userId, limit = 8, gamesIn) {
+/** Per-game values for one stat column (e.g. Points, Goals, Kills). */
+export function statTrend(userId, statKey = "kills", limit = 8, gamesIn) {
   const games = gamesIn ?? recentGames(userId, limit);
   if (games.length > 0) {
     return [...games].reverse().map((g) => ({
       label: g.opponent || g.title || "Game",
-      value: Number(g.kills) || 0,
+      value: Number(g[statKey]) || 0,
     }));
   }
-
   const totals = statTotals(userId);
-  if ((totals.kills ?? 0) > 0 || totals.games > 0) {
-    return [{ label: "Season", value: Number(totals.kills) || 0 }];
+  if ((totals[statKey] ?? 0) > 0 || totals.games > 0) {
+    return [{ label: "Season", value: Number(totals[statKey]) || 0 }];
   }
   return [];
+}
+
+/** @deprecated Use statTrend(userId, "kills", ...) */
+export function killsTrend(userId, limit = 8, gamesIn) {
+  return statTrend(userId, "kills", limit, gamesIn);
 }
 
 /** Recent daily check-ins for the wellness history list/chart. */
@@ -122,22 +129,21 @@ export function injuryHistory(userId, limit = 12) {
 }
 
 /** Heuristic strengths + areas for improvement from stat profile vs. team. */
-export function strengthsAndImprovements(userId, teamId) {
+export function strengthsAndImprovements(userId, teamId, statDefs = STATS) {
   const board = teamLeaderboard(teamId);
   const me = board.find((p) => p.id === userId);
   if (!me || me.games === 0) {
     return { strengths: ["Building a baseline — keep logging games."], improvements: ["Play more games to unlock insights."] };
   }
 
-  // Team per-game average for each stat.
   const teamAvg = {};
-  for (const s of STATS) {
+  for (const s of statDefs) {
     const totalGames = board.reduce((a, p) => a + p.games, 0) || 1;
     const totalStat = board.reduce((a, p) => a + p[s.key], 0);
     teamAvg[s.key] = totalStat / totalGames;
   }
 
-  const ranked = STATS.map((s) => {
+  const ranked = statDefs.map((s) => {
     const perGame = me[s.key] / me.games;
     const avg = teamAvg[s.key] || 0.0001;
     return { label: s.label, ratio: perGame / (avg || 0.0001), perGame };
@@ -179,8 +185,7 @@ export function teamTrends(teamId) {
         .prepare(
           `SELECT e.id, e.title, e.opponent, e.start_time, r.result, r.our_score, r.opp_score
            FROM events e JOIN game_results r ON r.event_id = e.id
-           JOIN users u ON u.id = e.created_by
-           WHERE u.team_id = ? ORDER BY e.start_time ASC`
+           WHERE ${eventTeamExpr("e")} = ? ORDER BY e.start_time ASC`
         )
         .all(teamId)
     : db

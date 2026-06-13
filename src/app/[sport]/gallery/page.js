@@ -2,6 +2,7 @@ import { getSportPageContext } from "@/lib/sportPage";
 import { sportPath } from "@/lib/sportPaths";
 import NavShell from "@/components/NavShell";
 import { getDb } from "@/lib/db";
+import { contentTeamExpr, eventTeamExpr } from "@/lib/teamScope";
 import Gallery from "@/components/Gallery";
 
 export default async function GalleryPage({ params, searchParams }) {
@@ -18,7 +19,7 @@ export default async function GalleryPage({ params, searchParams }) {
        FROM media m
        LEFT JOIN events e ON e.id = m.event_id
        JOIN users u ON u.id = m.uploaded_by
-       WHERE u.team_id = ?
+       WHERE ${contentTeamExpr("m", "uploaded_by")} = ?
        ORDER BY m.created_at DESC, m.id DESC
        LIMIT 120`
     )
@@ -27,8 +28,7 @@ export default async function GalleryPage({ params, searchParams }) {
   const events = db
     .prepare(
       `SELECT e.id, e.title, e.type FROM events e
-       JOIN users u ON u.id = e.created_by
-       WHERE u.team_id = ? AND e.type IN ('game','tournament') ORDER BY e.start_time DESC LIMIT 40`
+       WHERE ${eventTeamExpr("e")} = ? AND e.type IN ('game','tournament') ORDER BY e.start_time DESC LIMIT 40`
     )
     .all(teamId);
 

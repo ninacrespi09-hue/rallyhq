@@ -56,8 +56,8 @@ export async function POST(req) {
 
   const info = db
     .prepare(
-      `INSERT INTO media (url, caption, event_id, category, favorite, uploaded_by, uploader_role, ratio)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO media (url, caption, event_id, category, favorite, uploaded_by, uploader_role, ratio, team_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       url,
@@ -67,7 +67,8 @@ export async function POST(req) {
       form.get("favorite") === "true" ? 1 : 0,
       user.id,
       user.role,
-      ratio
+      ratio,
+      user.team_id || null
     );
 
   return NextResponse.json({ ok: true, id: info.lastInsertRowid, url });

@@ -19,10 +19,10 @@ export async function POST(req) {
   const db = getDb();
   const info = db
     .prepare(
-      `INSERT INTO events (type, title, opponent, location, start_time, end_time, notes, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO events (type, title, opponent, location, start_time, end_time, notes, created_by, team_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .run(type, title.trim(), opponent || null, location || null, start_time, end_time || null, notes || null, user.id);
+    .run(type, title.trim(), opponent || null, location || null, start_time, end_time || null, notes || null, user.id, user.team_id);
 
   return NextResponse.json({ ok: true, id: info.lastInsertRowid });
 }

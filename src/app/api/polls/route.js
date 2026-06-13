@@ -33,6 +33,7 @@ export async function POST(req) {
 
   const pollId = createPoll({
     authorId: user.id,
+    teamId: user.team_id,
     question,
     choices,
     pinned: !!body.pinned,

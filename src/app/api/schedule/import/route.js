@@ -29,8 +29,8 @@ export async function POST(req) {
 
   const db = getDb();
   const insert = db.prepare(
-    `INSERT INTO events (type, title, opponent, location, start_time, end_time, notes, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO events (type, title, opponent, location, start_time, end_time, notes, created_by, team_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   const saved = [];
@@ -67,7 +67,8 @@ export async function POST(req) {
         startIso,
         endIso,
         e.notes?.trim() || null,
-        user.id
+        user.id,
+        user.team_id
       );
       saved.push(info.lastInsertRowid);
     }
