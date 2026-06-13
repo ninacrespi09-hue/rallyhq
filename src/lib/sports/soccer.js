@@ -1,0 +1,20 @@
+export const soccer = {
+  id: "soccer",
+  label: "Soccer",
+  icon: "⚽",
+  gradient: "from-emerald-400 to-green-700",
+  tagline: "Goals, assists, and recovery tools for your soccer squad.",
+  stats: [
+    { key: "kills", label: "Goals" },
+    { key: "assists", label: "Assists" },
+    { key: "hits", label: "Shots" },
+    { key: "digs", label: "Saves" },
+    { key: "blocks", label: "Tackles" },
+  ],
+  leaderboardColumns: ["kills", "assists", "hits", "blocks", "digs"],
+  trendMetric: (row) => (row.kills || 0) + (row.assists || 0),
+  positions: ["Goalkeeper", "Center Back", "Full Back", "Defensive Mid", "Central Mid", "Winger", "Striker"],
+  playersCardIcon: "⚽",
+  scoreLabel: "Goals",
+  aiSportName: "soccer",
+};

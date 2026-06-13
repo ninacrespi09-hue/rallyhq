@@ -1,3 +1,5 @@
+import { getPositionsForSport } from "./sports";
+
 export function fmtDate(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -69,6 +71,10 @@ export const POSITIONS = [
   "Defensive Specialist",
   "Serving Specialist",
 ];
+
+export function positionsForSport(sport) {
+  return getPositionsForSport(sport);
+}
 
 export const SEVERITY_STYLES = {
   high: "bg-blue-100 text-blue-800",

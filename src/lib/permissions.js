@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { sportPath } from "./sportPaths";
+import { getSportConfig } from "./sports";
 
 export const ROLES = {
   COACH: "coach",
@@ -35,6 +37,7 @@ export const NAV_PARENT = [
 ];
 
 export const NAV_SECONDARY = [
+  { href: "/schedule/all", label: "All Sports", icon: "🗓️" },
   { href: "/gallery", label: "Gallery", icon: "📷" },
   { href: "/stats", label: "Team Stats", icon: "📊" },
   { href: "/checkin", label: "Wellness", icon: "🩺" },
@@ -43,14 +46,6 @@ export const NAV_SECONDARY = [
 ];
 
 export const NAV_SECONDARY_PARENT = [];
-
-export function navPrimaryForRole(role) {
-  return role === ROLES.PARENT ? NAV_PARENT : NAV_PRIMARY;
-}
-
-export function navSecondaryForRole(role) {
-  return role === ROLES.PARENT ? NAV_SECONDARY_PARENT : NAV_SECONDARY;
-}
 
 /** Full mobile bottom bar — matches home Explore cards + Home, AI. */
 export const NAV_MOBILE = [
@@ -73,8 +68,31 @@ export const NAV_MOBILE_PARENT = [
   { href: "/players", label: "Team", icon: "🏐" },
 ];
 
-export function navMobileForRole(role) {
-  return role === ROLES.PARENT ? NAV_MOBILE_PARENT : NAV_MOBILE;
+export function prefixNavForSport(items, sport) {
+  if (!sport) return items;
+  const cfg = getSportConfig(sport);
+  return items.map((item) => {
+    if (item.href === "/schedule/all") return item;
+    if (item.href === "/") return { ...item, href: sportPath(sport) };
+    const next = { ...item, href: sportPath(sport, item.href.slice(1)) };
+    if (item.label === "Players" || item.label === "Team") next.icon = cfg.icon;
+    return next;
+  });
+}
+
+export function navPrimaryForRole(role, sport) {
+  const base = role === ROLES.PARENT ? NAV_PARENT : NAV_PRIMARY;
+  return prefixNavForSport(base, sport);
+}
+
+export function navSecondaryForRole(role, sport) {
+  const base = role === ROLES.PARENT ? NAV_SECONDARY_PARENT : NAV_SECONDARY;
+  return prefixNavForSport(base, sport);
+}
+
+export function navMobileForRole(role, sport) {
+  const base = role === ROLES.PARENT ? NAV_MOBILE_PARENT : NAV_MOBILE;
+  return prefixNavForSport(base, sport);
 }
 
 const PARENT_BLOCKED_PREFIXES = [
@@ -87,10 +105,15 @@ const PARENT_BLOCKED_PREFIXES = [
   "/chat",
 ];
 
+function stripSportPrefix(pathname) {
+  return pathname.replace(/^\/(volleyball|basketball|soccer)(?=\/|$)/, "") || "/";
+}
+
 /** Redirect parents away from coach/player-only pages. */
 export function guardParentPage(user, pathname) {
   if (!isParent(user)) return;
-  if (PARENT_BLOCKED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  const check = stripSportPrefix(pathname);
+  if (PARENT_BLOCKED_PREFIXES.some((p) => check === p || check.startsWith(`${p}/`))) {
     redirect("/");
   }
 }

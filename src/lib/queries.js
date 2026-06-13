@@ -126,3 +126,34 @@ export function allPlayers(teamId) {
     .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' AND team_id = ? ORDER BY name")
     .all(teamId);
 }
+
+/** Cross-sport events for teams the user can access. */
+export function allSportEvents(userId, sportFilter = "all") {
+  const db = getDb();
+  const teamRows = db
+    .prepare(
+      `SELECT ust.team_id, ust.sport, t.name AS team_name
+       FROM user_sport_teams ust JOIN teams t ON t.id = ust.team_id
+       WHERE ust.user_id = ?`
+    )
+    .all(userId);
+  if (!teamRows.length) return [];
+
+  const filtered =
+    sportFilter && sportFilter !== "all"
+      ? teamRows.filter((t) => t.sport === sportFilter)
+      : teamRows;
+  if (!filtered.length) return [];
+
+  const placeholders = filtered.map(() => "?").join(",");
+  const teamIds = filtered.map((t) => t.team_id);
+  return db
+    .prepare(
+      `SELECT e.*, t.sport, t.name AS team_name
+       FROM events e
+       JOIN teams t ON t.id = COALESCE(e.team_id, (SELECT u.team_id FROM users u WHERE u.id = e.created_by))
+       WHERE COALESCE(e.team_id, (SELECT u.team_id FROM users u WHERE u.id = e.created_by)) IN (${placeholders})
+       ORDER BY e.start_time ASC`
+    )
+    .all(...teamIds);
+}

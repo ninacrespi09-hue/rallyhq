@@ -65,7 +65,7 @@ export async function getCurrentUser() {
     const user = db
       .prepare(
         `SELECT u.id, u.name, u.email, u.role, u.team_id, u.position, u.jersey_number, u.height_cm, u.bio,
-                t.name AS team_name, t.code AS team_code
+                t.name AS team_name, t.code AS team_code, COALESCE(t.sport, 'volleyball') AS team_sport
          FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.id = ?`
       )
       .get(payload.uid);

@@ -1,0 +1,28 @@
+export const volleyball = {
+  id: "volleyball",
+  label: "Volleyball",
+  icon: "🏐",
+  gradient: "from-sky-400 to-blue-600",
+  tagline: "Stats, wellness, and team hub for your volleyball squad.",
+  stats: [
+    { key: "kills", label: "Kills" },
+    { key: "hits", label: "Hits" },
+    { key: "blocks", label: "Blocks" },
+    { key: "digs", label: "Digs" },
+    { key: "aces", label: "Serve Aces" },
+  ],
+  leaderboardColumns: ["kills", "assists", "aces", "digs", "blocks"],
+  trendMetric: (row) => (row.kills || 0) + (row.aces || 0) + (row.blocks || 0),
+  positions: [
+    "Setter",
+    "Libero",
+    "Outside Hitter",
+    "Opposite",
+    "Middle Blocker",
+    "Defensive Specialist",
+    "Serving Specialist",
+  ],
+  playersCardIcon: "🏐",
+  scoreLabel: "Sets",
+  aiSportName: "volleyball",
+};

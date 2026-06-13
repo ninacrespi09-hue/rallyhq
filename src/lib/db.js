@@ -14,6 +14,7 @@ export function getDb() {
     ensureChatTables(db);
     ensurePollTables(db);
     ensureWellnessKitTable(db);
+    ensureMultiSportTables(db);
     ensureIndexes(db);
     return db;
   }
@@ -31,6 +32,7 @@ export function getDb() {
   ensureChatTables(db);
   ensurePollTables(db);
   ensureWellnessKitTable(db);
+  ensureMultiSportTables(db);
   ensureIndexes(db);
   return db;
 }
@@ -48,6 +50,52 @@ function ensureIndexes(db) {
     CREATE INDEX IF NOT EXISTS idx_poll_votes_poll ON poll_votes(poll_id);
     CREATE INDEX IF NOT EXISTS idx_poll_options_poll ON poll_options(poll_id);
   `);
+}
+
+/** Multi-sport: team sport + per-user sport team access. */
+function ensureMultiSportTables(db) {
+  const has = (table, col) =>
+    db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === col);
+
+  if (!has("teams", "sport")) {
+    db.exec("ALTER TABLE teams ADD COLUMN sport TEXT NOT NULL DEFAULT 'volleyball'");
+  }
+
+  if (!has("events", "team_id")) {
+    db.exec("ALTER TABLE events ADD COLUMN team_id INTEGER REFERENCES teams(id)");
+    db.exec(`
+      UPDATE events SET team_id = (
+        SELECT u.team_id FROM users u WHERE u.id = events.created_by
+      ) WHERE team_id IS NULL
+    `);
+  }
+
+  const ust = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'user_sport_teams'")
+    .get();
+  if (!ust) {
+    db.exec(`
+      CREATE TABLE user_sport_teams (
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        sport   TEXT NOT NULL,
+        team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        PRIMARY KEY (user_id, sport)
+      );
+    `);
+  }
+
+  // Backfill sport access rows for existing users.
+  const users = db
+    .prepare(
+      `SELECT u.id AS user_id, u.team_id, COALESCE(t.sport, 'volleyball') AS sport
+       FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.team_id IS NOT NULL`
+    )
+    .all();
+  const insert = db.prepare(
+    `INSERT INTO user_sport_teams (user_id, sport, team_id) VALUES (?, ?, ?)
+     ON CONFLICT(user_id, sport) DO NOTHING`
+  );
+  for (const u of users) insert.run(u.user_id, u.sport, u.team_id);
 }
 
 /** Wellness kit tables — player suggestions + coach-managed inventory. */

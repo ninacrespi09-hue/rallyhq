@@ -5,14 +5,18 @@ import { usePathname, useRouter } from "next/navigation";
 import TeamCodeCard from "./TeamCodeCard";
 import { Button } from "@/components/ui/button";
 import { navPrimaryForRole, navSecondaryForRole, navMobileForRole, isCoach } from "@/lib/permissions";
+import { getSportConfig } from "@/lib/sports";
+import { sportFromPathname } from "@/lib/sportPaths";
 
-export default function NavShell({ user, children }) {
+export default function NavShell({ user, children, sport: sportProp }) {
   const pathname = usePathname();
   const router = useRouter();
+  const sport = sportProp || sportFromPathname(pathname);
+  const sportCfg = sport ? getSportConfig(sport) : null;
 
-  const primary = navPrimaryForRole(user.role);
-  const secondary = navSecondaryForRole(user.role);
-  const mobileNav = navMobileForRole(user.role);
+  const primary = navPrimaryForRole(user.role, sport);
+  const secondary = navSecondaryForRole(user.role, sport);
+  const mobileNav = navMobileForRole(user.role, sport);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -20,14 +24,17 @@ export default function NavShell({ user, children }) {
     router.refresh();
   }
 
-  const isActive = (href) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href) => {
+    if (href === "/") return pathname === "/";
+    if (sport && href === `/${sport}`) return pathname === `/${sport}`;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <div className="min-h-screen md:flex">
       {/* Sidebar (desktop) */}
       <aside className="hidden md:flex md:w-64 md:flex-col bg-gradient-to-b from-navy-900 to-navy-950 p-4 text-white">
-        <Brand light />
+        <Brand light sportIcon={sportCfg?.icon} />
         <nav className="mt-7 flex flex-1 flex-col gap-1">
           {[...primary, ...secondary].map((n) => (
             <Link
@@ -52,7 +59,7 @@ export default function NavShell({ user, children }) {
       <div className="flex-1 flex flex-col">
         {/* Mobile top bar */}
         <header className="md:hidden sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-navy-900 to-navy-800 px-4 py-3 text-white shadow-soft">
-          <Brand light small />
+          <Brand light small sportIcon={sportCfg?.icon} />
           <div className="flex items-center gap-3">
             <Link href="/profile" className="text-sm font-medium text-blue-100">
               {user.name.split(" ")[0]}
@@ -89,11 +96,11 @@ export default function NavShell({ user, children }) {
   );
 }
 
-function Brand({ small, light }) {
+function Brand({ small, light, sportIcon }) {
   return (
     <Link href="/" className="flex items-center gap-2">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-lg shadow-glow">
-        🏐
+        {sportIcon || "🏟️"}
       </span>
       <span
         className={`font-extrabold tracking-tight ${light ? "text-white" : "text-navy-900"} ${

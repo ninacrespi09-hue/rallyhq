@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { hashPassword, createSession, normalizeEmail, isValidEmail } from "@/lib/auth";
 
 export async function POST(req) {
-  const { name, email, password: rawPassword, role, team_name, team_code, position, jersey_number } =
+  const { name, email, password: rawPassword, role, team_name, team_code, position, jersey_number, sport } =
     await req.json();
   const password = (rawPassword || "").trim();
 
@@ -38,7 +38,7 @@ export async function POST(req) {
     if (taken)
       return NextResponse.json({ error: "That team code is already taken. Choose a different one." }, { status: 409 });
 
-    const t = db.prepare("INSERT INTO teams (name, code) VALUES (?, ?)").run(team_name.trim(), code);
+    const t = db.prepare("INSERT INTO teams (name, code, sport) VALUES (?, ?, ?)").run(team_name.trim(), code, sport || "volleyball");
     teamId = t.lastInsertRowid;
   } else if (role === "player" || role === "parent") {
     if (!team_code?.trim())
@@ -77,6 +77,15 @@ export async function POST(req) {
       signupRole === "player" ? position || null : null,
       signupRole === "player" && jersey_number ? Number(jersey_number) : null
     );
+
+  if (teamId) {
+    const teamSport =
+      db.prepare("SELECT sport FROM teams WHERE id = ?").get(teamId)?.sport || sport || "volleyball";
+    db.prepare(
+      `INSERT INTO user_sport_teams (user_id, sport, team_id) VALUES (?, ?, ?)
+       ON CONFLICT(user_id, sport) DO NOTHING`
+    ).run(info.lastInsertRowid, teamSport, teamId);
+  }
 
   await createSession(info.lastInsertRowid);
   return NextResponse.json({ ok: true });
