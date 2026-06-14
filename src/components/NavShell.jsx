@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import TeamCodeCard from "./TeamCodeCard";
 import { Button } from "@/components/ui/button";
 import { navPrimaryForRole, navSecondaryForRole, navMobileForRole, isCoach } from "@/lib/permissions";
@@ -10,8 +10,11 @@ import { sportFromPathname } from "@/lib/sportPaths";
 
 export default function NavShell({ user, children, sport: sportProp }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const sport = sportProp || sportFromPathname(pathname);
+  const sport =
+    sportProp ||
+    sportFromPathname(pathname) ||
+    user.active_sport ||
+    null;
   const sportCfg = sport ? getSportConfig(sport) : null;
 
   const primary = navPrimaryForRole(user.role, sport, user);
@@ -19,14 +22,12 @@ export default function NavShell({ user, children, sport: sportProp }) {
   const mobileNav = navMobileForRole(user.role, sport, user);
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
+    window.location.href = "/logout";
   }
 
   const isActive = (href) => {
+    if (sport && href === `/${sport}`) return pathname === `/${sport}` || pathname === `/${sport}/`;
     if (href === "/") return pathname === "/";
-    if (sport && href === `/${sport}`) return pathname === `/${sport}`;
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
@@ -98,8 +99,8 @@ export default function NavShell({ user, children, sport: sportProp }) {
 
 function Brand({ small, light, sportIcon }) {
   return (
-    <Link href="/" className="flex items-center gap-2">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-lg shadow-glow">
+    <Link href="/" className="flex items-center gap-2" title="All sports">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-lg shadow-glow transition hover:scale-105">
         {sportIcon || "🏟️"}
       </span>
       <span

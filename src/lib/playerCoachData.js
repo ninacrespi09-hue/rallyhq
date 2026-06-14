@@ -8,11 +8,12 @@ import {
   recentGames,
   strengthsAndImprovements,
 } from "./stats";
-import { STATS } from "./statDefs";
+import { getStatsForSport } from "./sports";
 
 /** Everything the AI coach can see about one player in the app. */
-export function buildPlayerCoachProfile(userId, teamId) {
+export function buildPlayerCoachProfile(userId, teamId, sport = "volleyball") {
   const db = getDb();
+  const SPORT_STATS = getStatsForSport(sport);
   const player = db
     .prepare(
       `SELECT id, name, position, jersey_number, bio FROM users WHERE id = ? AND role = 'player'`
@@ -20,12 +21,12 @@ export function buildPlayerCoachProfile(userId, teamId) {
     .get(userId);
   if (!player) return null;
 
-  const totals = statTotals(userId);
+  const totals = statTotals(userId, teamId, sport);
   const attendance = attendancePct(userId);
   const wellness = wellnessScore(userId);
   const wHistory = wellnessHistory(userId, 7);
-  const games = recentGames(userId, 6);
-  const { strengths, improvements } = strengthsAndImprovements(userId, teamId);
+  const games = recentGames(userId, 6, teamId);
+  const { strengths, improvements } = strengthsAndImprovements(userId, teamId, SPORT_STATS, sport);
 
   const checkins = db
     .prepare(
@@ -72,7 +73,7 @@ export function buildPlayerCoachProfile(userId, teamId) {
     .map((e) => ({ ...e, completed: !!e.completed }));
 
   const perGame = {};
-  for (const s of STATS) {
+  for (const s of SPORT_STATS) {
     perGame[s.key] = totals.games ? (totals[s.key] / totals.games).toFixed(2) : "0";
   }
 
@@ -82,9 +83,10 @@ export function buildPlayerCoachProfile(userId, teamId) {
     position: player.position,
     jersey_number: player.jersey_number,
     bio: player.bio,
+    sport,
     gamesPlayed: totals.games,
-    statTotals: STATS.reduce((o, s) => ({ ...o, [s.label]: totals[s.key] }), {}),
-    perGameStats: STATS.reduce((o, s) => ({ ...o, [s.label]: perGame[s.key] }), {}),
+    statTotals: SPORT_STATS.reduce((o, s) => ({ ...o, [s.label]: totals[s.key] }), {}),
+    perGameStats: SPORT_STATS.reduce((o, s) => ({ ...o, [s.label]: perGame[s.key] }), {}),
     attendancePct: attendance,
     wellnessScore: wellness,
     wellnessHistory: wHistory,
@@ -95,16 +97,11 @@ export function buildPlayerCoachProfile(userId, teamId) {
     teamExercises,
     computedStrengths: strengths,
     computedImprovements: improvements,
-    recentGames: games.map((g) => ({
-      title: g.title,
-      opponent: g.opponent,
-      date: g.start_time?.slice(0, 10),
-      kills: g.kills,
-      digs: g.digs,
-      aces: g.aces,
-      blocks: g.blocks,
-      errors: g.errors,
-    })),
+    recentGames: games.map((g) => {
+      const line = { title: g.title, opponent: g.opponent, date: g.start_time?.slice(0, 10) };
+      for (const s of SPORT_STATS) line[s.label] = g[s.key];
+      return line;
+    }),
   };
 }
 

@@ -60,9 +60,10 @@ export async function createSession(userId) {
 /** Clear the session cookie so the user can sign in again with the same email. */
 export async function destroySession() {
   const jar = await cookies();
-  jar.set(COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
-  jar.set(SPORT_PREF_COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
-  jar.set(SPORT_COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
+  jar.delete(COOKIE);
+  jar.delete(SPORT_PREF_COOKIE);
+  // Must match middleware (non-httpOnly) so the browser actually clears it.
+  jar.delete({ name: SPORT_COOKIE, path: "/" });
 }
 
 function applyActiveSportTeam(user, sport) {

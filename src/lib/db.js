@@ -17,6 +17,7 @@ export function getDb() {
     ensureMultiSportTables(db);
     ensureSportPreferenceColumn(db);
     ensureContentTeamIds(db);
+    ensureSoccerStatColumns(db);
     ensureIndexes(db);
     return db;
   }
@@ -458,5 +459,17 @@ function initSchema(db) {
   if (!has("player_stats", "service_receptions")) {
     db.exec("ALTER TABLE player_stats ADD COLUMN service_receptions INTEGER NOT NULL DEFAULT 0");
   }
+  ensureSoccerStatColumns(db);
   // Events, announcements, exercises, media are scoped through their creator's team_id via JOIN.
+}
+
+/** Soccer-specific defensive and disciplinary stat columns. */
+function ensureSoccerStatColumns(db) {
+  const has = (col) =>
+    db.prepare("PRAGMA table_info(player_stats)").all().some((c) => c.name === col);
+  for (const col of ["interceptions", "def_blocks", "yellow_cards", "red_cards"]) {
+    if (!has(col)) {
+      db.exec(`ALTER TABLE player_stats ADD COLUMN ${col} INTEGER NOT NULL DEFAULT 0`);
+    }
+  }
 }

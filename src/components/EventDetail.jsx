@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isCompetitive } from "@/lib/format";
 import { STATS } from "@/lib/statDefs";
+import { formatStatValue, gameStatValue } from "@/lib/statAgg";
 import { cn } from "@/lib/utils";
 import StatEditor from "./StatEditor";
 import { isCoach, isParent, isPlayer, canManageRsvp, canRsvp } from "@/lib/permissions";
@@ -31,7 +32,7 @@ const RSVP_STYLE = {
   cant_go: "bg-navy-400 text-white ring-navy-400",
 };
 
-export default function EventDetail({ event, user, players, initialAttendance, initialRsvps = [], initialResult, initialStats }) {
+export default function EventDetail({ event, user, players, initialAttendance, initialRsvps = [], initialResult, initialStats, stats = STATS }) {
   const coach = isCoach(user);
   const parent = isParent(user);
   const player = isPlayer(user);
@@ -255,6 +256,21 @@ export default function EventDetail({ event, user, players, initialAttendance, i
           </CardContent>
         </Card>
       )}
+
+      {isGame && (
+        <>
+          <ResultPanel event={event} isCoach={coach} initial={initialResult} />
+          <StatsPanel
+            event={event}
+            players={players}
+            initialStats={initialStats}
+            isCoach={coach}
+            isParent={parent}
+            userId={user.id}
+            stats={stats}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -322,10 +338,8 @@ function ScoreBox({ label, value, onChange, editable }) {
   );
 }
 
-// Full statistic names (no abbreviations): Kills, Hits, Blocks, Digs, Serve Aces.
-const STAT_COLS = STATS;
-
-function StatsPanel({ event, players, initialStats, isCoach, isParent: parent, userId }) {
+// Full statistic names — labels come from sport config.
+function StatsPanel({ event, players, initialStats, isCoach, isParent: parent, userId, stats = STATS }) {
   const router = useRouter();
   const [editing, setEditing] = useState(null); // player id being edited
   const statMap = {};
@@ -351,7 +365,7 @@ function StatsPanel({ event, players, initialStats, isCoach, isParent: parent, u
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-navy-400">
                 <th className="py-2">Player</th>
-                {STAT_COLS.map((c) => (
+                {stats.map((c) => (
                   <th key={c.key} className="px-2 text-center">
                     {c.label}
                   </th>
@@ -365,19 +379,21 @@ function StatsPanel({ event, players, initialStats, isCoach, isParent: parent, u
                 return (
                   <tr key={p.id} className="border-t border-navy-50">
                     <td className="py-2 font-medium text-navy-700">{p.name}</td>
-                    {STAT_COLS.map((c) => (
+                    {stats.map((c) => (
                       <td key={c.key} className="px-2 text-center text-navy-600">
-                        {s ? s[c.key] : "–"}
+                        {s ? formatStatValue(c, gameStatValue(c, s)) : "–"}
                       </td>
                     ))}
                     <td className="text-right">
                       {canEdit(p.id) && (
-                        <button
+                        <Button
+                          variant="link"
+                          size="sm"
                           onClick={() => setEditing(p.id)}
-                          className="text-xs font-semibold text-brand-600"
+                          className="h-auto p-0 text-xs font-semibold text-brand-600"
                         >
                           {s ? "Edit" : "Add"}
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -393,6 +409,7 @@ function StatsPanel({ event, players, initialStats, isCoach, isParent: parent, u
             playerId={editing}
             playerName={players.find((p) => p.id === editing)?.name}
             existing={statMap[editing]}
+            stats={stats}
             onClose={() => setEditing(null)}
             onSaved={() => {
               setEditing(null);

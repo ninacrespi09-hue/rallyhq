@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
+    "dev:clean": "rm -rf .next && next dev -H 0.0.0.0",
     "build": "next build",
     "start": "node scripts/ensure-demo.mjs && next start",
     "seed": "node scripts/seed.mjs",
+    "seed:all": "node scripts/seed-all-sports.mjs",
     "seed:rosters": "node scripts/seed-sport-rosters.mjs",
-    "seed:basketball": "node scripts/seed-basketball-demo.mjs"
+    "seed:basketball": "node scripts/seed-basketball-demo.mjs",
+    "reset:logins": "node scripts/reset-logins.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { enrichImprovementsWithExercises } from "./weaknessExercises";
+import { answerAppQuestionRules, formatAppContextForPrompt } from "./aiAppContext";
 
 /**
  * Analyze a set of player check-ins and surface trends.
@@ -336,43 +337,54 @@ function arr(v) {
 }
 
 /**
- * Answer a player's volleyball question using their profile + optional chat history.
+ * Answer a player's question using their profile, app context, and chat history.
  */
-export async function answerPlayerVolleyballQuestion({ profile, message, history = [] }) {
+export async function answerPlayerVolleyballQuestion({ profile, message, history = [], appContext }) {
   const q = (message || "").trim();
   if (!q) {
-    return { reply: "Ask me anything about volleyball — serving, digging, your position, or how to improve.", source: "rules" };
+    return {
+      reply: "Ask me about the schedule, announcements, your stats, exercises, or how to improve your game.",
+      source: "rules",
+    };
   }
+
+  const appAnswer = answerAppQuestionRules({ message: q, appContext, profile });
+  if (appAnswer) return appAnswer;
 
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      return await answerVolleyballChatClaude({ profile, message: q, history });
+      return await answerVolleyballChatClaude({ profile, message: q, history, appContext });
     } catch (err) {
-      console.error("Claude volleyball chat failed, falling back to rules:", err.message);
+      console.error("Claude chat failed, falling back to rules:", err.message);
     }
   }
-  return answerVolleyballChatRules({ profile, message: q });
+  return answerVolleyballChatRules({ profile, message: q, appContext });
 }
 
-async function answerVolleyballChatClaude({ profile, message, history }) {
+async function answerVolleyballChatClaude({ profile, message, history, appContext }) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const insight = profile?.latestInsight;
+  const sportLabel = appContext?.sportLabel || profile?.sport || "team";
 
   const system =
-    "You are a friendly volleyball coach chatting with one player on their team app. " +
-    "Only answer questions about volleyball, training, recovery, team play, and their development. " +
-    "If asked about unrelated topics, politely redirect to volleyball. " +
-    "Keep replies concise (2-4 short paragraphs max). Be encouraging and practical. " +
-    "Use their stats and wellness data when relevant.";
+    `You are a friendly AI assistant on RallyHQ, a ${sportLabel} team app. ` +
+    "Answer questions using ONLY the team data provided below — schedule, announcements, roster, stats, exercises, and RSVPs. " +
+    "You can also give sport-specific training and recovery advice. " +
+    "If something isn't in the data, say so and tell them which part of the app to check (Schedule, Stats, Announcements, etc.). " +
+    "Keep replies concise (2-4 short paragraphs). Be encouraging and practical.";
 
   const context =
     `Player: ${profile?.name || "Player"} (${profile?.position || "Player"})\n` +
+    `Sport: ${sportLabel}\n` +
     `Games logged: ${profile?.gamesPlayed ?? 0}\n` +
-    `Per-game stats: ${JSON.stringify(profile?.perGameStats || {})}\n` +
+    `Season stats: ${JSON.stringify(profile?.statTotals || {})}\n` +
+    `Per-game averages: ${JSON.stringify(profile?.perGameStats || {})}\n` +
     `Wellness score: ${profile?.wellnessScore ?? "n/a"}\n` +
     `Strengths: ${(profile?.computedStrengths || []).join("; ")}\n` +
     `Focus areas: ${(profile?.computedImprovements || []).join("; ")}\n` +
-    (insight?.summary ? `Latest AI coach summary: ${insight.summary}\n` : "");
+    (insight?.summary ? `Latest AI coach summary: ${insight.summary}\n` : "") +
+    "\n--- Team app data ---\n" +
+    formatAppContextForPrompt(appContext);
 
   const prior = history
     .slice(-8)
@@ -382,15 +394,18 @@ async function answerVolleyballChatClaude({ profile, message, history }) {
   const msg = await client.messages.create({
     model: "claude-opus-4-8",
     max_tokens: 600,
-    system: system + "\n\nPlayer context:\n" + context,
+    system: system + "\n\nContext:\n" + context,
     messages: [...prior, { role: "user", content: message }],
   });
 
   const text = msg.content.find((b) => b.type === "text")?.text?.trim();
-  return { reply: text || "I'm here to help with volleyball — try asking about a skill you want to work on.", source: "claude" };
+  return {
+    reply: text || "I can help with your schedule, team updates, stats, and training — what would you like to know?",
+    source: "claude",
+  };
 }
 
-function answerVolleyballChatRules({ profile, message }) {
+function answerVolleyballChatRules({ profile, message, appContext }) {
   const q = message.toLowerCase();
   const name = profile?.name?.split(" ")[0] || "there";
   const pos = (profile?.position || "").toLowerCase();
@@ -493,8 +508,8 @@ function answerVolleyballChatRules({ profile, message }) {
 
   return {
     reply:
-      `Hey ${name}! I can help with serving, passing, hitting, blocking, setting, rotations, recovery, and how to use your stats to improve. ` +
-      (topStrong ? `You're doing well with ${topStrong.toLowerCase().replace(/\.$/, "")} — ask me how to build on that.` : "What part of your game do you want to work on?"),
+      `Hey ${name}! I can help with your **schedule**, **announcements**, **stats**, **exercises**, and **training tips** for ${appContext?.sportLabel || "your sport"}. ` +
+      (topStrong ? `You're doing well with ${topStrong.toLowerCase().replace(/\.$/, "")} — ask me how to build on that.` : "Try asking \"What's on the schedule this week?\""),
     source: "rules",
   };
 }

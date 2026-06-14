@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { formatStatValue, statGridClass } from "@/lib/statAgg";
 import { useApiMutation } from "@/hooks/use-api";
 
 export default function CoachSeasonStats({ playerId, playerName, totals, stats = STATS }) {
@@ -56,15 +57,15 @@ export default function CoachSeasonStats({ playerId, playerName, totals, stats =
     <>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="font-bold text-navy-900">Season Statistics</h2>
-        <Button variant="link" size="sm" onClick={openEditor} className="h-auto p-0 text-xs font-semibold text-brand-600">
-          Edit
+        <Button variant="outline" size="sm" onClick={openEditor} className="rounded-full text-xs font-semibold">
+          Edit stats
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className={statGridClass(stats.length)}>
         {stats.map((s) => (
           <Card key={s.key} className="border-0 bg-navy-50 shadow-none">
             <CardContent className="p-3 text-center">
-              <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
+              <div className="text-2xl font-extrabold text-navy-900">{formatStatValue(s, totals[s.key], totals.games)}</div>
               <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
             </CardContent>
           </Card>
@@ -72,19 +73,20 @@ export default function CoachSeasonStats({ playerId, playerName, totals, stats =
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <form onSubmit={save}>
             <DialogHeader>
               <DialogTitle>{playerName}</DialogTitle>
-              <DialogDescription>Update season totals</DialogDescription>
+              <DialogDescription>Update season totals for all tracked stats</DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-3 py-4">
-              {stats.map((s) => (
+            <div className="grid grid-cols-2 gap-3 py-4 max-h-[60vh] overflow-y-auto">
+              {stats.filter((s) => s.editable !== false && s.agg !== "computed").map((s) => (
                 <div key={s.key}>
                   <Label>{s.label}</Label>
                   <Input
                     type="number"
                     min="0"
+                    max={s.max ?? undefined}
                     value={vals[s.key]}
                     onChange={(e) => setVals((v) => ({ ...v, [s.key]: e.target.value }))}
                     className="mt-1.5"

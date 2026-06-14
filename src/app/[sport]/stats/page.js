@@ -19,9 +19,9 @@ export default async function StatsPage({ params, searchParams }) {
   const cfg = getSportConfig(sport);
 
   const rec = teamRecord(teamId);
-  const totals = teamStatTotals(teamId);
-  const trends = teamTrends(teamId);
-  const board = teamLeaderboard(teamId);
+  const totals = teamStatTotals(teamId, sport);
+  const trends = teamTrends(teamId, sport);
+  const board = teamLeaderboard(teamId, sport);
 
   const statBars = STATS.map((s) => ({ label: s.label, value: totals[s.key] }));
   const trendPoints = trends.map((t) => ({ label: t.label, value: t.points }));
@@ -132,7 +132,7 @@ export default async function StatsPage({ params, searchParams }) {
               All players →
             </Link>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {STATS.map((s) => {
               const leader = [...board].sort((a, b) => b[s.key] - a[s.key]).filter((p) => p[s.key] > 0)[0];
               return (

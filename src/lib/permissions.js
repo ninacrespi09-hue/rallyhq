@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { sportPath } from "./sportPaths";
 import { getSportConfig } from "./sports";
-import { canAccessAllSports } from "./userSportPreference";
 
 export const ROLES = {
   COACH: "coach",
@@ -73,9 +72,8 @@ export const NAV_MOBILE_PARENT = [
   { href: "/players", label: "Team", icon: "🏐" },
 ];
 
-function filterNavForUser(items, user) {
-  if (canAccessAllSports(user)) return items;
-  return items.filter((item) => item.href !== "/schedule/all");
+function filterNavForUser(items) {
+  return items;
 }
 
 export function prefixNavForSport(items, sport) {
@@ -92,17 +90,17 @@ export function prefixNavForSport(items, sport) {
 
 export function navPrimaryForRole(role, sport, user) {
   const base = role === ROLES.PARENT ? NAV_PARENT : NAV_PRIMARY;
-  return prefixNavForSport(filterNavForUser(base, user), sport);
+  return prefixNavForSport(filterNavForUser(base), sport);
 }
 
 export function navSecondaryForRole(role, sport, user) {
   const base = role === ROLES.PARENT ? NAV_SECONDARY_PARENT : NAV_SECONDARY;
-  return prefixNavForSport(filterNavForUser(base, user), sport);
+  return prefixNavForSport(filterNavForUser(base), sport);
 }
 
 export function navMobileForRole(role, sport, user) {
   const base = role === ROLES.PARENT ? NAV_MOBILE_PARENT : NAV_MOBILE;
-  return prefixNavForSport(filterNavForUser(base, user), sport);
+  return prefixNavForSport(filterNavForUser(base), sport);
 }
 
 const PARENT_BLOCKED_PREFIXES = [

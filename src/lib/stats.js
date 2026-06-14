@@ -1,34 +1,50 @@
 import { getDb } from "./db";
 import { STATS } from "./statDefs";
+import { getStatsForSport, getSportConfig } from "./sports";
+import { buildStatSumSelect } from "./statAgg";
 import { eventTeamExpr } from "./teamScope";
 
 // Re-export so server modules can keep importing STATS from "@/lib/stats".
 export { STATS };
 
-const SUMS = STATS.map((s) => `COALESCE(SUM(ps.${s.key}),0) AS ${s.key}`).join(", ");
+function sumSelect(sport = "volleyball") {
+  return buildStatSumSelect(getStatsForSport(sport));
+}
 
-/** Season totals for one player across the 5 tracked statistics. */
-export function statTotals(userId) {
+/** Season totals for one player across tracked statistics. */
+export function statTotals(userId, teamId = null, sport = "volleyball") {
+  const sums = sumSelect(sport);
+  if (teamId) {
+    return getDb()
+      .prepare(
+        `SELECT ${sums}
+         FROM player_stats ps
+         JOIN events e ON e.id = ps.event_id AND e.team_id = ?
+         WHERE ps.user_id = ?`
+      )
+      .get(teamId, userId);
+  }
   return getDb()
-    .prepare(
-      `SELECT COUNT(ps.id) AS games, ${SUMS}
-       FROM player_stats ps WHERE ps.user_id = ?`
-    )
+    .prepare(`SELECT ${sums} FROM player_stats ps WHERE ps.user_id = ?`)
     .get(userId);
 }
 
 /** Every player with season totals — scoped to a team (empty if no team). */
-export function teamLeaderboard(teamId) {
+export function teamLeaderboard(teamId, sport = "volleyball") {
   if (!teamId) return [];
+  const sums = sumSelect(sport);
   return getDb()
     .prepare(
       `SELECT u.id, u.name, u.position, u.jersey_number, u.photo_url,
-              COUNT(ps.id) AS games, ${SUMS}
-       FROM users u LEFT JOIN player_stats ps ON ps.user_id = u.id
+              ${sums}
+       FROM users u
+       LEFT JOIN player_stats ps ON ps.user_id = u.id
+       LEFT JOIN events e ON e.id = ps.event_id AND e.team_id = ?
        WHERE u.role = 'player' AND u.team_id = ?
+         AND (ps.id IS NULL OR e.id IS NOT NULL)
        GROUP BY u.id ORDER BY u.name`
     )
-    .all(teamId);
+    .all(teamId, teamId);
 }
 
 /** Attendance percentage (present or late counts as attended). */
@@ -71,7 +87,17 @@ export function wellnessScore(userId) {
 }
 
 /** Most recent games with this player's stat line. */
-export function recentGames(userId, limit = 6) {
+export function recentGames(userId, limit = 6, teamId = null) {
+  if (teamId) {
+    return getDb()
+      .prepare(
+        `SELECT ps.*, e.title, e.opponent, e.type, e.start_time
+         FROM player_stats ps JOIN events e ON e.id = ps.event_id
+         WHERE ps.user_id = ? AND e.team_id = ?
+         ORDER BY e.start_time DESC LIMIT ?`
+      )
+      .all(userId, teamId, limit);
+  }
   return getDb()
     .prepare(
       `SELECT ps.*, e.title, e.opponent, e.type, e.start_time
@@ -81,17 +107,16 @@ export function recentGames(userId, limit = 6) {
     .all(userId, limit);
 }
 
-/** Kills-over-time points for the profile trend chart. Pass `games` to avoid a duplicate query. */
 /** Per-game values for one stat column (e.g. Points, Goals, Kills). */
-export function statTrend(userId, statKey = "kills", limit = 8, gamesIn) {
-  const games = gamesIn ?? recentGames(userId, limit);
+export function statTrend(userId, statKey = "kills", limit = 8, gamesIn, teamId = null) {
+  const games = gamesIn ?? recentGames(userId, limit, teamId);
   if (games.length > 0) {
     return [...games].reverse().map((g) => ({
       label: g.opponent || g.title || "Game",
       value: Number(g[statKey]) || 0,
     }));
   }
-  const totals = statTotals(userId);
+  const totals = statTotals(userId, teamId);
   if ((totals[statKey] ?? 0) > 0 || totals.games > 0) {
     return [{ label: "Season", value: Number(totals[statKey]) || 0 }];
   }
@@ -129,25 +154,28 @@ export function injuryHistory(userId, limit = 12) {
 }
 
 /** Heuristic strengths + areas for improvement from stat profile vs. team. */
-export function strengthsAndImprovements(userId, teamId, statDefs = STATS) {
-  const board = teamLeaderboard(teamId);
+export function strengthsAndImprovements(userId, teamId, statDefs = STATS, sport = "volleyball") {
+  const board = teamLeaderboard(teamId, sport);
   const me = board.find((p) => p.id === userId);
   if (!me || me.games === 0) {
     return { strengths: ["Building a baseline — keep logging games."], improvements: ["Play more games to unlock insights."] };
   }
 
+  const editable = statDefs.filter((s) => s.agg !== "computed");
   const teamAvg = {};
-  for (const s of statDefs) {
+  for (const s of editable) {
     const totalGames = board.reduce((a, p) => a + p.games, 0) || 1;
-    const totalStat = board.reduce((a, p) => a + p[s.key], 0);
+    const totalStat = board.reduce((a, p) => a + (p[s.key] || 0), 0);
     teamAvg[s.key] = totalStat / totalGames;
   }
 
-  const ranked = statDefs.map((s) => {
-    const perGame = me[s.key] / me.games;
-    const avg = teamAvg[s.key] || 0.0001;
-    return { label: s.label, ratio: perGame / (avg || 0.0001), perGame };
-  }).sort((a, b) => b.ratio - a.ratio);
+  const ranked = editable
+    .map((s) => {
+      const perGame = me[s.key] / me.games;
+      const avg = teamAvg[s.key] || 0.0001;
+      return { label: s.label, ratio: perGame / (avg || 0.0001), perGame };
+    })
+    .sort((a, b) => b.ratio - a.ratio);
 
   const strengths = ranked
     .filter((r) => r.ratio >= 1)
@@ -165,21 +193,23 @@ export function strengthsAndImprovements(userId, teamId, statDefs = STATS) {
 
 /* ------------------------------ Team analytics ------------------------------ */
 
-export function teamStatTotals(teamId) {
+export function teamStatTotals(teamId, sport = "volleyball") {
+  const sums = sumSelect(sport);
   if (!teamId) {
-    return getDb().prepare(`SELECT ${SUMS} FROM player_stats ps`).get();
+    return getDb().prepare(`SELECT ${sums} FROM player_stats ps`).get();
   }
   return getDb()
     .prepare(
-      `SELECT ${SUMS} FROM player_stats ps
+      `SELECT ${sums} FROM player_stats ps
        JOIN users u ON u.id = ps.user_id WHERE u.team_id = ?`
     )
     .get(teamId);
 }
 
-/** Per-game offensive output (kills + aces + blocks) over time, plus W/L. */
-export function teamTrends(teamId) {
+/** Per-game team output over time, plus W/L. */
+export function teamTrends(teamId, sport = "volleyball") {
   const db = getDb();
+  const { trendMetric } = getSportConfig(sport);
   const games = teamId
     ? db
         .prepare(
@@ -202,11 +232,20 @@ export function teamTrends(teamId) {
   const placeholders = ids.map(() => "?").join(",");
   const aggs = db
     .prepare(
-      `SELECT event_id, COALESCE(SUM(kills + aces + blocks), 0) AS pts
-       FROM player_stats WHERE event_id IN (${placeholders}) GROUP BY event_id`
+      `SELECT event_id, kills, assists, aces, blocks
+       FROM player_stats WHERE event_id IN (${placeholders})`
     )
     .all(...ids);
-  const ptsByEvent = Object.fromEntries(aggs.map((a) => [a.event_id, a.pts]));
+
+  const ptsByEvent = {};
+  for (const eventId of ids) ptsByEvent[eventId] = 0;
+  const byEvent = {};
+  for (const row of aggs) {
+    (byEvent[row.event_id] ||= []).push(row);
+  }
+  for (const [eventId, rows] of Object.entries(byEvent)) {
+    ptsByEvent[eventId] = rows.reduce((sum, row) => sum + trendMetric(row), 0);
+  }
 
   return games.map((g) => {
     const pts = ptsByEvent[g.id] ?? 0;

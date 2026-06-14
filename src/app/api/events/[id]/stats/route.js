@@ -5,6 +5,21 @@ import { eventTeamId, userTeamId, forbiddenTeam } from "@/lib/tenancy";
 import { regeneratePlayerCoachInsight } from "@/lib/playerCoachInsight";
 import { blockParentApi, isCoach } from "@/lib/permissions";
 
+const STAT_COLUMNS = [
+  "kills",
+  "hits",
+  "assists",
+  "aces",
+  "digs",
+  "blocks",
+  "errors",
+  "service_receptions",
+  "interceptions",
+  "def_blocks",
+  "yellow_cards",
+  "red_cards",
+];
+
 /**
  * Record per-player stats for a game. Any authenticated teammate can help
  * record stats (a requested feature), so we allow all logged-in users.
@@ -19,7 +34,8 @@ export async function POST(req, { params }) {
   const { id } = await params;
   if (eventTeamId(id) !== user.team_id) return forbiddenTeam();
 
-  const { user_id, kills, hits, assists, aces, digs, blocks, errors, service_receptions } = await req.json();
+  const body = await req.json();
+  const { user_id } = body;
   if (!user_id) return NextResponse.json({ error: "Player is required." }, { status: 400 });
   if (userTeamId(user_id) !== user.team_id) return forbiddenTeam();
 
@@ -29,28 +45,23 @@ export async function POST(req, { params }) {
   }
 
   const n = (v) => Math.max(0, Number(v) || 0);
+  const values = { event_id: Number(id), user_id: targetId, recorded_by: user.id };
+  for (const col of STAT_COLUMNS) {
+    values[col] = n(body[col]);
+  }
+
+  const cols = ["event_id", "user_id", "recorded_by", ...STAT_COLUMNS];
+  const placeholders = cols.map((c) => `@${c}`).join(", ");
+  const updates = STAT_COLUMNS.map((c) => `${c}=@${c}`).join(", ");
 
   getDb()
     .prepare(
-      `INSERT INTO player_stats (event_id, user_id, recorded_by, kills, hits, assists, aces, digs, blocks, errors, service_receptions)
-       VALUES (@event_id, @user_id, @recorded_by, @kills, @hits, @assists, @aces, @digs, @blocks, @errors, @service_receptions)
+      `INSERT INTO player_stats (${cols.join(", ")})
+       VALUES (${placeholders})
        ON CONFLICT(event_id, user_id) DO UPDATE SET
-         kills=@kills, hits=@hits, assists=@assists, aces=@aces, digs=@digs,
-         blocks=@blocks, errors=@errors, service_receptions=@service_receptions, recorded_by=@recorded_by`
+         ${updates}, recorded_by=@recorded_by`
     )
-    .run({
-      event_id: Number(id),
-      user_id: Number(user_id),
-      recorded_by: user.id,
-      kills: n(kills),
-      hits: n(hits),
-      assists: n(assists),
-      aces: n(aces),
-      digs: n(digs),
-      blocks: n(blocks),
-      errors: n(errors),
-      service_receptions: n(service_receptions),
-    });
+    .run(values);
 
   await regeneratePlayerCoachInsight(targetId, user.team_id);
 

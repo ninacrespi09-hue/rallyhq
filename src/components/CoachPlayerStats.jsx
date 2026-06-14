@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATS } from "@/lib/statDefs";
+import { formatStatValue, gameStatValue } from "@/lib/statAgg";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import StatEditor from "./StatEditor";
@@ -30,7 +31,9 @@ export default function CoachPlayerStats({ player, games, stats = STATS }) {
         id: s.key,
         header: s.label,
         cell: ({ row }) => (
-          <span className="block text-center text-navy-600">{row.original[s.key]}</span>
+          <span className="block text-center text-navy-600">
+            {formatStatValue(s, gameStatValue(s, row.original))}
+          </span>
         ),
       })),
       {
@@ -54,7 +57,11 @@ export default function CoachPlayerStats({ player, games, stats = STATS }) {
   );
 
   if (!games.length) {
-    return <p className="text-sm text-navy-400">No games recorded yet. Add stats from a game on the schedule.</p>;
+    return (
+      <p className="text-sm text-navy-400">
+        No games recorded yet. Open a game on the schedule and tap <span className="font-semibold text-navy-600">Add</span> next to a player to enter stats.
+      </p>
+    );
   }
 
   const game = editing ? games.find((g) => g.event_id === editing) : null;
@@ -71,6 +78,7 @@ export default function CoachPlayerStats({ player, games, stats = STATS }) {
           playerId={player.id}
           playerName={player.name}
           existing={game}
+          stats={stats}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);

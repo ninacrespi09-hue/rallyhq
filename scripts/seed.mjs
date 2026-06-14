@@ -32,7 +32,9 @@ for (const t of [
 db.prepare("DELETE FROM sqlite_sequence").run();
 
 // ---- demo team ----
-const teamId = db.prepare("INSERT INTO teams (name, code) VALUES (?, ?)").run("RallyHQ Demo", "DEMO01").lastInsertRowid;
+const teamId = db
+  .prepare("INSERT INTO teams (name, code, sport) VALUES (?, ?, ?)")
+  .run("RallyHQ Demo", "DEMO01", "volleyball").lastInsertRowid;
 
 const hash = bcrypt.hashSync("password123", 10);
 const iso = (d) => d.toISOString();
@@ -382,6 +384,14 @@ const KIT_SUGGESTIONS = [
   [playerIds[7], "Instant cold packs for travel"],
 ];
 KIT_SUGGESTIONS.forEach(([uid, text]) => insertKitSuggestion.run(uid, text));
+
+// Link coach and players to the volleyball sport hub.
+const linkSport = db.prepare(
+  `INSERT INTO user_sport_teams (user_id, sport, team_id) VALUES (?, 'volleyball', ?)
+   ON CONFLICT(user_id, sport) DO UPDATE SET team_id = excluded.team_id`
+);
+linkSport.run(coachId, teamId);
+for (const pid of playerIds) linkSport.run(pid, teamId);
 
 console.log("✅ Seeded RallyHQ:");
 console.log(`   1 coach, ${players.length} players`);

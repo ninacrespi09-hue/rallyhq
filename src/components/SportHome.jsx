@@ -6,7 +6,6 @@ import { upcomingEvents, teamWellness, todaysCheckin } from "@/lib/queries";
 import { getDb } from "@/lib/db";
 import { fmtDate, getEventStyle } from "@/lib/format";
 import { isCoach, isParent, isPlayer } from "@/lib/permissions";
-import { canAccessAllSports } from "@/lib/userSportPreference";
 import { getSportConfig } from "@/lib/sports";
 import { sportPath } from "@/lib/sportPaths";
 import { resolveTeamId } from "@/lib/sportTeams";
@@ -128,7 +127,6 @@ export default function SportHome({ user, sport }) {
   const wellness = isCoach(user) && teamId ? teamWellness(teamId) : null;
   const checkin = isPlayer(user) ? todaysCheckin(user.id) : null;
   const cards = isParent(user) ? PARENT_CARDS(sport) : buildCards(sport);
-  const showAllSports = canAccessAllSports(user);
 
   const featured = isParent(user)
     ? nextEvent
@@ -183,11 +181,9 @@ export default function SportHome({ user, sport }) {
       <section className={`relative overflow-hidden rounded-[2rem] bg-gradient-to-br ${cfg.gradient} p-7 text-white ring-1 ring-white/20 shadow-soft sm:p-10`}>
         <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-3xl animate-float" />
         <div className="relative animate-rise">
-          {showAllSports && (
-            <Link href="/" className="text-sm font-medium text-white/80 hover:text-white">
-              ← All sports
-            </Link>
-          )}
+          <Link href="/" className="text-sm font-medium text-white/80 hover:text-white">
+            ← All sports
+          </Link>
           <span className="eyebrow mt-3 block text-white/70">{cfg.label} Hub</span>
           <h1 className="mt-2 text-4xl font-extrabold leading-[1.04] sm:text-5xl">
             {cfg.icon} {cfg.label}
@@ -220,13 +216,11 @@ export default function SportHome({ user, sport }) {
                 📅 Full schedule
               </Badge>
             </Link>
-            {showAllSports && (
-              <Link href="/schedule/all">
-                <Badge className="cursor-pointer bg-white/70 text-navy-700 ring-1 ring-white/40 backdrop-blur transition hover:bg-white">
-                  🗓️ All sports
-                </Badge>
-              </Link>
-            )}
+            <Link href="/schedule/all">
+              <Badge className="cursor-pointer bg-white/70 text-navy-700 ring-1 ring-white/40 backdrop-blur transition hover:bg-white">
+                🗓️ All sports
+              </Badge>
+            </Link>
           </div>
         </div>
       </section>

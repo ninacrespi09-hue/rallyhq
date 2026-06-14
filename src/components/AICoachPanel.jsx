@@ -75,7 +75,7 @@ function Section({ title, items, empty, tone }) {
   );
 }
 
-function PlayerVolleyballChat() {
+function PlayerAppChat({ sport }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [chatError, setChatError] = useState("");
@@ -98,7 +98,7 @@ function PlayerVolleyballChat() {
     setChatError("");
 
     try {
-      const json = await chatMutation.mutateAsync({ message: text, history: messages });
+      const json = await chatMutation.mutateAsync({ message: text, history: messages, sport });
       setMessages([...nextMessages, { role: "assistant", content: json.reply }]);
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -113,7 +113,9 @@ function PlayerVolleyballChat() {
     <Card className="overflow-hidden p-0 ring-1 ring-brand-200/50">
       <div className="border-b border-blue-200/40 px-4 py-3">
         <h3 className="font-bold text-navy-900">Ask your AI coach</h3>
-        <p className="text-xs text-navy-500">Volleyball questions only — skills, position, recovery, and improvement.</p>
+        <p className="text-xs text-navy-500">
+          Schedule, announcements, stats, exercises, and training — all from your team app.
+        </p>
       </div>
 
       {messages.length > 0 && (
@@ -146,7 +148,7 @@ function PlayerVolleyballChat() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about serving, digging, your position…"
+          placeholder="When's our next game? What did coach announce? How are my stats?"
           maxLength={500}
           disabled={chatMutation.isPending}
           className="min-h-[44px] flex-1 text-sm"
@@ -161,7 +163,7 @@ function PlayerVolleyballChat() {
   );
 }
 
-export default function AICoachPanel({ role, initialPlayer, initialPlayers }) {
+export default function AICoachPanel({ role, sport = "volleyball", initialPlayer, initialPlayers }) {
   const [playerData, setPlayerData] = useState(initialPlayer);
   const [coachPlayers, setCoachPlayers] = useState(initialPlayers || []);
   const [error, setError] = useState("");
@@ -236,7 +238,7 @@ export default function AICoachPanel({ role, initialPlayer, initialPlayers }) {
 
         <InsightSections insight={playerData?.insight} />
 
-        <PlayerVolleyballChat />
+        <PlayerAppChat sport={sport} />
       </div>
     );
   }

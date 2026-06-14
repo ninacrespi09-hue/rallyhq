@@ -23,7 +23,7 @@ export default async function AICoachPage({ params, searchParams }) {
           title="Your AI Coach"
           subtitle="Personal insights from your stats, wellness check-ins, exercises, and attendance — only you can see this."
         />
-        <AICoachPanel role="player" initialPlayer={{ id: user.id, name: user.name, insight }} />
+        <AICoachPanel role="player" sport={sport} initialPlayer={{ id: user.id, name: user.name, insight }} />
       </NavShell>
     );
   }

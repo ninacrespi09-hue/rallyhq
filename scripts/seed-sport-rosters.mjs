@@ -129,14 +129,14 @@ function seedSportGames(teamId, sport, playerIds, opponents, profiles) {
 }
 
 const bballProfiles = [
-  { kills: 18, hits: 7, assists: 6, aces: 3, digs: 4, blocks: 0, errors: 2 },
-  { kills: 14, hits: 6, assists: 2, aces: 2, digs: 3, blocks: 1, errors: 3 },
-  { kills: 12, hits: 5, assists: 3, aces: 2, digs: 6, blocks: 1, errors: 2 },
-  { kills: 10, hits: 4, assists: 1, aces: 1, digs: 8, blocks: 2, errors: 2 },
-  { kills: 16, hits: 6, assists: 1, aces: 1, digs: 10, blocks: 3, errors: 3 },
-  { kills: 11, hits: 4, assists: 7, aces: 4, digs: 2, blocks: 0, errors: 2 },
-  { kills: 13, hits: 5, assists: 2, aces: 2, digs: 3, blocks: 0, errors: 2 },
-  { kills: 15, hits: 6, assists: 2, aces: 2, digs: 5, blocks: 1, errors: 2 },
+  { kills: 18, digs: 8, assists: 5, errors: 3, aces: 2, blocks: 0, hits: 4 },
+  { kills: 14, digs: 4, assists: 2, errors: 2, aces: 2, blocks: 1, hits: 3 },
+  { kills: 12, digs: 6, assists: 3, errors: 4, aces: 2, blocks: 1, hits: 5 },
+  { kills: 10, digs: 8, assists: 1, errors: 2, aces: 1, blocks: 2, hits: 4 },
+  { kills: 16, digs: 10, assists: 1, errors: 3, aces: 1, blocks: 3, hits: 5 },
+  { kills: 11, digs: 2, assists: 7, errors: 5, aces: 4, blocks: 0, hits: 2 },
+  { kills: 13, digs: 3, assists: 2, errors: 2, aces: 2, blocks: 0, hits: 3 },
+  { kills: 15, digs: 5, assists: 2, errors: 3, aces: 2, blocks: 1, hits: 4 },
 ];
 
 const soccerProfiles = [

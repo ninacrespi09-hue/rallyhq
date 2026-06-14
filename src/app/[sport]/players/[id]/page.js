@@ -20,6 +20,7 @@ import {
 } from "@/lib/playerCoachInsight";
 import { isCoach, isParent } from "@/lib/permissions";
 import { isSportId, getStatsForSport } from "@/lib/sports";
+import { formatStatValue, gameStatValue, statGridClass } from "@/lib/statAgg";
 import {
   statTotals,
   recentGames,
@@ -67,14 +68,14 @@ export default async function PlayerProfile({ params, searchParams }) {
     );
   }
 
-  const totals = statTotals(player.id);
-  const games = recentGames(player.id, 8);
+  const totals = statTotals(player.id, teamId, sport);
+  const games = recentGames(player.id, 8, teamId);
   const attendance = attendancePct(player.id);
   const wellness = wellnessScore(player.id);
   const wHistory = wellnessHistory(player.id);
   const injuries = injuryHistory(player.id);
   const aiInsight = getLatestPlayerCoachInsight(player.id);
-  const statInsights = strengthsAndImprovements(player.id, teamId, SPORT_STATS);
+  const statInsights = strengthsAndImprovements(player.id, teamId, SPORT_STATS, sport);
   const { strengths, improvements } = profileInsightsFromAi(aiInsight, statInsights);
   const { wellnessNotes, injuryNote } = wellnessNotesFromAi(aiInsight, wellness, injuries);
   const notes = db
@@ -85,7 +86,7 @@ export default async function PlayerProfile({ params, searchParams }) {
     .all(player.id);
 
   const statBars = SPORT_STATS.map((s) => ({ label: s.label, value: totals[s.key] }));
-  const trend = statTrend(player.id, primaryStat.key, 8, games);
+  const trend = statTrend(player.id, primaryStat.key, 8, games, teamId);
   const parentView = isParent(user);
 
   return (
@@ -127,10 +128,10 @@ export default async function PlayerProfile({ params, searchParams }) {
           ) : (
             <>
               <h2 className="mb-3 font-bold text-navy-900">Season Statistics</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <div className={statGridClass(SPORT_STATS.length)}>
                 {SPORT_STATS.map((s) => (
                   <div key={s.key} className="rounded-xl bg-navy-50 p-3 text-center">
-                    <div className="text-2xl font-extrabold text-navy-900">{totals[s.key]}</div>
+                    <div className="text-2xl font-extrabold text-navy-900">{formatStatValue(s, totals[s.key], totals.games)}</div>
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
                   </div>
                 ))}
@@ -187,8 +188,8 @@ export default async function PlayerProfile({ params, searchParams }) {
         <CardContent>
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="font-bold text-navy-900">Recent Game Statistics</h2>
-            {isCoach(user) && games.length > 0 && (
-              <span className="text-xs text-navy-400">Tap Edit to update any game</span>
+            {isCoach(user) && (
+              <span className="text-xs text-navy-400">Tap Edit on any game row, or open a game on the schedule</span>
             )}
           </div>
           {isCoach(user) ? (
@@ -213,7 +214,9 @@ export default async function PlayerProfile({ params, searchParams }) {
                       <div className="text-xs text-navy-400">{fmtDate(g.start_time)}</div>
                     </td>
                     {SPORT_STATS.map((s) => (
-                      <td key={s.key} className="px-2 text-center text-navy-600">{g[s.key]}</td>
+                      <td key={s.key} className="px-2 text-center text-navy-600">
+                        {formatStatValue(s, gameStatValue(s, g))}
+                      </td>
                     ))}
                   </tr>
                 ))}

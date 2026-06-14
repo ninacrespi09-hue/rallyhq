@@ -14,6 +14,7 @@ import QuickDelete from "@/components/QuickDelete";
 
 const VIEWS = [
   { key: "upcoming",      label: "Upcoming",      type: null },
+  { key: "games",         label: "Games",         type: "game" },
   { key: "practices",     label: "Practices",     type: "practice" },
   { key: "conditioning",  label: "Conditioning",  type: "conditioning" },
   { key: "tournaments",   label: "Tournaments",   type: "tournament" },
@@ -58,7 +59,7 @@ export default async function SchedulePage({ params, searchParams }) {
         </Card>
       )}
 
-      <Legend />
+      <Legend view={view} sport={sport} />
       <ViewTabs view={view} sport={sport} />
 
       <div className="mt-5">
@@ -267,7 +268,7 @@ function CalendarView({ monthParam, teamId, sport }) {
                     <Link
                       key={e.id}
                       href={sportPath(sport, `schedule/${e.id}`)}
-                      className={`flex items-center gap-1 rounded-md px-1 py-0.5 ${s.chip}`}
+                      className={`flex min-h-[28px] items-center gap-1 rounded-md px-1 py-1 active:opacity-80 ${s.chip}`}
                       title={e.title}
                     >
                       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`} />
@@ -276,7 +277,12 @@ function CalendarView({ monthParam, teamId, sport }) {
                   );
                 })}
                 {dayEvents.length > 3 && (
-                  <div className="px-1 text-[9px] text-navy-400">+{dayEvents.length - 3} more</div>
+                  <Link
+                    href={sportPath(sport, `schedule?view=upcoming`)}
+                    className="block px-1 text-[9px] font-medium text-brand-600 hover:underline"
+                  >
+                    +{dayEvents.length - 3} more
+                  </Link>
                 )}
               </div>
             </div>
@@ -315,21 +321,33 @@ function ViewTabs({ view, sport }) {
   );
 }
 
-function Legend() {
+function Legend({ view, sport }) {
   const items = [
-    ["practice", "Practice"],
-    ["tournament", "Tournament"],
-    ["bonding", "Team Bonding"],
-    ["game", "Game"],
+    { type: "game", label: "Game", viewKey: "games" },
+    { type: "practice", label: "Practice", viewKey: "practices" },
+    { type: "tournament", label: "Tournament", viewKey: "tournaments" },
+    { type: "bonding", label: "Team Bonding", viewKey: "bonding" },
   ];
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-navy-500">
-      {items.map(([type, label]) => (
-        <span key={type} className="flex items-center gap-1.5">
-          <span className={`h-2.5 w-2.5 rounded-full ${getEventStyle(type).dot}`} />
-          {label}
-        </span>
-      ))}
+    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+      <span className="text-navy-400">Filter:</span>
+      {items.map(({ type, label, viewKey }) => {
+        const active = view === viewKey;
+        return (
+          <Link
+            key={type}
+            href={sportPath(sport, `schedule?view=${viewKey}`)}
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 transition ${
+              active
+                ? "bg-brand-600 text-white ring-brand-600"
+                : "bg-white text-navy-600 ring-navy-100 hover:bg-navy-50"
+            }`}
+          >
+            <span className={`h-2.5 w-2.5 rounded-full ${getEventStyle(type).dot}`} />
+            {label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -337,9 +355,12 @@ function Legend() {
 function EventRow({ e, past, isCoach, sport }) {
   const s = getEventStyle(e.type);
   return (
-    <Card className={`flex items-center gap-3 ${s.ring} ${s.bg}`}>
-      <CardContent className="flex w-full items-center gap-3">
-        <Link href={sportPath(sport, `schedule/${e.id}`)} className="flex min-w-0 flex-1 items-center gap-3">
+    <Card className={`flex items-center gap-3 transition hover:shadow-soft ${s.ring} ${s.bg}`}>
+      <CardContent className="flex w-full items-center gap-3 p-4">
+        <Link
+          href={sportPath(sport, `schedule/${e.id}`)}
+          className="flex min-w-0 flex-1 items-center gap-3 active:opacity-80"
+        >
           <span className={`h-10 w-1.5 shrink-0 rounded-full ${s.bar}`} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

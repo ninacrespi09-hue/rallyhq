@@ -9,6 +9,7 @@ import { getDb } from "@/lib/db";
 import { fmtDateTime, getEventStyle, isCompetitive } from "@/lib/format";
 import EventDetail from "@/components/EventDetail";
 import { isCoach } from "@/lib/permissions";
+import { getStatsForSport } from "@/lib/sports";
 
 const EventEditor = dynamic(() => import("@/components/EventEditor"));
 
@@ -34,14 +35,16 @@ export default async function EventPage({ params, searchParams }) {
   const rsvps = db
     .prepare("SELECT user_id, status FROM event_rsvps WHERE event_id = ?")
     .all(event.id);
-  const result = isGame ? null : db.prepare("SELECT * FROM game_results WHERE event_id = ?").get(event.id);
+  const result = isGame
+    ? db.prepare("SELECT * FROM game_results WHERE event_id = ?").get(event.id)
+    : null;
   const stats = isGame
-    ? []
-    : db
+    ? db
         .prepare(
           `SELECT ps.*, u.name FROM player_stats ps JOIN users u ON u.id = ps.user_id WHERE ps.event_id = ?`
         )
-        .all(event.id);
+        .all(event.id)
+    : [];
 
   const s = getEventStyle(event.type);
 
@@ -73,6 +76,7 @@ export default async function EventPage({ params, searchParams }) {
         initialRsvps={rsvps}
         initialResult={result}
         initialStats={stats}
+        stats={getStatsForSport(sport)}
       />
     </NavShell>
   );

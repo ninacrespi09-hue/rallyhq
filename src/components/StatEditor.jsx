@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { STATS } from "@/lib/statDefs";
+import { editableStatKeys } from "@/lib/statAgg";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,10 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useApiMutation } from "@/hooks/use-api";
 
-export default function StatEditor({ eventId, playerName, playerId, existing, onClose, onSaved }) {
+export default function StatEditor({ eventId, playerName, playerId, existing, onClose, onSaved, stats = STATS }) {
+  const editable = stats.filter((s) => s.editable !== false && s.agg !== "computed");
+  const keys = editableStatKeys(stats);
+
   const [vals, setVals] = useState(() => {
     const v = {};
-    STATS.forEach((c) => (v[c.key] = existing?.[c.key] ?? 0));
+    keys.forEach((k) => (v[k] = existing?.[k] ?? 0));
     return v;
   });
   const [error, setError] = useState("");
@@ -26,37 +30,33 @@ export default function StatEditor({ eventId, playerName, playerId, existing, on
 
   function save() {
     setError("");
-    mutation.mutate(
-      {
-        user_id: playerId,
-        ...vals,
-        assists: existing?.assists ?? 0,
-        errors: existing?.errors ?? 0,
-        service_receptions: existing?.service_receptions ?? 0,
+    const payload = { user_id: playerId };
+    keys.forEach((k) => {
+      payload[k] = vals[k];
+    });
+    mutation.mutate(payload, {
+      onSuccess: () => onSaved(),
+      onError: (err) => {
+        setError(err.message || "Could not save stats.");
       },
-      {
-        onSuccess: () => onSaved(),
-        onError: (err) => {
-          setError(err.message || "Could not save stats.");
-        },
-      }
-    );
+    });
   }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md gap-0 p-5">
+      <DialogContent className="max-w-lg gap-0 p-5">
         <DialogHeader>
           <DialogTitle>{playerName}</DialogTitle>
           <DialogDescription>Record stats for this game</DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          {STATS.map((c) => (
+        <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto">
+          {editable.map((c) => (
             <div key={c.key}>
               <Label>{c.label}</Label>
               <Input
                 type="number"
                 min="0"
+                max={c.max ?? undefined}
                 value={vals[c.key]}
                 onChange={(e) => setVals((v) => ({ ...v, [c.key]: e.target.value }))}
               />

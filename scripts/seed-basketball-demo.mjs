@@ -17,16 +17,16 @@ const PLAYERS = [
   ["Amir Okafor", "amir.bb@rallyhq.dev", "Small Forward", 21, 195, "Slasher who gets to the free-throw line."],
 ];
 
-// kills=Points, hits=FG made, assists, aces=Steals, digs=Rebounds, blocks
+// kills=Points, digs=Rebounds, assists, errors=Turnovers, aces=Steals, blocks, hits=Fouls
 const PROFILES = [
-  { kills: 16, hits: 6, assists: 8, aces: 3, digs: 3, blocks: 0, errors: 2 }, // PG Marcus
-  { kills: 22, hits: 8, assists: 2, aces: 2, digs: 4, blocks: 0, errors: 3 }, // SG Tyler
-  { kills: 14, hits: 5, assists: 3, aces: 2, digs: 6, blocks: 1, errors: 2 }, // SF Ethan
-  { kills: 12, hits: 5, assists: 1, aces: 1, digs: 11, blocks: 2, errors: 2 }, // PF Jaylen
-  { kills: 18, hits: 7, assists: 1, aces: 1, digs: 14, blocks: 4, errors: 3 }, // C Devon
-  { kills: 11, hits: 4, assists: 7, aces: 4, digs: 2, blocks: 0, errors: 2 }, // PG Ryan
-  { kills: 15, hits: 6, assists: 2, aces: 2, digs: 3, blocks: 0, errors: 2 }, // SG Cole
-  { kills: 17, hits: 6, assists: 2, aces: 2, digs: 5, blocks: 1, errors: 2 }, // SF Amir
+  { kills: 16, digs: 3, assists: 8, errors: 3, aces: 3, blocks: 0, hits: 2 },
+  { kills: 22, digs: 4, assists: 2, errors: 2, aces: 2, blocks: 0, hits: 3 },
+  { kills: 14, digs: 6, assists: 3, errors: 4, aces: 2, blocks: 1, hits: 4 },
+  { kills: 12, digs: 11, assists: 1, errors: 2, aces: 1, blocks: 2, hits: 5 },
+  { kills: 18, digs: 14, assists: 1, errors: 3, aces: 1, blocks: 4, hits: 4 },
+  { kills: 11, digs: 2, assists: 7, errors: 5, aces: 4, blocks: 0, hits: 2 },
+  { kills: 15, digs: 3, assists: 2, errors: 2, aces: 2, blocks: 0, hits: 3 },
+  { kills: 17, digs: 5, assists: 2, errors: 3, aces: 2, blocks: 1, hits: 4 },
 ];
 
 const GAMES = [

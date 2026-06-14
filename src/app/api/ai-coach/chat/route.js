@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { answerPlayerVolleyballQuestion } from "@/lib/ai";
 import { buildPlayerCoachProfile } from "@/lib/playerCoachData";
+import { buildAppContextForAI } from "@/lib/aiAppContext";
+import { resolveTeamId } from "@/lib/sportTeams";
+import { isSportId } from "@/lib/sports";
 import { getDb } from "@/lib/db";
 
 const SCOPE = "player_coach";
@@ -24,7 +27,7 @@ function latestInsight(userId) {
   return { summary: row.summary, ...details };
 }
 
-/** POST — player-only volleyball Q&A chat. */
+/** POST — player Q&A about schedule, app content, stats, and training. */
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
@@ -45,6 +48,9 @@ export async function POST(req) {
     return NextResponse.json({ error: `Keep questions under ${MAX_MESSAGE} characters.` }, { status: 400 });
   }
 
+  const sport = isSportId(body.sport) ? body.sport : user.team_sport || "volleyball";
+  const teamId = resolveTeamId(user, sport) || user.team_id;
+
   const history = Array.isArray(body.history)
     ? body.history
         .slice(-10)
@@ -52,11 +58,18 @@ export async function POST(req) {
         .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_MESSAGE) }))
     : [];
 
-  const profile = buildPlayerCoachProfile(user.id, user.team_id);
+  const profile = buildPlayerCoachProfile(user.id, teamId, sport);
   if (!profile) return NextResponse.json({ error: "Could not load your profile." }, { status: 400 });
 
   profile.latestInsight = latestInsight(user.id);
-  const { reply, source } = await answerPlayerVolleyballQuestion({ profile, message, history });
+  const appContext = buildAppContextForAI({ teamId, sport, userId: user.id });
+
+  const { reply, source } = await answerPlayerVolleyballQuestion({
+    profile,
+    message,
+    history,
+    appContext,
+  });
 
   return NextResponse.json({ reply, source });
 }
