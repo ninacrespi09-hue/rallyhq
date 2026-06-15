@@ -243,23 +243,17 @@ if (coachId) {
   ).run(coachId);
 }
 
-// Coaches with empty rosters → link to demo teams so example players appear.
-const coaches = db.prepare("SELECT id, sport_preference FROM users WHERE role = 'coach'").all();
+// Coaches → demo teams per sport so each hub has its own example roster.
+const coaches = db.prepare("SELECT id FROM users WHERE role = 'coach'").all();
 for (const { id } of coaches) {
   for (const [sport, teamId] of [
     ["volleyball", vballTeamId],
     ["basketball", bballTeamId],
     ["soccer", soccerTeamId],
   ]) {
-    const linked = db.prepare("SELECT team_id FROM user_sport_teams WHERE user_id = ? AND sport = ?").get(id, sport);
-    const linkedPlayers = linked
-      ? db.prepare("SELECT COUNT(*) c FROM users WHERE role='player' AND team_id=?").get(linked.team_id).c
-      : 0;
-    if (!linked || linkedPlayers === 0) {
-      linkSport.run(id, sport, teamId);
-    }
+    linkSport.run(id, sport, teamId);
   }
-  db.prepare(`UPDATE users SET sport_preference = 'all' WHERE id = ? AND role = 'coach'`).run(id);
+  db.prepare(`UPDATE users SET sport_preference = 'all' WHERE id = ?`).run(id);
 }
 
 const vballIds = seedRoster(vballTeamId, "volleyball", volleyballPlayers);

@@ -75,7 +75,7 @@ function Section({ title, items, empty, tone }) {
   );
 }
 
-function PlayerAppChat({ sport }) {
+function AppAssistantChat({ sport, role = "player" }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [chatError, setChatError] = useState("");
@@ -85,6 +85,15 @@ function PlayerAppChat({ sport }) {
     url: "/api/ai-coach/chat",
     method: "POST",
   });
+
+  const isCoach = role === "coach";
+  const title = isCoach ? "Ask about your team" : "Ask your AI coach";
+  const subtitle = isCoach
+    ? "Schedule, roster, announcements, and anything in your team app — for this sport."
+    : "Schedule, announcements, stats, exercises, and training — all from your team app.";
+  const placeholder = isCoach
+    ? "What's on the schedule? Who's on the roster? Any announcements?"
+    : "When's our next game? What did coach announce? How are my stats?";
 
   async function sendMessage(e) {
     e?.preventDefault();
@@ -112,10 +121,8 @@ function PlayerAppChat({ sport }) {
   return (
     <Card className="overflow-hidden p-0 ring-1 ring-brand-200/50">
       <div className="border-b border-blue-200/40 px-4 py-3">
-        <h3 className="font-bold text-navy-900">Ask your AI coach</h3>
-        <p className="text-xs text-navy-500">
-          Schedule, announcements, stats, exercises, and training — all from your team app.
-        </p>
+        <h3 className="font-bold text-navy-900">{title}</h3>
+        <p className="text-xs text-navy-500">{subtitle}</p>
       </div>
 
       {messages.length > 0 && (
@@ -148,7 +155,7 @@ function PlayerAppChat({ sport }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="When's our next game? What did coach announce? How are my stats?"
+          placeholder={placeholder}
           maxLength={500}
           disabled={chatMutation.isPending}
           className="min-h-[44px] flex-1 text-sm"
@@ -238,7 +245,7 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
 
         <InsightSections insight={playerData?.insight} />
 
-        <PlayerAppChat sport={sport} />
+        <AppAssistantChat sport={sport} role="player" />
       </div>
     );
   }
@@ -262,6 +269,8 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
       </Button>
 
       {error && <p className="text-sm text-blue-700">{error}</p>}
+
+      <AppAssistantChat sport={sport} role="coach" />
 
       <div className="space-y-2">
         {coachPlayers.map((p) => (

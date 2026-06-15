@@ -337,13 +337,16 @@ function arr(v) {
 }
 
 /**
- * Answer a player's question using their profile, app context, and chat history.
+ * Answer a player's or coach's question using profile, app context, and chat history.
  */
-export async function answerPlayerVolleyballQuestion({ profile, message, history = [], appContext }) {
+export async function answerPlayerVolleyballQuestion({ profile, message, history = [], appContext, role = "player" }) {
   const q = (message || "").trim();
   if (!q) {
     return {
-      reply: "Ask me about the schedule, announcements, your stats, exercises, or how to improve your game.",
+      reply:
+        role === "coach"
+          ? "Ask me about the schedule, roster, announcements, exercises, or team stats."
+          : "Ask me about the schedule, announcements, your stats, exercises, or how to improve your game.",
       source: "rules",
     };
   }
@@ -353,21 +356,23 @@ export async function answerPlayerVolleyballQuestion({ profile, message, history
 
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      return await answerVolleyballChatClaude({ profile, message: q, history, appContext });
+      return await answerVolleyballChatClaude({ profile, message: q, history, appContext, role });
     } catch (err) {
       console.error("Claude chat failed, falling back to rules:", err.message);
     }
   }
-  return answerVolleyballChatRules({ profile, message: q, appContext });
+  return answerSportChatRules({ profile, message: q, appContext, role });
 }
 
-async function answerVolleyballChatClaude({ profile, message, history, appContext }) {
+async function answerVolleyballChatClaude({ profile, message, history, appContext, role = "player" }) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const insight = profile?.latestInsight;
   const sportLabel = appContext?.sportLabel || profile?.sport || "team";
+  const who = role === "coach" ? "coach" : "player";
 
   const system =
     `You are a friendly AI assistant on RallyHQ, a ${sportLabel} team app. ` +
+    `You are helping a ${who}. ` +
     "Answer questions using ONLY the team data provided below — schedule, announcements, roster, stats, exercises, and RSVPs. " +
     "You can also give sport-specific training and recovery advice. " +
     "If something isn't in the data, say so and tell them which part of the app to check (Schedule, Stats, Announcements, etc.). " +
@@ -405,7 +410,113 @@ async function answerVolleyballChatClaude({ profile, message, history, appContex
   };
 }
 
-function answerVolleyballChatRules({ profile, message, appContext }) {
+function answerSportChatRules({ profile, message, appContext, role = "player" }) {
+  const sport = appContext?.sport || profile?.sport || "volleyball";
+  if (sport === "basketball") return answerBasketballChatRules({ profile, message, appContext, role });
+  if (sport === "soccer") return answerSoccerChatRules({ profile, message, appContext, role });
+  return answerVolleyballChatRules({ profile, message, appContext, role });
+}
+
+function answerBasketballChatRules({ profile, message, appContext, role }) {
+  const q = message.toLowerCase();
+  const name = profile?.name?.split(" ")[0] || "there";
+
+  if (/shoot|shot|three|free throw|scoring|points/.test(q)) {
+    return {
+      reply:
+        `For shooting, ${name}, balance your base, follow through, and aim for a smooth arc. ` +
+        `Practice game-speed reps — catch, square up, shoot. Track your points in RallyHQ after each game.`,
+      source: "rules",
+    };
+  }
+  if (/rebound|box out|board/.test(q)) {
+    return {
+      reply:
+        `Rebounding wins possessions: find your player, hit them with a forearm, then go get the ball with two hands. ` +
+        `Crash the boards on every shot when you're near the paint.`,
+      source: "rules",
+    };
+  }
+  if (/assist|pass|ball movement|playmaker/.test(q)) {
+    return {
+      reply:
+        `Good teams share the ball — drive, kick, and keep defenders moving. ` +
+        `Look for open teammates one pass ahead and deliver crisp passes to their shooting pocket.`,
+      source: "rules",
+    };
+  }
+  if (/defense|steal|block|foul/.test(q)) {
+    return {
+      reply:
+        `Stay in a stance, move your feet, and contest without reaching. ` +
+        `Communicate switches and help-side coverage every possession.`,
+      source: "rules",
+    };
+  }
+
+  return defaultChatReply({ name, appContext, profile, role });
+}
+
+function answerSoccerChatRules({ profile, message, appContext, role }) {
+  const q = message.toLowerCase();
+  const name = profile?.name?.split(" ")[0] || "there";
+
+  if (/goal|score|finish|strik/.test(q)) {
+    return {
+      reply:
+        `In front of goal, ${name}, get your body over the ball and pick a corner early. ` +
+        `One-touch finishes come from being on the move before the cross arrives.`,
+      source: "rules",
+    };
+  }
+  if (/pass|possession|build|play out/.test(q)) {
+    return {
+      reply:
+        `Keep possession with quick, firm passes and constant movement off the ball. ` +
+        `Scan before you receive so you know your next option.`,
+      source: "rules",
+    };
+  }
+  if (/defend|tackle|intercept|mark/.test(q)) {
+    return {
+      reply:
+        `Defend with patience — stay goal-side, jockey the attacker, and tackle only when you're sure you'll win it. ` +
+        `Talk to your back line so everyone knows who steps and who covers.`,
+      source: "rules",
+    };
+  }
+  if (/keeper|goalie|save/.test(q)) {
+    return {
+      reply:
+        `Goalkeepers: set your line, communicate loudly, and use your feet to narrow angles. ` +
+        `Organize the defense on set pieces and distribute quickly to start counters.`,
+      source: "rules",
+    };
+  }
+
+  return defaultChatReply({ name, appContext, profile, role });
+}
+
+function defaultChatReply({ name, appContext, profile, role }) {
+  const sportLabel = appContext?.sportLabel || "your sport";
+  const topStrong = profile?.computedStrengths?.[0];
+  if (role === "coach") {
+    return {
+      reply:
+        `I can help with your **${sportLabel}** team's **schedule**, **roster**, **announcements**, and **stats**. ` +
+        `Try asking "What's on the schedule this week?" or "Who's on the roster?"`,
+      source: "rules",
+    };
+  }
+  return {
+    reply:
+      `Hey ${name}! I can help with your **schedule**, **announcements**, **stats**, **exercises**, and **training tips** for ${sportLabel}. ` +
+      (topStrong ? `You're doing well with ${topStrong.toLowerCase().replace(/\.$/, "")} — ask me how to build on that.` : 'Try asking "What\'s on the schedule this week?"'),
+    source: "rules",
+  };
+}
+
+function answerVolleyballChatRules({ profile, message, appContext, role }) {
   const q = message.toLowerCase();
   const name = profile?.name?.split(" ")[0] || "there";
   const pos = (profile?.position || "").toLowerCase();
@@ -506,10 +617,5 @@ function answerVolleyballChatRules({ profile, message, appContext }) {
     };
   }
 
-  return {
-    reply:
-      `Hey ${name}! I can help with your **schedule**, **announcements**, **stats**, **exercises**, and **training tips** for ${appContext?.sportLabel || "your sport"}. ` +
-      (topStrong ? `You're doing well with ${topStrong.toLowerCase().replace(/\.$/, "")} — ask me how to build on that.` : "Try asking \"What's on the schedule this week?\""),
-    source: "rules",
-  };
+  return defaultChatReply({ name, appContext, profile, role });
 }

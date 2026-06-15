@@ -42,7 +42,7 @@ export default async function AICoachPage({ params, searchParams }) {
         title="Team AI Coach"
         subtitle="See strengths, weaknesses, habit impact, and improvement tips for every player on your roster."
       />
-      <AICoachPanel role="coach" initialPlayers={players} />
+      <AICoachPanel role="coach" sport={sport} initialPlayers={players} />
     </NavShell>
   );
 }
