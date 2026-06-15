@@ -260,6 +260,11 @@ const vballIds = seedRoster(vballTeamId, "volleyball", volleyballPlayers);
 const bballIds = seedRoster(bballTeamId, "basketball", basketballPlayers);
 const soccerIds = seedRoster(soccerTeamId, "soccer", soccerPlayers);
 
+// Keep demo logins working after re-seed.
+db.prepare(
+  `UPDATE users SET password_hash = ? WHERE role = 'player' AND lower(email) LIKE '%@rallyhq.dev'`
+).run(hash);
+
 const gamesAdded =
   seedGames(vballTeamId, "volleyball", vballIds, coachId, ["Lincoln High", "Westfield Prep", "Riverside"], volleyballProfiles) +
   seedGames(bballTeamId, "basketball", bballIds, coachId, ["Central High", "Westside Prep", "Oak Park Academy"], basketballProfiles) +

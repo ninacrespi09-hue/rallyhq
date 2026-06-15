@@ -11,7 +11,9 @@
     "seed:all": "node scripts/seed-all-sports.mjs",
     "seed:rosters": "node scripts/seed-sport-rosters.mjs",
     "seed:basketball": "node scripts/seed-basketball-demo.mjs",
-    "reset:logins": "node scripts/reset-logins.mjs"
+    "reset:logins": "node scripts/reset-logins.mjs",
+    "reset:accounts": "node scripts/reset-accounts.mjs",
+    "ensure:owner": "node scripts/ensure-owner.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
