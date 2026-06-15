@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { POSITIONS } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,12 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const SAVED_EMAIL_KEY = "rallyhq_email";
+const DEFAULT_EMAIL = "nina.crespi09@gmail.com";
 
 // coachOnly = coach creates a new team at /signup/coach
 // prefilledCode = player/parent joins via /join/CODE invite link only
 // signupRole = 'player' | 'parent' when joining via invite
 export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = false, signupRole = "player" }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const signedOut = searchParams.get("signedOut") === "1";
   const isSignup = mode === "signup";
@@ -25,8 +25,8 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [savedEmail, setSavedEmail] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem(SAVED_EMAIL_KEY) || "";
+    if (typeof window === "undefined") return DEFAULT_EMAIL;
+    return localStorage.getItem(SAVED_EMAIL_KEY) || DEFAULT_EMAIL;
   });
 
   async function onSubmit(e) {
@@ -38,6 +38,7 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
     const res = await fetch(`/api/auth/${isSignup ? "signup" : "login"}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -59,8 +60,8 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
       return setError(data.error || "Something went wrong.");
     }
     if (body.email) localStorage.setItem(SAVED_EMAIL_KEY, body.email);
-    router.push(data.redirect || "/");
-    router.refresh();
+    // Full page load so the new session cookie is sent on the next request (fixes mobile/Safari).
+    window.location.href = data.redirect || "/";
   }
 
   return (
