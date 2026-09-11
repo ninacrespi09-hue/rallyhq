@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { Heart, Star } from "lucide-react";
 import { canUploadMedia } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,12 +20,6 @@ import {
 import { apiFetch } from "@/hooks/use-api";
 
 const MOMENTS = ["Serving", "Setting", "Hitting", "Digging"];
-const TAB_META = {
-  Serving: { icon: "🏐", gradient: "from-sky-400 to-blue-600" },
-  Setting: { icon: "⭐", gradient: "from-blue-500 to-indigo-600" },
-  Hitting: { icon: "💥", gradient: "from-cyan-500 to-blue-600" },
-  Digging: { icon: "🏅", gradient: "from-blue-600 to-navy-800" },
-};
 
 export default function Gallery({ user, media, events }) {
   const [items, setItems] = useState(media);
@@ -106,28 +101,27 @@ export default function Gallery({ user, media, events }) {
   function onUploaded(newItem) {
     setItems((cur) => [newItem, ...cur]);
     setUploadOpen(false);
-    flash("Photo added to the reel 🎉");
+    flash("Photo added to the reel");
   }
 
   return (
     <div>
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-soft sm:p-8">
-        <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
-        <div className="relative flex items-center justify-between gap-4">
+      <section className="rounded-md bg-gradient-to-br from-blue-500 via-blue-400 to-cyan-400 p-6 text-white shadow-soft sm:p-8">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-white/80">
-              <CameraIcon className="h-5 w-5" /> Media Gallery
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80">
+              <CameraIcon className="h-4 w-4" /> Media Gallery
             </div>
-            <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Player Photos</h1>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Player Photos</h1>
             <p className="mt-1 text-sm text-white/85">
-              The team's best game &amp; tournament moments. {items.length} shot
+              Game and tournament moments. {items.length} shot
               {items.length === 1 ? "" : "s"}.
             </p>
           </div>
           {canUpload && (
             <Button
               onClick={() => setUploadOpen(true)}
-              className="shrink-0 bg-white text-blue-700 shadow-sm hover:bg-blue-50"
+              className="shrink-0 bg-white text-blue-600 hover:bg-blue-50"
             >
               <CameraIcon className="h-4 w-4" /> Upload
             </Button>
@@ -135,25 +129,24 @@ export default function Gallery({ user, media, events }) {
         </div>
       </section>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {MOMENTS.map((m) => {
           const count = countsByMoment[m];
           const active = tab === m;
-          const { icon, gradient } = TAB_META[m];
           return (
             <button
               key={m}
               onClick={() => setTab(m)}
-              className={`group relative flex min-h-[150px] flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br ${gradient} p-5 text-white shadow-soft transition duration-200 hover:-translate-y-1 hover:shadow-glow sm:min-h-[170px] ${
-                active ? "scale-[1.03] shadow-glow ring-4 ring-white/60" : "opacity-75 hover:opacity-100"
+              className={`flex min-h-[120px] flex-col justify-between rounded-md border p-4 text-left transition-colors sm:min-h-[140px] ${
+                active
+                  ? "border-blue-300 bg-blue-100"
+                  : "border-blue-100/80 bg-blue-50/80 hover:border-blue-200 hover:bg-blue-100/80"
               }`}
             >
-              <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-2xl ring-1 ring-white/25 backdrop-blur-sm transition group-hover:scale-105">
-                {icon}
-              </div>
-              <div className="relative">
-                <div className="text-lg font-extrabold leading-tight sm:text-xl">{m}</div>
-                <div className="mt-0.5 text-sm text-white/80">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-navy-400">Album</div>
+              <div>
+                <div className="text-base font-semibold text-navy-900 sm:text-lg">{m}</div>
+                <div className="mt-0.5 text-sm text-navy-500">
                   {count} shot{count !== 1 ? "s" : ""}
                 </div>
               </div>
@@ -212,7 +205,7 @@ export default function Gallery({ user, media, events }) {
       />
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-navy-900 px-4 py-2 text-sm font-medium text-white shadow-glow md:bottom-8">
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-md bg-navy-900 px-4 py-2 text-sm font-medium text-white shadow-sm md:bottom-8">
           {toast}
         </div>
       )}
@@ -228,7 +221,7 @@ function MediaCard({ m, index, onOpen, onLike, onFav }) {
     >
       <button
         onClick={() => onOpen(m)}
-        className="relative block w-full aspect-square overflow-hidden rounded-full bg-blue-400/25 backdrop-blur-sm ring-0 transition duration-500 group-hover:scale-105 group-hover:bg-blue-400/35"
+        className="relative block w-full aspect-square overflow-hidden rounded-md bg-blue-300/25 backdrop-blur-sm ring-0 transition duration-500 group-hover:scale-105 group-hover:bg-blue-300/35"
       >
         <img
           src={m.url}
@@ -238,7 +231,11 @@ function MediaCard({ m, index, onOpen, onLike, onFav }) {
           fetchPriority="low"
           className="h-full w-full object-cover opacity-80 mix-blend-multiply"
         />
-        {m.favorite ? <span className="absolute right-3 top-3 text-lg drop-shadow">⭐</span> : null}
+        {m.favorite ? (
+          <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-md bg-white/90 text-amber-500 shadow-sm">
+            <Star className="h-3.5 w-3.5 fill-current" />
+          </span>
+        ) : null}
       </button>
 
       <figcaption className="px-2 pt-2">
@@ -249,14 +246,14 @@ function MediaCard({ m, index, onOpen, onLike, onFav }) {
             onClick={(e) => { e.stopPropagation(); onLike(m); }}
             className="flex items-center gap-1 text-sm active:scale-90"
           >
-            <span>{m.liked ? "❤️" : "🤍"}</span>
-            <span className="text-xs font-semibold text-navy-600">{m.like_count}</span>
+            <Heart className={`h-3.5 w-3.5 ${m.liked ? "fill-brand-500 text-brand-500" : "text-navy-400"}`} />
+            <span className="text-xs font-medium text-navy-600">{m.like_count}</span>
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onFav(m); }}
-            className="text-base active:scale-90"
+            className="active:scale-90"
           >
-            {m.favorite ? "⭐" : "☆"}
+            <Star className={`h-3.5 w-3.5 ${m.favorite ? "fill-amber-500 text-amber-500" : "text-navy-400"}`} />
           </button>
         </div>
       </figcaption>
@@ -275,7 +272,7 @@ function Lightbox({ item, open, onOpenChange, canDelete, onLike, onFav, onDelete
             src={item.url}
             alt={item.caption || "Action shot"}
             decoding="async"
-            className="mx-auto max-h-[78vh] w-auto rounded-2xl object-contain"
+            className="mx-auto max-h-[78vh] w-auto rounded-md object-contain"
           />
           <Card className="mt-3">
             <CardContent className="flex items-center gap-3 p-4">
@@ -283,21 +280,21 @@ function Lightbox({ item, open, onOpenChange, canDelete, onLike, onFav, onDelete
                 {item.caption && <h3 className="truncate font-bold text-navy-900">{item.caption}</h3>}
                 <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-navy-400">
                   {item.category && item.category !== "Action" && (
-                    <Badge className="bg-blue-50 text-blue-700">{item.category}</Badge>
+                    <Badge className="bg-blue-50 text-blue-600">{item.category}</Badge>
                   )}
                   {item.event_title && <span>{item.event_title}</span>}
                   {item.uploader_name && <span>· by {item.uploader_name}</span>}
                 </div>
               </div>
-              <Button variant="ghost" onClick={onLike}>
-                {item.liked ? "❤️" : "🤍"} {item.like_count}
+              <Button variant="ghost" onClick={onLike} className="gap-1.5">
+                <Heart className={`h-4 w-4 ${item.liked ? "fill-brand-500 text-brand-500" : ""}`} /> {item.like_count}
               </Button>
               <Button variant="ghost" onClick={onFav}>
-                {item.favorite ? "⭐" : "☆"}
+                <Star className={`h-4 w-4 ${item.favorite ? "fill-amber-500 text-amber-500" : ""}`} />
               </Button>
               {canDelete && (
                 <Button variant="soft" onClick={onDelete}>
-                  🗑
+                  Delete
                 </Button>
               )}
             </CardContent>
@@ -382,13 +379,13 @@ function Uploader({ user, events, open, onOpenChange, onUploaded }) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Upload action shot</DialogTitle>
-          <DialogDescription>Game &amp; tournament highlights only 🏐</DialogDescription>
+          <DialogDescription>Game and tournament highlights only</DialogDescription>
         </DialogHeader>
 
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 text-blue-600"
+          className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-blue-100 bg-blue-50/50 text-blue-500"
         >
           {preview ? (
             <img src={preview} alt="preview" className="h-full w-full object-cover" />
@@ -416,7 +413,7 @@ function Uploader({ user, events, open, onOpenChange, onUploaded }) {
               <select
                 value={moment}
                 onChange={(e) => setMoment(e.target.value)}
-                className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+                className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
               >
                 {MOMENTS.map((m) => (
                   <option key={m}>{m}</option>
@@ -428,7 +425,7 @@ function Uploader({ user, events, open, onOpenChange, onUploaded }) {
               <select
                 value={eventId}
                 onChange={(e) => setEventId(e.target.value)}
-                className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+                className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
               >
                 <option value="">None</option>
                 {events.map((ev) => (
@@ -444,13 +441,13 @@ function Uploader({ user, events, open, onOpenChange, onUploaded }) {
               type="checkbox"
               checked={favorite}
               onChange={(e) => setFavorite(e.target.checked)}
-              className="h-4 w-4 rounded accent-brand-600"
+              className="h-4 w-4 rounded accent-brand-500"
             />
-            ⭐ Mark as favorite
+            Mark as favorite
           </label>
         </div>
 
-        {error && <p className="text-sm text-blue-600">{error}</p>}
+        {error && <p className="text-sm text-blue-500">{error}</p>}
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">

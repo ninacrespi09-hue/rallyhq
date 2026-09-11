@@ -3,33 +3,35 @@
 @tailwind utilities;
 
 /* ============================================================================
-   RallyHQ design system — shadcn/ui + brand tokens
+   RallyHQ design system — previous blue palette + current squared shapes
    ========================================================================== */
 
 @layer base {
   :root {
     color-scheme: light;
-    --background: 205 85% 92%;
+    /* Exact tokens from pre-squared redesign (commit 95ccaa9) */
+    --background: 205 85% 94%;
     --foreground: 222 47% 11%;
-    --card: 214 100% 97%;
+    --card: 214 100% 98%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
+    --primary: 221 83% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 214 95% 93%;
+    --secondary: 214 95% 95%;
     --secondary-foreground: 222 47% 20%;
-    --muted: 214 32% 91%;
+    --muted: 214 32% 93%;
     --muted-foreground: 215 16% 47%;
-    --accent: 214 95% 93%;
+    --accent: 214 95% 95%;
     --accent-foreground: 222 47% 20%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 82%;
-    --input: 214 32% 82%;
-    --ring: 221 83% 53%;
-    --radius: 0.75rem;
-    --line: rgba(30, 58, 138, 0.14);
+    --border: 214 32% 86%;
+    --input: 214 32% 86%;
+    --ring: 221 83% 58%;
+    /* Keep current squared radius */
+    --radius: 0.375rem;
+    --line: rgba(30, 58, 138, 0.12);
   }
 
   * {
@@ -38,15 +40,16 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-color: #cfe8fb;
-    background-image: linear-gradient(180deg, #e3f1fd 0%, #cfe8fb 38%);
+    /* Exact previous baby-blue page wash */
+    background-color: #d9eefc;
+    background-image: linear-gradient(180deg, #eaf5fe 0%, #d9eefc 38%);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3 {
-    @apply tracking-tight;
+    @apply tracking-tight font-semibold;
     text-wrap: balance;
   }
 
@@ -60,69 +63,68 @@
 }
 
 @layer components {
-  /* Legacy aliases — map to shadcn primitives for gradual migration */
   .btn {
-    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
-           transition-[transform,box-shadow,background-color,color] duration-200 active:scale-[0.97]
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium
+           transition-colors duration-150
            disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
     @apply btn bg-primary text-primary-foreground shadow-glow hover:bg-primary/90;
   }
   .btn-ghost {
-    @apply btn text-navy-700 ring-1 ring-blue-400 hover:ring-blue-500;
+    @apply btn text-navy-700 ring-1 ring-blue-300 hover:ring-blue-400;
     background: rgba(59, 130, 246, 0.38);
   }
   .btn-ghost:hover {
     background: rgba(59, 130, 246, 0.48);
   }
   .btn-soft {
-    @apply btn bg-brand-50 text-brand-700 ring-1 ring-brand-100 hover:bg-brand-100;
+    @apply btn bg-brand-50 text-brand-600 ring-1 ring-brand-100 hover:bg-brand-100;
   }
 
   .card {
-    @apply rounded-2xl border border-blue-400/50 bg-card/80 p-5 text-card-foreground shadow-soft backdrop-blur-sm;
+    @apply rounded-md border border-blue-300/50 bg-card/80 p-5 text-card-foreground shadow-soft backdrop-blur-sm;
   }
   .card-interactive {
-    @apply transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift;
+    @apply transition-colors duration-150 hover:border-blue-300 hover:bg-white/70;
   }
   .panel {
-    @apply rounded-3xl border border-blue-400/50 bg-card/70 p-5 backdrop-blur;
+    @apply rounded-md border border-blue-300/50 bg-card/70 p-5 backdrop-blur;
   }
 
   .chip {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium;
   }
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-100;
+    @apply inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600 ring-1 ring-brand-100;
   }
 
   .label {
     @apply mb-1 block text-sm font-medium text-navy-600;
   }
   .input {
-    @apply flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm
            transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
   }
 
   .eyebrow {
-    @apply text-xs font-bold uppercase tracking-[0.14em] text-brand-600;
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-500;
   }
   .h-section {
-    @apply text-sm font-bold uppercase tracking-wide text-navy-400;
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-navy-400;
   }
   .title-gradient {
-    @apply bg-gradient-to-r from-brand-600 to-cyan-500 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-brand-500 to-cyan-400 bg-clip-text text-transparent;
   }
 
   .stat-tile {
-    @apply rounded-xl bg-navy-50 p-3 text-center;
+    @apply rounded-md bg-blue-50 p-3 text-center ring-1 ring-blue-100;
   }
   .stat-num {
-    @apply text-2xl font-extrabold text-navy-900;
+    @apply text-2xl font-semibold text-navy-900;
   }
   .stat-label {
-    @apply text-[11px] font-semibold uppercase tracking-wide text-navy-400;
+    @apply text-[11px] font-medium uppercase tracking-wide text-navy-400;
   }
 }
 

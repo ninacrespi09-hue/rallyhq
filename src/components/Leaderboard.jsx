@@ -28,7 +28,7 @@ export default function Leaderboard({ players }) {
           const p = row.original;
           return (
             <div>
-              <Link href={`/players/${p.id}`} className="font-medium text-navy-800 hover:text-brand-600">
+              <Link href={`/players/${p.id}`} className="font-medium text-navy-800 hover:text-brand-500">
                 {p.name}
               </Link>
               <div className="text-xs text-muted-foreground">{p.position}</div>
@@ -39,12 +39,12 @@ export default function Leaderboard({ players }) {
       ...STATS.map((s) => ({
         id: s.key,
         header: () => (
-          <span className={sortKey === s.key ? "text-brand-600" : ""}>{s.label}</span>
+          <span className={sortKey === s.key ? "text-brand-500" : ""}>{s.label}</span>
         ),
         cell: ({ row }) => (
           <span
             className={`block text-center ${
-              sortKey === s.key ? "font-bold text-brand-600" : "text-navy-600"
+              sortKey === s.key ? "font-bold text-brand-500" : "text-navy-600"
             }`}
           >
             {row.original[s.key]}
@@ -65,7 +65,7 @@ export default function Leaderboard({ players }) {
               size="sm"
               variant={sortKey === s.key ? "default" : "outline"}
               onClick={() => setSortKey(s.key)}
-              className="rounded-full"
+              className="rounded-md"
             >
               {s.label}
             </Button>

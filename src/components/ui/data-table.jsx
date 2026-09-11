@@ -13,7 +13,7 @@ export function DataTable({ columns, data, className, emptyMessage = "No results
   });
 
   return (
-    <div className={cn("rounded-xl border border-border/60 bg-background/50", className)}>
+    <div className={cn("rounded-md border border-border/60 bg-background/50", className)}>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

@@ -60,11 +60,11 @@ export default function EventEditor({ event }) {
     <>
       <div className="flex shrink-0 gap-2">
         <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
-          ✏️ Edit
+          Edit
         </Button>
         <Button
           size="sm"
-          className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+          className="bg-blue-100 text-blue-700 hover:bg-blue-100"
           onClick={() => setConfirmDelete(true)}
         >
           🗑 Delete
@@ -81,8 +81,8 @@ export default function EventEditor({ event }) {
             <div className="my-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {TYPES.map((t) => (
                 <button key={t.key} type="button" onClick={() => setType(t.key)}
-                  className={`rounded-xl py-2 text-xs font-semibold ring-1 transition ${
-                    type === t.key ? "bg-brand-600 text-white ring-brand-600" : "bg-white text-navy-500 ring-navy-100"
+                  className={`rounded-md py-2 text-xs font-semibold ring-1 transition ${
+                    type === t.key ? "bg-brand-500 text-white ring-brand-500" : "bg-white text-navy-500 ring-navy-100"
                   }`}
                 >{t.label}</button>
               ))}
@@ -137,7 +137,7 @@ export default function EventEditor({ event }) {
             <Button
               onClick={del}
               disabled={deleteMutation.isPending}
-              className="flex-1 bg-blue-700 text-white hover:bg-blue-800"
+              className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
             >
               {deleteMutation.isPending ? "Deleting…" : "Yes, delete"}
             </Button>

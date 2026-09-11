@@ -246,7 +246,7 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
             onChange={(e) =>
               updateRow(row.index, "user_id", e.target.value ? Number(e.target.value) : null)
             }
-            className="flex h-10 w-full min-w-[140px] rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+            className="flex h-10 w-full min-w-[140px] rounded-md border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
           >
             <option value="">Not linked</option>
             {roster.map((p) => (
@@ -377,7 +377,7 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
                   type="button"
                   variant="link"
                   onClick={openManualEntry}
-                  className="h-auto p-0 text-xs font-semibold text-brand-600"
+                  className="h-auto p-0 text-xs font-semibold text-brand-500"
                 >
                   Enter manually instead
                 </Button>
@@ -385,7 +385,7 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
             </div>
 
             {info && !previewOpen && <p className="mt-3 text-sm text-emerald-700">{info}</p>}
-            {error && !previewOpen && <p className="mt-3 text-sm text-blue-700">{error}</p>}
+            {error && !previewOpen && <p className="mt-3 text-sm text-blue-600">{error}</p>}
           </CardContent>
         </Card>
       )}
@@ -393,7 +393,7 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
       {manualOnly && info && !previewOpen && <p className="text-sm text-emerald-700">{info}</p>}
 
       <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
-        <SheetContent side="bottom" className="flex max-h-[92vh] flex-col gap-0 p-0 md:left-1/2 md:top-1/2 md:max-w-5xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:border">
+        <SheetContent side="bottom" className="flex max-h-[92vh] flex-col gap-0 p-0 md:left-1/2 md:top-1/2 md:max-w-5xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-md md:border">
           <SheetHeader className="border-b border-navy-50 p-5 text-left">
             <SheetTitle>{manualOnly ? "Enter stats" : "Review scanned stats"}</SheetTitle>
             <SheetDescription>
@@ -453,7 +453,7 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
                   type="button"
                   variant="link"
                   onClick={addSetScore}
-                  className="h-auto p-0 text-xs font-semibold text-brand-600"
+                  className="h-auto p-0 text-xs font-semibold text-brand-500"
                 >
                   + Add set
                 </Button>
@@ -475,7 +475,7 @@ export default function StatSheetUpload({ roster, manualOnly = false }) {
               <DataTable columns={columns} data={rows} className="min-w-[880px] border-0 bg-transparent" />
             </div>
 
-            {error && <p className="mt-3 text-sm text-blue-700">{error}</p>}
+            {error && <p className="mt-3 text-sm text-blue-600">{error}</p>}
           </ScrollArea>
 
           <SheetFooter className="flex-row gap-2 border-t border-navy-50 p-5">

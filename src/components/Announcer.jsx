@@ -37,14 +37,14 @@ export default function Announcer() {
 
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-4">
-      <form onSubmit={submit} className="w-full max-w-md rounded-t-3xl bg-white p-5 md:rounded-2xl">
+      <form onSubmit={submit} className="w-full max-w-md rounded-t-3xl bg-white p-5 md:rounded-md">
         <h2 className="text-lg font-bold text-navy-900">New post</h2>
 
         <div className="my-3 grid grid-cols-3 gap-2">
           {[
-            ["announcement", "📣 Announce"],
-            ["exercise", "💪 Exercise"],
-            ["info", "ℹ️ Info"],
+            ["announcement", "Announce"],
+            ["exercise", "Exercise"],
+            ["info", "Info"],
           ].map(([val, label]) => (
             <Button
               key={val}
@@ -53,8 +53,8 @@ export default function Announcer() {
               size="sm"
               onClick={() => setCategory(val)}
               className={cn(
-                "h-auto rounded-xl py-2 text-xs font-semibold ring-1",
-                category === val ? "bg-brand-600 text-white ring-brand-600 hover:bg-brand-600" : "bg-white text-navy-500 ring-navy-100 hover:bg-white"
+                "h-auto rounded-md py-2 text-xs font-semibold ring-1",
+                category === val ? "bg-brand-500 text-white ring-brand-500 hover:bg-brand-500" : "bg-white text-navy-500 ring-navy-100 hover:bg-white"
               )}
             >
               {label}
@@ -76,7 +76,7 @@ export default function Announcer() {
               type="checkbox"
               checked={pinned}
               onChange={(e) => setPinned(e.target.checked)}
-              className="h-4 w-4 rounded accent-brand-600"
+              className="h-4 w-4 rounded accent-brand-500"
             />
             📌 Pin to top
           </label>

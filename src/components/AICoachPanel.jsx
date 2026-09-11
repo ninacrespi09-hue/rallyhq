@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,51 +19,50 @@ function InsightSections({ insight }) {
 
   return (
     <div className="space-y-4">
-      <Card className="border-0 bg-white/40 shadow-none ring-1 ring-blue-200/50">
+      <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
-            <span className="text-lg">💬</span>
-            <h3 className="font-bold text-navy-900">Overview</h3>
+            <h3 className="font-semibold text-navy-900">Overview</h3>
             <Badge
               variant="secondary"
-              className={`ml-auto ${insight.source === "claude" ? "bg-violet-100 text-violet-700" : "bg-navy-50 text-navy-500"}`}
+              className={`ml-auto ${insight.source === "claude" ? "bg-violet-100 text-violet-700" : ""}`}
             >
-              {insight.source === "claude" ? "✦ Claude" : "AI coach"}
+              {insight.source === "claude" ? "Claude" : "AI coach"}
             </Badge>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-navy-700">{insight.summary}</p>
         </CardContent>
       </Card>
 
-      <Section title="💪 Strengths" items={insight.strengths} empty="Still gathering data…" tone="emerald" />
-      <Section title="🎯 Areas to work on" items={insight.weaknesses} empty="Nothing flagged yet." tone="amber" />
+      <Section title="Strengths" items={insight.strengths} empty="Still gathering data…" tone="emerald" />
+      <Section title="Areas to work on" items={insight.weaknesses} empty="Nothing flagged yet." tone="amber" />
 
       {insight.habitImpact && (
-        <Card className="border-0 bg-sky-50/80 shadow-none ring-1 ring-sky-200/60">
+        <Card>
           <CardContent className="p-4">
-            <h3 className="font-bold text-navy-900">🩺 How your habits affect your game</h3>
+            <h3 className="font-semibold text-navy-900">How your habits affect your game</h3>
             <p className="mt-2 text-sm leading-relaxed text-navy-700">{insight.habitImpact}</p>
           </CardContent>
         </Card>
       )}
 
-      <Section title="📈 How to improve" items={insight.improvements} empty="Check back after more check-ins and games." tone="brand" />
+      <Section title="How to improve" items={insight.improvements} empty="Check back after more check-ins and games." tone="brand" />
     </div>
   );
 }
 
 function Section({ title, items, empty, tone }) {
   const ring =
-    tone === "emerald" ? "ring-emerald-200/60" : tone === "amber" ? "ring-amber-200/60" : "ring-brand-200/60";
+    tone === "emerald" ? "border-emerald-200" : tone === "amber" ? "border-amber-200" : "border-brand-100";
   return (
-    <Card className={`border-0 bg-white/40 shadow-none ring-1 ${ring}`}>
+    <Card className={ring}>
       <CardContent className="p-4">
-        <h3 className="font-bold text-navy-900">{title}</h3>
+        <h3 className="font-semibold text-navy-900">{title}</h3>
         {items?.length ? (
           <ul className="mt-2 space-y-1.5 text-sm text-navy-700">
             {items.map((t, i) => (
               <li key={i} className="flex gap-2">
-                <span className="text-brand-500">•</span>
+                <span className="text-brand-400">•</span>
                 <span>{t}</span>
               </li>
             ))}
@@ -119,8 +119,8 @@ function AppAssistantChat({ sport, role = "player" }) {
   }
 
   return (
-    <Card className="overflow-hidden p-0 ring-1 ring-brand-200/50">
-      <div className="border-b border-blue-200/40 px-4 py-3">
+    <Card className="overflow-hidden p-0 ring-1 ring-brand-100/50">
+      <div className="border-b border-blue-100/40 px-4 py-3">
         <h3 className="font-bold text-navy-900">{title}</h3>
         <p className="text-xs text-navy-500">{subtitle}</p>
       </div>
@@ -130,10 +130,10 @@ function AppAssistantChat({ sport, role = "player" }) {
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                className={`max-w-[88%] rounded-md px-3 py-2 text-sm leading-relaxed ${
                   m.role === "user"
-                    ? "bg-brand-600 text-white"
-                    : "bg-white/60 text-navy-800 ring-1 ring-blue-200/50"
+                    ? "bg-brand-500 text-white"
+                    : "bg-white/60 text-navy-800 ring-1 ring-blue-100/50"
                 }`}
               >
                 {m.content}
@@ -142,7 +142,7 @@ function AppAssistantChat({ sport, role = "player" }) {
           ))}
           {chatMutation.isPending && (
             <div className="flex justify-start">
-              <div className="rounded-2xl bg-white/60 px-3 py-2 text-sm text-navy-500 ring-1 ring-blue-200/50">
+              <div className="rounded-md bg-white/60 px-3 py-2 text-sm text-navy-500 ring-1 ring-blue-100/50">
                 Thinking…
               </div>
             </div>
@@ -150,7 +150,7 @@ function AppAssistantChat({ sport, role = "player" }) {
         </div>
       )}
 
-      <form onSubmit={sendMessage} className="flex items-end gap-2 border-t border-blue-200/40 bg-white/30 p-3">
+      <form onSubmit={sendMessage} className="flex items-end gap-2 border-t border-blue-100/40 bg-white/30 p-3">
         <Input
           type="text"
           value={input}
@@ -165,7 +165,7 @@ function AppAssistantChat({ sport, role = "player" }) {
         </Button>
       </form>
 
-      {chatError && <p className="px-4 pb-3 text-xs text-blue-700">{chatError}</p>}
+      {chatError && <p className="px-4 pb-3 text-xs text-blue-600">{chatError}</p>}
     </Card>
   );
 }
@@ -221,13 +221,13 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
   if (role === "player") {
     return (
       <div className="space-y-4">
-        <Card className="border-l-4 border-brand-500">
+        <Card className="border-l-4 border-brand-400">
           <CardContent className="flex items-center gap-3 p-5">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-navy-800 text-2xl">
-              🤖
+            <span className="grid h-10 w-10 place-items-center rounded-md bg-gradient-to-br from-brand-400 to-blue-600 text-white">
+              <Bot className="h-5 w-5" strokeWidth={1.75} />
             </span>
             <div>
-              <h2 className="font-bold text-navy-900">Your AI Coach</h2>
+              <h2 className="font-semibold text-navy-900">Your AI Coach</h2>
               <p className="text-sm text-navy-500">Private insights based on your stats, check-ins, and training.</p>
             </div>
           </CardContent>
@@ -241,7 +241,7 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
               : "Generate my AI coach"}
         </Button>
 
-        {error && <p className="text-sm text-blue-700">{error}</p>}
+        {error && <p className="text-sm text-blue-600">{error}</p>}
 
         <InsightSections insight={playerData?.insight} />
 
@@ -252,13 +252,13 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
 
   return (
     <div className="space-y-4">
-      <Card className="border-l-4 border-brand-500">
+      <Card className="border-l-4 border-brand-400">
         <CardContent className="flex items-center gap-3 p-5">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-navy-800 text-2xl">
-            🤖
+          <span className="grid h-10 w-10 place-items-center rounded-md bg-gradient-to-br from-brand-400 to-blue-600 text-white">
+            <Bot className="h-5 w-5" strokeWidth={1.75} />
           </span>
           <div>
-            <h2 className="font-bold text-navy-900">Team AI Coach</h2>
+            <h2 className="font-semibold text-navy-900">Team AI Coach</h2>
             <p className="text-sm text-navy-500">Insights for every player — strengths, habits, and how to improve.</p>
           </div>
         </CardContent>
@@ -268,7 +268,7 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
         {generateMutation.isPending ? "Analyzing all players…" : "Generate all player insights"}
       </Button>
 
-      {error && <p className="text-sm text-blue-700">{error}</p>}
+      {error && <p className="text-sm text-blue-600">{error}</p>}
 
       <AppAssistantChat sport={sport} role="coach" />
 
@@ -280,7 +280,7 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
               onClick={() => setOpenId(openId === p.id ? null : p.id)}
               className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-white/20"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-brand-100 text-sm font-bold text-brand-600">
                 {p.name.split(" ")[0][0]}
               </span>
               <div className="min-w-0 flex-1">
@@ -291,7 +291,7 @@ export default function AICoachPanel({ role, sport = "volleyball", initialPlayer
             </button>
 
             {openId === p.id && (
-              <div className="border-t border-blue-200/40 px-5 pb-5 pt-2">
+              <div className="border-t border-blue-100/40 px-5 pb-5 pt-2">
                 <Button
                   type="button"
                   variant="ghost"

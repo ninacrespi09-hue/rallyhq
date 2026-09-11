@@ -228,7 +228,7 @@ export default function ScheduleUpload({ compact = false }) {
                   type="button"
                   variant="link"
                   onClick={openManual}
-                  className="h-auto p-0 text-xs font-semibold text-brand-600"
+                  className="h-auto p-0 text-xs font-semibold text-brand-500"
                 >
                   Enter events manually instead
                 </Button>
@@ -236,7 +236,7 @@ export default function ScheduleUpload({ compact = false }) {
             </div>
 
             {info && !open && <p className="mt-3 text-sm text-emerald-700">{info}</p>}
-            {error && !open && <p className="mt-3 text-sm text-blue-700">{error}</p>}
+            {error && !open && <p className="mt-3 text-sm text-blue-600">{error}</p>}
           </CardContent>
         </Card>
       )}
@@ -244,7 +244,7 @@ export default function ScheduleUpload({ compact = false }) {
       {info && compact && !open && <span className="sr-only">{info}</span>}
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom" className="flex max-h-[92vh] flex-col gap-0 p-0 md:left-1/2 md:top-1/2 md:max-w-2xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:border">
+        <SheetContent side="bottom" className="flex max-h-[92vh] flex-col gap-0 p-0 md:left-1/2 md:top-1/2 md:max-w-2xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-md md:border">
           <SheetHeader className="border-b border-navy-50 p-5 text-left">
             <SheetTitle>Review schedule</SheetTitle>
             <SheetDescription>
@@ -272,7 +272,7 @@ export default function ScheduleUpload({ compact = false }) {
                           type="checkbox"
                           checked={ev.included}
                           onChange={(e) => updateEvent(index, { included: e.target.checked })}
-                          className="h-4 w-4 rounded accent-brand-600"
+                          className="h-4 w-4 rounded accent-brand-500"
                         />
                         <span className={`chip ${s.chip}`}>{typeLabel}</span>
                         {events.length > 1 && (
@@ -280,7 +280,7 @@ export default function ScheduleUpload({ compact = false }) {
                             type="button"
                             variant="link"
                             onClick={() => removeEvent(index)}
-                            className="ml-auto h-auto p-0 text-xs font-semibold text-navy-400 hover:text-blue-600"
+                            className="ml-auto h-auto p-0 text-xs font-semibold text-navy-400 hover:text-blue-500"
                           >
                             Remove
                           </Button>
@@ -292,7 +292,7 @@ export default function ScheduleUpload({ compact = false }) {
                         <select
                           value={ev.type}
                           onChange={(e) => updateEvent(index, { type: e.target.value })}
-                          className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+                          className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
                         >
                           {SCHEDULE_EVENT_TYPES.map((t) => (
                             <option key={t.key} value={t.key}>
@@ -387,7 +387,7 @@ export default function ScheduleUpload({ compact = false }) {
             </div>
           </ScrollArea>
 
-          {error && <p className="px-5 pb-2 text-sm text-blue-700">{error}</p>}
+          {error && <p className="px-5 pb-2 text-sm text-blue-600">{error}</p>}
 
           <SheetFooter className="flex-row gap-2 border-t border-navy-50 p-5">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">

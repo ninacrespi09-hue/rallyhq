@@ -13,7 +13,7 @@ export default function Avatar({ user, size = 48, className = "" }) {
       <img
         src={user.photo_url}
         alt={user.name}
-        className={`rounded-full object-cover ring-2 ring-white ${className}`}
+        className={`rounded-md object-cover ring-2 ring-white ${className}`}
         style={{ width: size, height: size }}
       />
     );
@@ -21,7 +21,7 @@ export default function Avatar({ user, size = 48, className = "" }) {
 
   return (
     <div
-      className={`grid place-items-center rounded-full bg-gradient-to-br from-brand-400 to-navy-700 font-bold text-white ${className}`}
+      className={`grid place-items-center rounded-md bg-gradient-to-br from-brand-300 to-blue-600 font-semibold text-white ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.36 }}
     >
       {initials}

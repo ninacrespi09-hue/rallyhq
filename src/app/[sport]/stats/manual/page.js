@@ -30,7 +30,7 @@ export default async function StatSheetManualPage({ params, searchParams }) {
         subtitle="Fill in match and player stats, then save to the team dashboard."
       />
       <p className="mb-4 text-sm">
-        <Link href={sportPath(sport, "stats")} className="font-medium text-brand-600">
+        <Link href={sportPath(sport, "stats")} className="font-medium text-brand-500">
           ← Back to Team Stats
         </Link>
       </p>

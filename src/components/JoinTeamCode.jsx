@@ -25,9 +25,9 @@ export default function JoinTeamCode({ joinRole = "player" }) {
   }
 
   return (
-    <form onSubmit={onJoin} className="rounded-xl bg-white/50 p-4 ring-1 ring-blue-200/60 text-left">
-      <div className="text-sm font-bold text-navy-900">
-        {isParent ? "👨‍👩‍👧 I'm a parent" : "🏐 I'm a player"}
+    <form onSubmit={onJoin} className="rounded-md bg-white/50 p-4 ring-1 ring-blue-100/60 text-left">
+      <div className="text-sm font-semibold text-navy-900">
+        {isParent ? "I'm a parent" : "I'm a player"}
       </div>
       <p className="mt-1 text-xs text-navy-500">
         {isParent
@@ -47,7 +47,7 @@ export default function JoinTeamCode({ joinRole = "player" }) {
         />
       </div>
       {error && (
-        <div className="mt-2 rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-900">{error}</div>
+        <div className="mt-2 rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-800">{error}</div>
       )}
       <Button type="submit" className="mt-3 w-full">
         {isParent ? "Join as parent" : "Join team"}

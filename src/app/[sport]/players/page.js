@@ -9,14 +9,14 @@ import { getStatsForSport } from "@/lib/sports";
 
 // Translucent blue shades so the overlapping circles blend where they meet.
 const CIRCLE_SHADES = [
-  "bg-blue-500/70",
-  "bg-cyan-600/60",
-  "bg-blue-600/65",
-  "bg-sky-600/60",
-  "bg-indigo-500/60",
-  "bg-blue-700/55",
-  "bg-cyan-500/65",
-  "bg-navy-600/55",
+  "bg-blue-400/70",
+  "bg-cyan-500/60",
+  "bg-blue-500/65",
+  "bg-sky-500/60",
+  "bg-blue-300/70",
+  "bg-blue-600/55",
+  "bg-cyan-400/65",
+  "bg-sky-400/60",
 ];
 
 export default async function PlayersPage({ params, searchParams }) {

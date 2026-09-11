@@ -19,7 +19,7 @@ export default async function ScheduleUploadPage({ params, searchParams }) {
         subtitle="Scan a photo of your schedule and review events before saving."
       />
       <p className="mb-4 text-sm">
-        <Link href={sportPath(sport, "schedule")} className="font-medium text-brand-600">
+        <Link href={sportPath(sport, "schedule")} className="font-medium text-brand-500">
           ← Back to Schedule
         </Link>
       </p>

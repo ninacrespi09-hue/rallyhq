@@ -2,7 +2,7 @@ export const volleyball = {
   id: "volleyball",
   label: "Volleyball",
   icon: "🏐",
-  gradient: "from-sky-400 to-blue-600",
+  gradient: "from-sky-300 to-blue-500",
   tagline: "Stats, wellness, and team hub for your volleyball squad.",
   stats: [
     { key: "kills", label: "Kills" },

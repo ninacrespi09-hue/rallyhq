@@ -53,7 +53,7 @@ export default async function PlayerProfile({ params, searchParams }) {
     }
     return (
       <NavShell user={user} sport={sport}>
-        <Link href={sportPath(sport, "players")} className="text-sm font-medium text-brand-600">
+        <Link href={sportPath(sport, "players")} className="text-sm font-medium text-brand-500">
           ← Back to Roster
         </Link>
         <Card className="mt-4">
@@ -91,23 +91,23 @@ export default async function PlayerProfile({ params, searchParams }) {
 
   return (
     <NavShell user={user} sport={sport}>
-      <Link href={sportPath(sport, "players")} className="text-sm font-medium text-brand-600">
+      <Link href={sportPath(sport, "players")} className="text-sm font-medium text-brand-500">
         ← Back to Roster
       </Link>
 
       {/* Header */}
-      <div className="mt-3 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-navy-900 p-6 text-white shadow-soft">
+      <div className="mt-3 overflow-hidden rounded-md bg-gradient-to-br from-blue-500 to-blue-700 p-6 text-white shadow-soft">
         <div className="flex items-center gap-4">
           <Avatar user={player} size={84} className="ring-4 ring-white/20" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="truncate text-2xl font-black">{player.name}</h1>
+              <h1 className="truncate text-2xl font-semibold">{player.name}</h1>
               {player.jersey_number != null && (
                 <Badge className="bg-white/20 text-white">#{player.jersey_number}</Badge>
               )}
             </div>
             <div className="mt-1 text-sm text-blue-100">{player.position || "Player"}</div>
-            {player.height_cm ? <div className="text-xs text-blue-200">{player.height_cm} cm</div> : null}
+            {player.height_cm ? <div className="text-xs text-blue-100">{player.height_cm} cm</div> : null}
           </div>
         </div>
         {player.bio && <p className="mt-4 text-sm text-blue-50/90">{player.bio}</p>}
@@ -172,7 +172,7 @@ export default async function PlayerProfile({ params, searchParams }) {
         </Card>
         <Card>
           <CardContent>
-            <h2 className="mb-2 font-bold text-blue-700">🎯 Areas for Improvement</h2>
+            <h2 className="mb-2 font-bold text-blue-600">🎯 Areas for Improvement</h2>
             <ul className="space-y-1.5 text-sm text-navy-700">
               {improvements.map((s, i) => (
                 <li key={i} className="flex gap-2"><span>↗</span>{s}</li>
@@ -243,7 +243,7 @@ export default async function PlayerProfile({ params, searchParams }) {
                   <div key={w.date} className="flex items-center gap-2 rounded-lg bg-navy-50/60 px-3 py-1.5 text-xs">
                     <span className="w-20 font-medium text-navy-600">{w.date}</span>
                     <span className="text-navy-500">Energy {w.energy} · Soreness {w.soreness} · Mood {w.mood}</span>
-                    {w.injury ? <Badge className="ml-auto bg-blue-100 text-blue-700">injury</Badge> : null}
+                    {w.injury ? <Badge className="ml-auto bg-blue-100 text-blue-600">injury</Badge> : null}
                   </div>
                 ))}
               </div>
@@ -261,7 +261,7 @@ export default async function PlayerProfile({ params, searchParams }) {
                 {injuries.map((inj, i) => (
                   <div key={i} className="rounded-lg bg-blue-50 px-3 py-2 text-sm ring-1 ring-blue-100">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-blue-700">{inj.areas || "Injury"}</span>
+                      <span className="font-semibold text-blue-600">{inj.areas || "Injury"}</span>
                       <span className="ml-auto text-xs text-navy-400">{inj.date}</span>
                     </div>
                     {inj.note && <p className="mt-0.5 text-xs text-navy-600">{inj.note}</p>}

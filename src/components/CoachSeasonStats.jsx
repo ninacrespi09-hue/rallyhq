@@ -57,7 +57,7 @@ export default function CoachSeasonStats({ playerId, playerName, totals, stats =
     <>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="font-bold text-navy-900">Season Statistics</h2>
-        <Button variant="outline" size="sm" onClick={openEditor} className="rounded-full text-xs font-semibold">
+        <Button variant="outline" size="sm" onClick={openEditor} className="rounded-md text-xs font-semibold">
           Edit stats
         </Button>
       </div>
@@ -65,7 +65,7 @@ export default function CoachSeasonStats({ playerId, playerName, totals, stats =
         {stats.map((s) => (
           <Card key={s.key} className="border-0 bg-navy-50 shadow-none">
             <CardContent className="p-3 text-center">
-              <div className="text-2xl font-extrabold text-navy-900">{formatStatValue(s, totals[s.key], totals.games)}</div>
+              <div className="text-2xl font-semibold text-navy-900">{formatStatValue(s, totals[s.key], totals.games)}</div>
               <div className="text-[11px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</div>
             </CardContent>
           </Card>
@@ -94,7 +94,7 @@ export default function CoachSeasonStats({ playerId, playerName, totals, stats =
                 </div>
               ))}
             </div>
-            {error && <p className="text-sm text-blue-700">{error}</p>}
+            {error && <p className="text-sm text-blue-600">{error}</p>}
             <DialogFooter className="gap-2 sm:gap-0">
               <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">
                 Cancel

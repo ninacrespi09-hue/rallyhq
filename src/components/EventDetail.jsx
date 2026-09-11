@@ -16,8 +16,8 @@ import { useApiMutation } from "@/hooks/use-api";
 const STATUSES = ["present", "late", "absent", "excused"];
 const STATUS_STYLE = {
   present: "bg-emerald-600 text-white ring-emerald-600",
-  late: "bg-blue-500 text-white ring-blue-500",
-  absent: "bg-blue-500 text-white ring-blue-500",
+  late: "bg-blue-400 text-white ring-blue-400",
+  absent: "bg-blue-400 text-white ring-blue-400",
   excused: "bg-navy-400 text-white ring-navy-400",
 };
 
@@ -28,7 +28,7 @@ const RSVP_OPTIONS = [
 ];
 const RSVP_STYLE = {
   going: "bg-emerald-600 text-white ring-emerald-600",
-  maybe: "bg-blue-500 text-white ring-blue-500",
+  maybe: "bg-blue-400 text-white ring-blue-400",
   cant_go: "bg-navy-400 text-white ring-navy-400",
 };
 
@@ -120,7 +120,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
           )}
 
           {parent && canRsvp(user) && (
-            <div className="mt-4 rounded-xl bg-navy-50 p-3">
+            <div className="mt-4 rounded-md bg-navy-50 p-3">
               <p className="text-sm font-semibold text-navy-800">Your RSVP</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {RSVP_OPTIONS.map(({ key, label }) => (
@@ -131,7 +131,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                     size="sm"
                     onClick={() => setRsvpStatus(user.id, key)}
                     className={cn(
-                      "h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 transition hover:bg-white",
+                      "h-auto rounded-md px-2.5 py-0.5 text-xs font-semibold ring-1 transition hover:bg-white",
                       rsvp[user.id] === key ? RSVP_STYLE[key] : "bg-white text-navy-500 ring-navy-100"
                     )}
                   >
@@ -144,7 +144,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                     variant="ghost"
                     size="sm"
                     onClick={() => clearRsvp(user.id)}
-                    className="h-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy-400 ring-1 ring-navy-100 hover:bg-white"
+                    className="h-auto rounded-md bg-white px-2.5 py-0.5 text-xs font-semibold text-navy-400 ring-1 ring-navy-100 hover:bg-white"
                   >
                     Clear
                   </Button>
@@ -164,7 +164,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                 return (
                   <div key={p.id} className="flex items-center gap-2">
                     <div className="w-28 shrink-0 truncate text-sm font-medium text-navy-700">
-                      {p.name} {mine && <span className="text-xs text-brand-600">(you)</span>}
+                      {p.name} {mine && <span className="text-xs text-brand-500">(you)</span>}
                     </div>
                     <div className="flex flex-1 flex-wrap gap-1.5">
                       {RSVP_OPTIONS.map(({ key, label }) => (
@@ -176,7 +176,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                           disabled={!editable}
                           onClick={() => setRsvpStatus(p.id, key)}
                           className={cn(
-                            "h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 transition disabled:opacity-40 hover:bg-white",
+                            "h-auto rounded-md px-2.5 py-0.5 text-xs font-semibold ring-1 transition disabled:opacity-40 hover:bg-white",
                             status === key ? RSVP_STYLE[key] : "bg-white text-navy-500 ring-navy-100"
                           )}
                         >
@@ -189,7 +189,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                           variant="ghost"
                           size="sm"
                           onClick={() => clearRsvp(p.id)}
-                          className="h-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy-400 ring-1 ring-navy-100 hover:bg-white"
+                          className="h-auto rounded-md bg-white px-2.5 py-0.5 text-xs font-semibold text-navy-400 ring-1 ring-navy-100 hover:bg-white"
                         >
                           Clear
                         </Button>
@@ -226,7 +226,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                 return (
                   <div key={p.id} className="flex items-center gap-2">
                     <div className="w-28 shrink-0 truncate text-sm font-medium text-navy-700">
-                      {p.name} {mine && <span className="text-xs text-brand-600">(you)</span>}
+                      {p.name} {mine && <span className="text-xs text-brand-500">(you)</span>}
                     </div>
                     <div className="flex flex-1 flex-wrap gap-1.5">
                       {STATUSES.map((st) => (
@@ -238,7 +238,7 @@ export default function EventDetail({ event, user, players, initialAttendance, i
                           disabled={!editable}
                           onClick={() => setStatus(p.id, st)}
                           className={cn(
-                            "h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 transition disabled:opacity-40 hover:bg-white",
+                            "h-auto rounded-md px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 transition disabled:opacity-40 hover:bg-white",
                             status === st ? STATUS_STYLE[st] : "bg-white text-navy-500 ring-navy-100"
                           )}
                         >
@@ -303,7 +303,7 @@ function ResultPanel({ event, isCoach, initial }) {
             <span className="text-2xl font-bold text-navy-300">–</span>
             <ScoreBox label={event.opponent || "Them"} value={opp} onChange={setOpp} editable={isCoach} />
             {(our || opp) ? (
-              <Badge className={result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}>
+              <Badge className={result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-600"}>
                 {result === "W" ? "Win" : "Loss"}
               </Badge>
             ) : null}
@@ -329,10 +329,10 @@ function ScoreBox({ label, value, onChange, editable }) {
           min="0"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-16 rounded-xl border border-navy-100 py-2 text-center text-xl font-extrabold"
+          className="w-16 rounded-md border border-navy-100 py-2 text-center text-xl font-semibold"
         />
       ) : (
-        <div className="text-3xl font-extrabold text-navy-900">{value}</div>
+        <div className="text-3xl font-semibold text-navy-900">{value}</div>
       )}
     </div>
   );
@@ -390,7 +390,7 @@ function StatsPanel({ event, players, initialStats, isCoach, isParent: parent, u
                           variant="link"
                           size="sm"
                           onClick={() => setEditing(p.id)}
-                          className="h-auto p-0 text-xs font-semibold text-brand-600"
+                          className="h-auto p-0 text-xs font-semibold text-brand-500"
                         >
                           {s ? "Edit" : "Add"}
                         </Button>

@@ -20,6 +20,9 @@ export function middleware(request) {
     pathname.startsWith("/schedule/all") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
+    pathname.startsWith("/verify-email") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password") ||
     pathname === "/logout"
   ) {
     response.cookies.delete(SPORT_COOKIE);

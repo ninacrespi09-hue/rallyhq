@@ -19,7 +19,8 @@ export async function POST(req) {
   if (!user) {
     return NextResponse.json(
       {
-        error: "No account found with that email on this site. Sign up again here if you only created an account on your computer.",
+        error:
+          "No account found with that email. Sign up if you don't have an account yet.",
         code: "NO_ACCOUNT",
       },
       { status: 401 }
@@ -29,6 +30,17 @@ export async function POST(req) {
     return NextResponse.json(
       { error: "Incorrect password. Double-check caps lock and try again.", code: "WRONG_PASSWORD" },
       { status: 401 }
+    );
+  }
+
+  if (Number(user.email_verified) === 0) {
+    return NextResponse.json(
+      {
+        error: "Please verify your email before signing in. Check your inbox for the link we sent.",
+        code: "EMAIL_NOT_VERIFIED",
+        email: normalizedEmail,
+      },
+      { status: 403 }
     );
   }
 

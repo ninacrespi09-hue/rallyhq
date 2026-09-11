@@ -10,7 +10,7 @@ import { isCoach } from "@/lib/permissions";
 import { fmtDateTime } from "@/lib/format";
 
 const CATEGORY_STYLE = {
-  announcement: "bg-sky-100 text-sky-800",
+  announcement: "bg-sky-100 text-sky-700",
   exercise: "bg-emerald-100 text-emerald-800",
   info: "bg-navy-100 text-navy-700",
 };

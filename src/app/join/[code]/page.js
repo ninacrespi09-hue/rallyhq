@@ -18,7 +18,7 @@ export default async function JoinPage({ params, searchParams }) {
 
   if (!team) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-200 to-sky-100 flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-b from-blue-100 to-sky-100 flex flex-col items-center justify-center px-4">
         <Card className="w-full max-w-sm">
           <CardContent className="text-center">
             <div className="text-4xl mb-3">🏐</div>

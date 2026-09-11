@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -118,11 +119,11 @@ export default function GroupChat({ user, initialRooms, roster }) {
                   <button
                     key={r.id}
                     onClick={() => openRoom(r.id)}
-                    className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-navy-50 ${
-                      activeId === r.id ? "bg-brand-50 ring-1 ring-brand-200" : ""
+                    className={`flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left transition hover:bg-navy-50 ${
+                      activeId === r.id ? "bg-brand-50 ring-1 ring-brand-100" : ""
                     }`}
                   >
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-brand-100 text-sm font-bold text-brand-600">
                       {r.name.slice(0, 1).toUpperCase()}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -142,7 +143,7 @@ export default function GroupChat({ user, initialRooms, roster }) {
       <Card className={`flex min-h-[420px] flex-col overflow-hidden p-0 ${!activeId ? "hidden md:flex" : ""}`}>
         {!activeId ? (
           <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-            <span className="text-4xl">💬</span>
+            <MessageSquare className="h-8 w-8 text-navy-300" strokeWidth={1.5} />
             <p className="mt-3 text-sm text-navy-500">Select a group or create a new chat.</p>
           </div>
         ) : (
@@ -175,9 +176,9 @@ export default function GroupChat({ user, initialRooms, roster }) {
                         <span className="mb-0.5 px-1 text-[10px] font-semibold text-navy-400">{m.author_name}</span>
                       )}
                       <div
-                        className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                        className={`rounded-md px-3 py-2 text-sm leading-relaxed ${
                           mine
-                            ? "bg-brand-600 text-white"
+                            ? "bg-brand-500 text-white"
                             : "bg-navy-50 text-navy-800 ring-1 ring-navy-100"
                         }`}
                       >
@@ -203,7 +204,7 @@ export default function GroupChat({ user, initialRooms, roster }) {
                 Send
               </Button>
             </form>
-            {error && <p className="px-4 pb-3 text-xs text-blue-700">{error}</p>}
+            {error && <p className="px-4 pb-3 text-xs text-blue-600">{error}</p>}
           </>
         )}
       </Card>
@@ -283,7 +284,7 @@ function CreateChatDialog({ open, onOpenChange, roster, onCreated }) {
         </div>
         <div className="mt-3">
           <Label>Invite people</Label>
-          <ScrollArea className="mt-1.5 max-h-48 rounded-xl border border-navy-100 p-2">
+          <ScrollArea className="mt-1.5 max-h-48 rounded-md border border-navy-100 p-2">
             <div className="space-y-1 pr-3">
               {roster.length === 0 && <p className="text-sm text-navy-400">No teammates to invite.</p>}
               {roster.map((p) => (
@@ -292,7 +293,7 @@ function CreateChatDialog({ open, onOpenChange, roster, onCreated }) {
                     type="checkbox"
                     checked={selected.has(p.id)}
                     onChange={() => toggle(p.id)}
-                    className="h-4 w-4 rounded accent-brand-600"
+                    className="h-4 w-4 rounded accent-brand-500"
                   />
                   <span className="text-sm font-medium text-navy-700">{p.name}</span>
                   <span className="ml-auto text-xs capitalize text-navy-400">{p.role}</span>
@@ -301,7 +302,7 @@ function CreateChatDialog({ open, onOpenChange, roster, onCreated }) {
             </div>
           </ScrollArea>
         </div>
-        {error && <p className="text-sm text-blue-700">{error}</p>}
+        {error && <p className="text-sm text-blue-600">{error}</p>}
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">
             Cancel
@@ -352,7 +353,7 @@ function InviteDialog({ open, onOpenChange, roster, roomId, onInvited }) {
         <DialogHeader>
           <DialogTitle>Invite to group</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-56 rounded-xl border border-navy-100 p-2">
+        <ScrollArea className="max-h-56 rounded-md border border-navy-100 p-2">
           <div className="space-y-1 pr-3">
             {roster.length === 0 && <p className="text-sm text-navy-400">Everyone on the team is already here.</p>}
             {roster.map((p) => (
@@ -361,14 +362,14 @@ function InviteDialog({ open, onOpenChange, roster, roomId, onInvited }) {
                   type="checkbox"
                   checked={selected.has(p.id)}
                   onChange={() => toggle(p.id)}
-                  className="h-4 w-4 rounded accent-brand-600"
+                  className="h-4 w-4 rounded accent-brand-500"
                 />
                 <span className="text-sm font-medium text-navy-700">{p.name}</span>
               </label>
             ))}
           </div>
         </ScrollArea>
-        {error && <p className="text-sm text-blue-700">{error}</p>}
+        {error && <p className="text-sm text-blue-600">{error}</p>}
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">
             Cancel

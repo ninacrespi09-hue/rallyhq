@@ -29,7 +29,7 @@ export default async function StatSheetUploadPage({ params, searchParams }) {
         subtitle="Scan a photo or enter stats manually, then review before saving."
       />
       <p className="mb-4 text-sm">
-        <Link href={sportPath(sport, "stats")} className="font-medium text-brand-600">
+        <Link href={sportPath(sport, "stats")} className="font-medium text-brand-500">
           ← Back to Team Stats
         </Link>
       </p>

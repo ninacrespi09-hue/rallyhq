@@ -27,7 +27,7 @@ export default function QuickDelete({ id }) {
           variant="outline"
           size="sm"
           onClick={() => setConfirm(false)}
-          className="chip h-auto rounded-full bg-white px-2.5 py-0.5 text-xs text-navy-500 ring-1 ring-navy-200"
+          className="chip h-auto rounded-md bg-white px-2.5 py-0.5 text-xs text-navy-500 ring-1 ring-navy-200"
         >
           Cancel
         </Button>
@@ -36,7 +36,7 @@ export default function QuickDelete({ id }) {
           size="sm"
           onClick={del}
           disabled={deleteMutation.isPending}
-          className="chip h-auto rounded-full bg-blue-700 px-2.5 py-0.5 text-xs text-white"
+          className="chip h-auto rounded-md bg-blue-600 px-2.5 py-0.5 text-xs text-white"
         >
           {deleteMutation.isPending ? "…" : "Delete"}
         </Button>
@@ -47,7 +47,7 @@ export default function QuickDelete({ id }) {
   return (
     <button
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirm(true); }}
-      className="shrink-0 text-navy-300 hover:text-blue-700 transition text-lg"
+      className="shrink-0 text-navy-300 hover:text-blue-600 transition text-lg"
       title="Delete event"
     >
       🗑

@@ -44,7 +44,7 @@ export default async function CheckinPage({ params, searchParams }) {
                   <Bar label="Sore" value={h.soreness} invert />
                   <Bar label="Energy" value={h.energy} />
                   <Bar label="Mood" value={h.mood} />
-                  {h.injury ? <Badge className="bg-blue-100 text-blue-700">injury</Badge> : null}
+                  {h.injury ? <Badge className="bg-blue-100 text-blue-600">injury</Badge> : null}
                 </div>
               ))}
             </div>
@@ -59,7 +59,7 @@ function Bar({ label, value, invert }) {
   // invert => higher is worse (soreness): show red when high
   const good = invert ? value <= 2 : value >= 4;
   const bad = invert ? value >= 4 : value <= 2;
-  const color = good ? "bg-emerald-500" : bad ? "bg-blue-400" : "bg-blue-400";
+  const color = good ? "bg-emerald-500" : bad ? "bg-blue-300" : "bg-blue-300";
   return (
     <div className="flex-1">
       <div className="flex items-center justify-between text-[10px] text-navy-400">

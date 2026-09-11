@@ -10,9 +10,9 @@ export function BarChart({ data, color }) {
       {data.map((d, i) => (
         <div key={d.label} className="flex items-center gap-3">
           <span className="w-24 shrink-0 text-xs font-medium text-navy-500">{d.label}</span>
-          <div className="h-3 flex-1 overflow-hidden rounded-full bg-navy-50">
+          <div className="h-3 flex-1 overflow-hidden rounded-md bg-navy-50">
             <div
-              className="h-3 rounded-full transition-all"
+              className="h-3 rounded-md transition-all"
               style={{
                 width: `${(d.value / max) * 100}%`,
                 background: color || `linear-gradient(90deg, ${BLUES[i % BLUES.length]}, #1e3a8a)`,

@@ -63,7 +63,7 @@ export default function StatEditor({ eventId, playerName, playerId, existing, on
             </div>
           ))}
         </div>
-        {error && <p className="mt-3 text-sm text-blue-700">{error}</p>}
+        {error && <p className="mt-3 text-sm text-blue-600">{error}</p>}
         <div className="mt-4 flex gap-2">
           <Button variant="ghost" onClick={onClose} className="flex-1">
             Cancel

@@ -157,7 +157,7 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
 
   return (
     <div className="space-y-5">
-      <Card className="overflow-hidden border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      <Card className="overflow-hidden">
         <CardContent className="p-5">
           <h2 className="mb-1 font-bold text-navy-900">What&apos;s in the kit</h2>
           <p className="mb-4 text-sm text-navy-500">
@@ -173,23 +173,23 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
                 onChange={(e) => setNewItemName(e.target.value)}
                 placeholder="Item name, e.g. Foam roller"
                 maxLength={120}
-                className="rounded-2xl bg-white"
+                className="rounded-md bg-white"
               />
               <Input
                 value={newItemQty}
                 onChange={(e) => setNewItemQty(e.target.value)}
                 placeholder="Qty (optional)"
                 maxLength={40}
-                className="rounded-2xl bg-white sm:max-w-[140px]"
+                className="rounded-md bg-white sm:max-w-[140px]"
               />
-              <Button type="submit" disabled={!newItemName.trim() || addItemMutation.isPending} className="shrink-0 rounded-2xl">
+              <Button type="submit" disabled={!newItemName.trim() || addItemMutation.isPending} className="shrink-0 rounded-md">
                 {addItemMutation.isPending ? "Adding…" : "Add item"}
               </Button>
             </form>
           )}
 
           {items.length === 0 ? (
-            <div className="rounded-2xl bg-white/80 px-4 py-6 text-center ring-1 ring-emerald-100">
+            <div className="rounded-md bg-white/80 px-4 py-6 text-center ring-1 ring-emerald-100">
               <span className="text-3xl">📦</span>
               <p className="mt-2 text-sm text-navy-500">
                 {isCoach(user) ? "No items yet — add what's in your wellness kit." : "Your coach hasn't listed kit items yet."}
@@ -200,7 +200,7 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
               {items.map((item) => (
                 <li
                   key={item.id}
-                  className="flex flex-col gap-2 rounded-2xl bg-white px-4 py-3 ring-1 ring-emerald-100 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded-md bg-white px-4 py-3 ring-1 ring-emerald-100 sm:flex-row sm:items-center sm:justify-between"
                 >
                   {editingId === item.id ? (
                     <>
@@ -209,14 +209,14 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           maxLength={120}
-                          className="rounded-xl"
+                          className="rounded-md"
                         />
                         <Input
                           value={editQty}
                           onChange={(e) => setEditQty(e.target.value)}
                           placeholder="Qty"
                           maxLength={40}
-                          className="rounded-xl sm:max-w-[120px]"
+                          className="rounded-md sm:max-w-[120px]"
                         />
                       </div>
                       <div className="flex shrink-0 gap-2">
@@ -261,7 +261,7 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
       </Card>
 
       {isPlayer(user) && (
-        <Card className="overflow-hidden border-sky-200/80 bg-gradient-to-br from-sky-50 via-white to-cyan-50">
+        <Card className="overflow-hidden">
           <CardContent className="p-5">
             <form onSubmit={submitSuggestion} className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="min-w-0 flex-1">
@@ -269,7 +269,7 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
                   What would you like in your wellness kit?
                 </label>
                 <div className="relative">
-                  <div className="pointer-events-none absolute -left-1 -top-1 h-4 w-4 rounded-bl-xl bg-sky-200/80" />
+                  <div className="pointer-events-none absolute -left-1 -top-1 h-4 w-4 rounded-bl-xl bg-sky-100/80" />
                   <textarea
                     id="wellness-kit-suggestion"
                     value={input}
@@ -277,7 +277,7 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
                     rows={2}
                     maxLength={200}
                     placeholder="e.g. resistance bands, electrolyte packets, ice packs…"
-                    className="w-full resize-none rounded-3xl rounded-bl-md border border-sky-200 bg-white px-4 py-3 text-sm text-navy-800 shadow-sm outline-none ring-sky-300 transition placeholder:text-navy-400 focus:ring-2"
+                    className="w-full resize-none rounded-md rounded-bl-md border border-sky-100 bg-white px-4 py-3 text-sm text-navy-800 shadow-sm outline-none ring-sky-200 transition placeholder:text-navy-400 focus:ring-2"
                   />
                 </div>
                 <p className="mt-1 text-xs text-navy-400">{input.length}/200</p>
@@ -287,14 +287,14 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
                       key={chip}
                       type="button"
                       onClick={() => setInput((cur) => (cur ? `${cur}, ${chip.toLowerCase()}` : chip))}
-                      className="rounded-full bg-white px-3 py-1 text-xs font-medium text-navy-600 ring-1 ring-sky-200 transition hover:bg-sky-50"
+                      className="rounded-md bg-white px-3 py-1 text-xs font-medium text-navy-600 ring-1 ring-sky-100 transition hover:bg-sky-50"
                     >
                       + {chip}
                     </button>
                   ))}
                 </div>
               </div>
-              <Button type="submit" disabled={!input.trim() || suggestionMutation.isPending} className="shrink-0 rounded-2xl">
+              <Button type="submit" disabled={!input.trim() || suggestionMutation.isPending} className="shrink-0 rounded-md">
                 {suggestionMutation.isPending ? "Adding…" : "Add suggestion"}
               </Button>
             </form>
@@ -304,7 +304,7 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
       )}
 
       {isCoach(user) && (
-        <Card className="border-sky-200/60 bg-sky-50/60">
+        <Card className="border-sky-100/60 bg-sky-50/60">
           <CardContent className="p-4 text-sm text-navy-600">
             Player suggestions are below — use them when you update the kit list above.
           </CardContent>
@@ -315,9 +315,8 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
         <CardContent className="p-5">
           <h2 className="mb-4 font-bold text-navy-900">Team suggestions</h2>
           {suggestions.length === 0 ? (
-            <div className="rounded-2xl bg-navy-50 px-4 py-8 text-center">
-              <span className="text-3xl">🎒</span>
-              <p className="mt-2 text-sm text-navy-500">
+            <div className="rounded-md bg-navy-50 px-4 py-8 text-center">
+              <p className="text-sm text-navy-500">
                 {isPlayer(user)
                   ? "No suggestions yet — be the first to add one!"
                   : "No player suggestions yet."}
@@ -330,9 +329,9 @@ export default function WellnessKit({ user, initialSuggestions, initialItems }) 
                 return (
                   <div key={s.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`max-w-[85%] rounded-3xl px-4 py-3 shadow-sm ${
+                      className={`max-w-[85%] rounded-md px-4 py-3 shadow-sm ${
                         mine
-                          ? "rounded-br-md bg-gradient-to-br from-sky-500 to-cyan-600 text-white"
+                          ? "rounded-br-md bg-brand-500 text-white"
                           : "rounded-bl-md bg-white ring-1 ring-sky-100"
                       }`}
                     >

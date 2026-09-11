@@ -27,7 +27,7 @@ export default function InsightsPanel({ initial, scope }) {
         {loading ? "Analyzing check-ins…" : data ? "Re-run analysis" : "Generate insights"}
       </Button>
 
-      {error && <p className="text-sm text-blue-600">{error}</p>}
+      {error && <p className="text-sm text-blue-500">{error}</p>}
 
       {!data && !loading && (
         <Card>
@@ -39,7 +39,7 @@ export default function InsightsPanel({ initial, scope }) {
 
       {data && (
         <>
-          <Card className="border-l-4 border-brand-500">
+          <Card className="border-l-4 border-brand-400">
             <CardContent>
               <div className="flex items-center gap-2">
                 <h2 className="font-bold text-navy-900">Summary</h2>
@@ -48,7 +48,7 @@ export default function InsightsPanel({ initial, scope }) {
                     data.source === "claude" ? "bg-violet-100 text-violet-700" : "bg-navy-50 text-navy-500"
                   }
                 >
-                  {data.source === "claude" ? "✦ Claude" : "rule-based"}
+                  {data.source === "claude" ? "Claude" : "rule-based"}
                 </Badge>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-navy-700">{data.summary}</p>
@@ -79,7 +79,7 @@ export default function InsightsPanel({ initial, scope }) {
             </div>
           ) : (
             <Card>
-              <CardContent className="text-sm text-emerald-700">✓ No concerns flagged. Everyone looks good!</CardContent>
+              <CardContent className="text-sm text-emerald-700">No concerns flagged. Everyone looks good.</CardContent>
             </Card>
           )}
         </>

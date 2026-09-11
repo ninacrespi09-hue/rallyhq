@@ -55,14 +55,14 @@ export default function CoachNotes({ playerId, notes, canEdit }) {
       ) : (
         <div className="space-y-2">
           {notes.map((n) => (
-            <div key={n.id} className="rounded-xl bg-navy-50/60 p-3">
+            <div key={n.id} className="rounded-md bg-navy-50/60 p-3">
               <p className="text-sm text-navy-700">{n.note}</p>
               <div className="mt-1 flex items-center gap-2 text-xs text-navy-400">
                 <span>{n.author || "Coach"}</span>
                 <span>·</span>
                 <span>{fmtDate(n.created_at)}</span>
                 {canEdit && (
-                  <button onClick={() => remove(n.id)} className="ml-auto text-blue-400 hover:text-blue-600">
+                  <button onClick={() => remove(n.id)} className="ml-auto text-blue-300 hover:text-blue-500">
                     Delete
                   </button>
                 )}

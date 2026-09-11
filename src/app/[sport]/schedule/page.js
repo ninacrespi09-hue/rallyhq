@@ -255,10 +255,10 @@ function CalendarView({ monthParam, teamId, sport }) {
             <div
               key={day}
               className={`min-h-[64px] rounded-xl p-1 text-left ring-1 sm:min-h-[88px] ${
-                isToday ? "bg-brand-50 ring-brand-300" : "bg-navy-50/40 ring-navy-100"
+                isToday ? "bg-brand-50 ring-brand-200" : "bg-navy-50/40 ring-navy-100"
               }`}
             >
-              <div className={`px-1 text-[11px] font-semibold ${isToday ? "text-brand-700" : "text-navy-500"}`}>
+              <div className={`px-1 text-[11px] font-semibold ${isToday ? "text-brand-600" : "text-navy-500"}`}>
                 {day}
               </div>
               <div className="mt-0.5 space-y-0.5">
@@ -279,7 +279,7 @@ function CalendarView({ monthParam, teamId, sport }) {
                 {dayEvents.length > 3 && (
                   <Link
                     href={sportPath(sport, `schedule?view=upcoming`)}
-                    className="block px-1 text-[9px] font-medium text-brand-600 hover:underline"
+                    className="block px-1 text-[9px] font-medium text-brand-500 hover:underline"
                   >
                     +{dayEvents.length - 3} more
                   </Link>
@@ -339,7 +339,7 @@ function Legend({ view, sport }) {
             href={sportPath(sport, `schedule?view=${viewKey}`)}
             className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 transition ${
               active
-                ? "bg-brand-600 text-white ring-brand-600"
+                ? "bg-brand-500 text-white ring-brand-500"
                 : "bg-white text-navy-600 ring-navy-100 hover:bg-navy-50"
             }`}
           >
@@ -373,7 +373,7 @@ function EventRow({ e, past, isCoach, sport }) {
             </div>
           </div>
           {past && e.result && (
-            <Badge className={e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}>
+            <Badge className={e.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-600"}>
               {e.result} {e.our_score}-{e.opp_score}
             </Badge>
           )}

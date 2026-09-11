@@ -24,7 +24,7 @@ const VIEWS = [
 ];
 
 const SPORT_BADGE = {
-  volleyball: "bg-sky-100 text-sky-800",
+  volleyball: "bg-sky-100 text-sky-700",
   basketball: "bg-orange-100 text-orange-800",
   soccer: "bg-emerald-100 text-emerald-800",
 };
@@ -72,7 +72,7 @@ export default async function AllSportsSchedulePage({ searchParams }) {
         subtitle="Games and practices across volleyball, basketball, and soccer."
       />
 
-      <Link href="/" className="mb-4 inline-block text-sm font-medium text-brand-600">
+      <Link href="/" className="mb-4 inline-block text-sm font-medium text-brand-500">
         ← Choose a sport
       </Link>
 
@@ -81,7 +81,7 @@ export default async function AllSportsSchedulePage({ searchParams }) {
           <Link key={f.key} href={filterHref(f.key, view, sp.month, typeFilter)}>
             <Badge
               className={`cursor-pointer px-3 py-1.5 ${
-                filter === f.key ? "bg-brand-600 text-white" : "bg-navy-50 text-navy-600"
+                filter === f.key ? "bg-brand-500 text-white" : "bg-navy-50 text-navy-600"
               }`}
             >
               {f.key !== "all" ? `${getSportConfig(f.key).icon} ` : ""}
@@ -113,7 +113,7 @@ export default async function AllSportsSchedulePage({ searchParams }) {
       {typeFilter !== "all" && (
         <p className="mt-2 text-xs text-navy-500">
           Showing {TYPE_FILTERS.find((t) => t.key === typeFilter)?.label.toLowerCase()}s only.{" "}
-          <Link href={filterHref(filter, view, sp.month, "all")} className="font-semibold text-brand-600">
+          <Link href={filterHref(filter, view, sp.month, "all")} className="font-semibold text-brand-500">
             Show all types
           </Link>
         </p>
@@ -225,10 +225,10 @@ function AllSportsCalendarView({ events, monthParam, sport, typeFilter }) {
               <div
                 key={day}
                 className={`min-h-[72px] rounded-xl p-1 text-left ring-1 sm:min-h-[96px] ${
-                  isToday ? "bg-brand-50 ring-brand-300" : "bg-navy-50/40 ring-navy-100"
+                  isToday ? "bg-brand-50 ring-brand-200" : "bg-navy-50/40 ring-navy-100"
                 }`}
               >
-                <div className={`px-1 text-[11px] font-semibold ${isToday ? "text-brand-700" : "text-navy-500"}`}>
+                <div className={`px-1 text-[11px] font-semibold ${isToday ? "text-brand-600" : "text-navy-500"}`}>
                   {day}
                 </div>
                 <div className="mt-0.5 space-y-0.5">
@@ -251,7 +251,7 @@ function AllSportsCalendarView({ events, monthParam, sport, typeFilter }) {
                   {dayEvents.length > 3 && (
                     <Link
                       href={filterHref(sport, "list", monthParam, typeFilter)}
-                      className="block px-1 text-[9px] font-medium text-brand-600 hover:underline"
+                      className="block px-1 text-[9px] font-medium text-brand-500 hover:underline"
                     >
                       +{dayEvents.length - 3} more
                     </Link>
@@ -278,7 +278,7 @@ function Legend({ sport, view, month, typeFilter }) {
             href={filterHref(sport, view, month, key)}
             className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 transition ${
               active
-                ? "bg-brand-600 text-white ring-brand-600"
+                ? "bg-brand-500 text-white ring-brand-500"
                 : "bg-white text-navy-600 ring-navy-100 hover:bg-navy-50"
             }`}
           >

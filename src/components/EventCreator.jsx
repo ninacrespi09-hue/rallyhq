@@ -82,9 +82,9 @@ export default function EventCreator({ defaultType = "practice" }) {
                   key={t.key}
                   type="button"
                   onClick={() => setType(t.key)}
-                  className={`rounded-xl py-2 text-xs font-semibold ring-1 transition ${
+                  className={`rounded-md py-2 text-xs font-semibold ring-1 transition ${
                     type === t.key
-                      ? "bg-brand-600 text-white ring-brand-600"
+                      ? "bg-brand-500 text-white ring-brand-500"
                       : "bg-white text-navy-500 ring-navy-100 hover:bg-navy-50"
                   }`}
                 >
@@ -100,7 +100,7 @@ export default function EventCreator({ defaultType = "practice" }) {
                   <div className="flex flex-wrap gap-2">
                     {BONDING_KINDS.map((k) => (
                       <button key={k} type="button" onClick={() => setTitle(k)}
-                        className="chip bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200 hover:bg-cyan-100">
+                        className="chip bg-cyan-50 text-cyan-600 ring-1 ring-cyan-100 hover:bg-cyan-100">
                         {k}
                       </button>
                     ))}
@@ -113,7 +113,7 @@ export default function EventCreator({ defaultType = "practice" }) {
                   <div className="flex flex-wrap gap-2">
                     {CONDITIONING_KINDS.map((k) => (
                       <button key={k} type="button" onClick={() => setTitle(k)}
-                        className="chip bg-blue-50 text-blue-700 ring-1 ring-blue-200 hover:bg-blue-100">
+                        className="chip bg-blue-50 text-blue-600 ring-1 ring-blue-100 hover:bg-blue-100">
                         {k}
                       </button>
                     ))}
@@ -166,7 +166,7 @@ export default function EventCreator({ defaultType = "practice" }) {
               </div>
             </div>
 
-            {error && <p className="mt-2 text-sm text-blue-600">{error}</p>}
+            {error && <p className="mt-2 text-sm text-blue-500">{error}</p>}
 
             <div className="mt-4 flex gap-2">
               <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">

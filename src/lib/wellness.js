@@ -32,8 +32,8 @@ export function wellnessLevel(w) {
 }
 
 export const LEVEL_STYLE = {
-  rest: { chip: "bg-blue-100 text-blue-800", label: "Needs rest", dot: "bg-blue-700" },
-  monitor: { chip: "bg-sky-100 text-sky-700", label: "Monitor", dot: "bg-sky-500" },
+  rest: { chip: "bg-blue-100 text-blue-700", label: "Needs rest", dot: "bg-blue-600" },
+  monitor: { chip: "bg-sky-100 text-sky-600", label: "Monitor", dot: "bg-sky-400" },
   ok: { chip: "bg-emerald-100 text-emerald-700", label: "Good", dot: "bg-emerald-500" },
 };
 

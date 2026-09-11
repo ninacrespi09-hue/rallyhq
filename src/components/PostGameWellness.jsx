@@ -11,10 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useApiMutation } from "@/hooks/use-api";
 
 const SCALES = [
-  { key: "soreness", label: "Soreness", emoji: "🤕", low: "None", high: "Severe", invert: true },
-  { key: "energy", label: "Energy", emoji: "⚡", low: "Drained", high: "Great" },
-  { key: "mood", label: "Mood", emoji: "😄", low: "Low", high: "Great" },
-  { key: "recovery", label: "Recovery need", emoji: "🔋", low: "None", high: "A lot", invert: true },
+  { key: "soreness", label: "Soreness", low: "None", high: "Severe", invert: true },
+  { key: "energy", label: "Energy", low: "Drained", high: "Great" },
+  { key: "mood", label: "Mood", low: "Low", high: "Great" },
+  { key: "recovery", label: "Recovery need", low: "None", high: "A lot", invert: true },
 ];
 
 const AREAS = ["Shoulder", "Knee", "Ankle", "Back", "Wrist", "Hip", "Elbow", "Hamstring"];
@@ -23,10 +23,10 @@ const NEEDS = RECOVERY_NEEDS;
 export default function PostGameWellness({ event, user, players, submissions, mine }) {
   const isCoach = user.role === "coach";
   return (
-    <Card className="border-l-4 border-brand-500">
+    <Card className="border-l-4 border-brand-400">
       <CardContent>
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-navy-900">🩺 Post-game wellness</h2>
+          <h2 className="font-semibold text-navy-900">Post-game wellness</h2>
           <span className="text-xs text-navy-400">
             {submissions.length}/{players.length} submitted
           </span>
@@ -94,7 +94,7 @@ function PlayerForm({ event, mine }) {
         <div key={s.key}>
           <div className="mb-1.5 flex items-center justify-between">
             <label className="font-medium text-navy-700">
-              {s.emoji} {s.label}
+              {s.label}
             </label>
             <span className="text-xs text-navy-400">
               {s.low} → {s.high}
@@ -108,9 +108,9 @@ function PlayerForm({ event, mine }) {
                   key={n}
                   type="button"
                   onClick={() => setVals((v) => ({ ...v, [s.key]: n }))}
-                  className={`rounded-xl py-3 text-sm font-bold ring-1 transition ${
+                  className={`rounded-md py-3 text-sm font-bold ring-1 transition ${
                     active
-                      ? "bg-gradient-to-br from-brand-500 to-brand-700 text-white ring-brand-600 shadow-glow"
+                      ? "bg-brand-500 text-white ring-brand-500 shadow-sm"
                       : "bg-white text-navy-400 ring-navy-100 hover:bg-navy-50"
                   }`}
                 >
@@ -128,7 +128,7 @@ function PlayerForm({ event, mine }) {
             type="checkbox"
             checked={injury}
             onChange={(e) => setInjury(e.target.checked)}
-            className="h-4 w-4 rounded accent-brand-600"
+            className="h-4 w-4 rounded accent-brand-500"
           />
           I picked up an injury or pain
         </label>
@@ -141,7 +141,7 @@ function PlayerForm({ event, mine }) {
                 onClick={() => toggle(setAreas)(a)}
                 className={`chip ring-1 transition ${
                   areas.includes(a)
-                    ? "bg-blue-100 text-blue-700 ring-blue-200"
+                    ? "bg-blue-100 text-blue-600 ring-blue-100"
                     : "bg-white text-navy-400 ring-navy-100"
                 }`}
               >
@@ -162,7 +162,7 @@ function PlayerForm({ event, mine }) {
               onClick={() => toggle(setNeeds)(nd)}
               className={`chip ring-1 transition ${
                 needs.includes(nd)
-                  ? "bg-brand-600 text-white ring-brand-600"
+                  ? "bg-brand-500 text-white ring-brand-500"
                   : "bg-white text-navy-500 ring-navy-100 hover:bg-navy-50"
               }`}
             >
@@ -207,8 +207,8 @@ function CoachSummary({ submissions, players }) {
   return (
     <div className="mt-3 space-y-3">
       {needRest.length > 0 && (
-        <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700 ring-1 ring-blue-100">
-          ⚠️ <b>{needRest.length}</b> player{needRest.length > 1 ? "s" : ""} may need rest:{" "}
+        <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-600 ring-1 ring-blue-100">
+          <b>{needRest.length}</b> player{needRest.length > 1 ? "s" : ""} may need rest:{" "}
           {needRest.map((p) => p.name).join(", ")}
         </div>
       )}
@@ -217,7 +217,7 @@ function CoachSummary({ submissions, players }) {
         {scored.map((s) => {
           const st = LEVEL_STYLE[s.level] || LEVEL_STYLE.ok;
           return (
-            <div key={s.user_id} className="rounded-xl bg-navy-50/60 p-3">
+            <div key={s.user_id} className="rounded-md bg-navy-50/60 p-3">
               <div className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${st.dot}`} />
                 <span className="font-semibold text-navy-800">{s.name}</span>
@@ -237,7 +237,7 @@ function CoachSummary({ submissions, players }) {
               )}
               {(s.injury || s.note) && (
                 <p className="mt-2 text-sm text-navy-600">
-                  {s.injury ? <span className="font-semibold text-blue-600">Injury{ s.sore_areas ? ` (${s.sore_areas})` : ""}. </span> : null}
+                  {s.injury ? <span className="font-semibold text-blue-500">Injury{ s.sore_areas ? ` (${s.sore_areas})` : ""}. </span> : null}
                   {s.note}
                 </p>
               )}

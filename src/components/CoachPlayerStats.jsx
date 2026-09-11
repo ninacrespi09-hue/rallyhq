@@ -44,7 +44,7 @@ export default function CoachPlayerStats({ player, games, stats = STATS }) {
             <Button
               variant="link"
               size="sm"
-              className="h-auto p-0 text-xs font-semibold text-brand-600"
+              className="h-auto p-0 text-xs font-semibold text-brand-500"
               onClick={() => setEditing(row.original.event_id)}
             >
               Edit

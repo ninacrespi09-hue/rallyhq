@@ -48,7 +48,7 @@ function ScaleSlider({ scaleKey, label, invert, value, onChange }) {
     <div>
       <div className="mb-3 flex items-center justify-between">
         <label className="font-medium text-navy-700">{label}</label>
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-sm font-extrabold text-white">
+        <span className="grid h-8 w-8 place-items-center rounded-md bg-brand-500 text-sm font-semibold text-white">
           {value}
         </span>
       </div>
@@ -62,10 +62,10 @@ function ScaleSlider({ scaleKey, label, invert, value, onChange }) {
         {/* Draggable track */}
         <div className="relative flex-1 py-2">
           {/* Track line */}
-          <div className="relative h-1.5 w-full rounded-full bg-navy-100">
+          <div className="relative h-1.5 w-full rounded-md bg-navy-100">
             {/* Filled portion */}
             <div
-              className="absolute left-0 top-0 h-1.5 rounded-full bg-brand-500 transition-all"
+              className="absolute left-0 top-0 h-1.5 rounded-md bg-brand-400 transition-all"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -84,7 +84,7 @@ function ScaleSlider({ scaleKey, label, invert, value, onChange }) {
 
           {/* Visual dot */}
           <div
-            className="pointer-events-none absolute top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-brand-600 shadow-glow ring-2 ring-white transition-all"
+            className="pointer-events-none absolute top-1/2 h-6 w-6 -translate-y-1/2 rounded-md bg-brand-500 shadow-sm ring-2 ring-white transition-all"
             style={{ left: `calc(${pct}% - 12px)` }}
           />
         </div>
@@ -135,7 +135,7 @@ export default function CheckinForm({ existing }) {
   }
 
   return (
-    <div className="space-y-6 rounded-2xl bg-blue-400/20 p-5 backdrop-blur-sm ring-1 ring-blue-300/40">
+    <div className="space-y-6 rounded-md bg-blue-300/20 p-5 backdrop-blur-sm ring-1 ring-blue-200/40">
       {SCALES.map((s) => (
         <ScaleSlider
           key={s.key}
@@ -153,7 +153,7 @@ export default function CheckinForm({ existing }) {
             type="checkbox"
             checked={injury}
             onChange={(e) => setInjury(e.target.checked)}
-            className="h-4 w-4 rounded accent-brand-600"
+            className="h-4 w-4 rounded accent-brand-500"
           />
           I have an injury or pain to report
         </label>
@@ -166,7 +166,7 @@ export default function CheckinForm({ existing }) {
                 onClick={() => toggleArea(a)}
                 className={`chip ring-1 transition ${
                   areas.includes(a)
-                    ? "bg-blue-100 text-blue-700 ring-blue-200"
+                    ? "bg-blue-100 text-blue-600 ring-blue-100"
                     : "bg-white text-navy-500 ring-navy-100"
                 }`}
               >

@@ -82,7 +82,7 @@ export default async function StatsPage({ params, searchParams }) {
             <h2 className="font-bold text-navy-900">Season Record</h2>
             <div className="flex gap-3">
               <Stat big value={rec.wins} label="Wins" tone="text-emerald-600" />
-              <Stat big value={rec.losses} label="Losses" tone="text-blue-500" />
+              <Stat big value={rec.losses} label="Losses" tone="text-blue-400" />
               <Stat big value={rec.wins + rec.losses} label="Games" tone="text-navy-900" />
             </div>
             {/* Recent results */}
@@ -90,7 +90,7 @@ export default async function StatsPage({ params, searchParams }) {
               {trends.slice(-8).map((t, i) => (
                 <Badge
                   key={i}
-                  className={t.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}
+                  className={t.result === "W" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-600"}
                   title={`${t.label} ${t.score}`}
                 >
                   {t.result} {t.score}
@@ -128,7 +128,7 @@ export default async function StatsPage({ params, searchParams }) {
         <CardContent>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold text-navy-900">Category Leaders</h2>
-            <Link href={sportPath(sport, "players")} className="text-sm font-medium text-brand-600">
+            <Link href={sportPath(sport, "players")} className="text-sm font-medium text-brand-500">
               All players →
             </Link>
           </div>
@@ -140,8 +140,8 @@ export default async function StatsPage({ params, searchParams }) {
                   <div className="text-[11px] font-bold uppercase tracking-wide text-navy-400">{s.label}</div>
                   {leader ? (
                     <>
-                      <div className="mt-1 text-lg font-extrabold text-brand-600">{leader[s.key]}</div>
-                      <Link href={sportPath(sport, `players/${leader.id}`)} className="text-xs font-medium text-navy-700 hover:text-brand-600">
+                      <div className="mt-1 text-lg font-extrabold text-brand-500">{leader[s.key]}</div>
+                      <Link href={sportPath(sport, `players/${leader.id}`)} className="text-xs font-medium text-navy-700 hover:text-brand-500">
                         {leader.name}
                       </Link>
                     </>

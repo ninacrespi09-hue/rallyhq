@@ -23,16 +23,9 @@ import { apiFetch, useApiMutation } from "@/hooks/use-api";
 const CATEGORIES = ["Skills", "Strength", "Conditioning", "Recovery", "Injury Prevention"];
 const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"];
 const DIFF_STYLE = {
-  Beginner: "bg-emerald-100 text-emerald-700",
-  Intermediate: "bg-blue-100 text-blue-700",
-  Advanced: "bg-blue-100 text-blue-700",
-};
-const CAT_ICON = {
-  Skills: "🏐",
-  Strength: "💪",
-  Conditioning: "🏃",
-  Recovery: "🧘",
-  "Injury Prevention": "🛡️",
+  Beginner: "bg-emerald-50 text-emerald-700",
+  Intermediate: "bg-blue-50 text-blue-600",
+  Advanced: "bg-navy-50 text-navy-700",
 };
 
 export default function Exercises({ user, initialExercises, playerCount }) {
@@ -102,15 +95,14 @@ export default function Exercises({ user, initialExercises, playerCount }) {
 
   return (
     <div>
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-navy-900 p-6 text-white shadow-soft">
-        <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative flex items-center justify-between gap-4">
+      <section className="rounded-md bg-gradient-to-br from-blue-500 to-blue-700 p-6 text-white shadow-soft">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm font-semibold text-blue-100">💪 Recommended Exercises</div>
-            <h1 className="mt-1 text-2xl font-black sm:text-3xl">Train Smarter</h1>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-100">Recommended Exercises</div>
+            <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">Train Smarter</h1>
             {!coach && player && (
               <p className="mt-1 text-sm text-blue-100">
-                You've completed <b className="text-white">{myDone}</b> of {items.length} exercises.
+                You&apos;ve completed <b className="text-white font-semibold">{myDone}</b> of {items.length} exercises.
               </p>
             )}
             {!coach && !player && (
@@ -121,7 +113,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
             )}
           </div>
           {coach && (
-            <Button onClick={() => setEditor({})} className="shrink-0 bg-white text-blue-700 hover:bg-blue-50">
+            <Button onClick={() => setEditor({})} className="shrink-0 bg-white text-blue-600 hover:bg-blue-50">
               + New
             </Button>
           )}
@@ -129,7 +121,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
         {player && items.length > 0 && (
           <Progress
             value={(myDone / items.length) * 100}
-            className="relative mt-4 h-2.5 bg-white/20"
+            className="mt-4 h-2 bg-white/20"
           />
         )}
       </section>
@@ -141,9 +133,8 @@ export default function Exercises({ user, initialExercises, playerCount }) {
             size="sm"
             variant={filter === c ? "default" : "outline"}
             onClick={() => setFilter(c)}
-            className="rounded-full"
           >
-            {c === "All" ? "All" : `${CAT_ICON[c]} ${c}`}
+            {c}
           </Button>
         ))}
       </div>
@@ -157,8 +148,7 @@ export default function Exercises({ user, initialExercises, playerCount }) {
             <CardContent className="flex flex-col p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{CAT_ICON[ex.category] || "🏐"}</span>
-                  <h3 className="font-bold text-navy-900">{ex.title}</h3>
+                  <h3 className="font-semibold text-navy-900">{ex.title}</h3>
                 </div>
                 <span className={`chip ${DIFF_STYLE[ex.difficulty] || DIFF_STYLE.Beginner}`}>
                   {ex.difficulty}
@@ -168,13 +158,13 @@ export default function Exercises({ user, initialExercises, playerCount }) {
               {ex.instructions && <p className="mt-2 text-sm text-navy-600">{ex.instructions}</p>}
 
               <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                <Badge className="bg-blue-50 text-blue-700">{ex.category}</Badge>
-                {ex.reps && <Badge variant="secondary">🔁 {ex.reps}</Badge>}
+                <Badge variant="secondary">{ex.category}</Badge>
+                {ex.reps && <Badge variant="outline">{ex.reps}</Badge>}
               </div>
 
               {ex.coach_notes && (
-                <p className="mt-2 rounded-lg bg-blue-50 p-2 text-xs text-blue-800">
-                  📋 Coach note: {ex.coach_notes}
+                <p className="mt-2 rounded-md bg-muted px-2.5 py-2 text-xs text-navy-700">
+                  Coach note: {ex.coach_notes}
                 </p>
               )}
 
@@ -294,7 +284,7 @@ function ExerciseEditor({ exercise, open, onOpenChange, onSaved }) {
               <select
                 value={form.difficulty}
                 onChange={set("difficulty")}
-                className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+                className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
               >
                 {DIFFICULTIES.map((d) => (
                   <option key={d}>{d}</option>
@@ -307,7 +297,7 @@ function ExerciseEditor({ exercise, open, onOpenChange, onSaved }) {
             <select
               value={form.category}
               onChange={set("category")}
-              className="mt-1.5 flex h-10 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
+              className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
             >
               {CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -324,7 +314,7 @@ function ExerciseEditor({ exercise, open, onOpenChange, onSaved }) {
             />
           </div>
         </div>
-        {error && <p className="text-sm text-blue-600">{error}</p>}
+        {error && <p className="text-sm text-blue-500">{error}</p>}
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">
             Cancel
