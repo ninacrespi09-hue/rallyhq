@@ -25,4 +25,6 @@ export const volleyball = {
   playersCardIcon: "🏐",
   scoreLabel: "Sets",
   aiSportName: "volleyball",
+  // Photo gallery album labels for volleyball action shots.
+  galleryMoments: ["Serving", "Setting", "Hitting", "Digging"],
 };

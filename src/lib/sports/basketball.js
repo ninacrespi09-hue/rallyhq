@@ -19,4 +19,6 @@ export const basketball = {
   playersCardIcon: "🏀",
   scoreLabel: "Points",
   aiSportName: "basketball",
+  // Photo gallery album labels for basketball action shots.
+  galleryMoments: ["Shooting", "Passing", "Rebounding", "Defense"],
 };

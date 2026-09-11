@@ -18,10 +18,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { apiFetch } from "@/hooks/use-api";
+import { getGalleryMomentsForSport } from "@/lib/sports";
 
-const MOMENTS = ["Serving", "Setting", "Hitting", "Digging"];
-
-export default function Gallery({ user, media, events }) {
+export default function Gallery({ user, media, events, sport = "volleyball" }) {
+  // Pick the four album labels for this sport (volleyball vs basketball, etc.).
+  const moments = useMemo(() => getGalleryMomentsForSport(sport), [sport]);
   const [items, setItems] = useState(media);
   const [tab, setTab] = useState(null);
   const [lightbox, setLightbox] = useState(null);
@@ -31,12 +32,12 @@ export default function Gallery({ user, media, events }) {
 
   const countsByMoment = useMemo(() => {
     const counts = {};
-    for (const m of MOMENTS) counts[m] = 0;
+    for (const m of moments) counts[m] = 0;
     for (const item of items) {
       if (counts[item.category] !== undefined) counts[item.category]++;
     }
     return counts;
-  }, [items]);
+  }, [items, moments]);
 
   const filtered = useMemo(
     () => (tab ? items.filter((m) => m.category === tab) : []),
@@ -130,7 +131,7 @@ export default function Gallery({ user, media, events }) {
       </section>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {MOMENTS.map((m) => {
+        {moments.map((m) => {
           const count = countsByMoment[m];
           const active = tab === m;
           return (
@@ -199,6 +200,7 @@ export default function Gallery({ user, media, events }) {
       <Uploader
         user={user}
         events={events}
+        moments={moments}
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         onUploaded={onUploaded}
@@ -305,12 +307,13 @@ function Lightbox({ item, open, onOpenChange, canDelete, onLike, onFav, onDelete
   );
 }
 
-function Uploader({ user, events, open, onOpenChange, onUploaded }) {
+function Uploader({ user, events, moments, open, onOpenChange, onUploaded }) {
   const fileRef = useRef(null);
   const [preview, setPreview] = useState("");
   const [ratio, setRatio] = useState(1);
   const [caption, setCaption] = useState("");
-  const [moment, setMoment] = useState("Serving");
+  // Start on the first album for this sport (Serving for volleyball, Shooting for basketball).
+  const [moment, setMoment] = useState(moments[0]);
   const [eventId, setEventId] = useState("");
   const [favorite, setFavorite] = useState(false);
   const [error, setError] = useState("");
@@ -415,7 +418,7 @@ function Uploader({ user, events, open, onOpenChange, onUploaded }) {
                 onChange={(e) => setMoment(e.target.value)}
                 className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3.5 py-2 text-sm shadow-sm"
               >
-                {MOMENTS.map((m) => (
+                {moments.map((m) => (
                   <option key={m}>{m}</option>
                 ))}
               </select>

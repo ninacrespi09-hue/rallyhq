@@ -22,3 +22,9 @@ export function getStatsForSport(sport) {
 export function getPositionsForSport(sport) {
   return getSportConfig(sport).positions;
 }
+
+// Gallery album names for this sport. Volleyball defaults keep soccer unchanged.
+export function getGalleryMomentsForSport(sport) {
+  const cfg = getSportConfig(sport);
+  return cfg.galleryMoments || ["Serving", "Setting", "Hitting", "Digging"];
+}

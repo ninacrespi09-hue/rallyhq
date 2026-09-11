@@ -34,7 +34,7 @@ export default async function GalleryPage({ params, searchParams }) {
 
   return (
     <NavShell user={user} sport={sport}>
-      <Gallery user={user} media={media} events={events} />
+      <Gallery user={user} media={media} events={events} sport={sport} />
     </NavShell>
   );
 }
