@@ -13,8 +13,13 @@ export default function VerifyEmailClient() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
   const emailParam = searchParams.get("email") || "";
+  const mailError = searchParams.get("mailError") === "1";
   const [status, setStatus] = useState(token ? "verifying" : "pending");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(
+    mailError
+      ? "We could not send the verification email yet. Email delivery still needs to be set up on the server (Resend + Render env vars)."
+      : ""
+  );
   const [email, setEmail] = useState(emailParam);
   const [devLink, setDevLink] = useState("");
   const [loading, setLoading] = useState(false);

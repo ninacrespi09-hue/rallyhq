@@ -22,4 +22,6 @@ export const soccer = {
   playersCardIcon: "⚽",
   scoreLabel: "Goals",
   aiSportName: "soccer",
+  // Photo gallery album labels for soccer action shots.
+  galleryMoments: ["Shooting", "Passing", "Dribbling", "Defending"],
 };

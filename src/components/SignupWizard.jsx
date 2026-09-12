@@ -55,8 +55,21 @@ export default function SignupWizard() {
       if (data.code === "EMAIL_EXISTS") {
         return setError("An account with that email already exists. Sign in instead.");
       }
+      if (
+        data.code === "EMAIL_NOT_VERIFIED" ||
+        data.code === "EMAIL_NOT_CONFIGURED" ||
+        data.code === "EMAIL_SEND_FAILED"
+      ) {
+        window.location.href =
+          data.redirect ||
+          `/verify-email?email=${encodeURIComponent(body.email || "")}${
+            data.code === "EMAIL_NOT_CONFIGURED" || data.code === "EMAIL_SEND_FAILED" ? "&mailError=1" : ""
+          }`;
+        return;
+      }
       return setError(data.error || "Something went wrong.");
     }
+    // New signup or existing unverified account → go verify (resend already triggered server-side).
     if (data.needsVerification) {
       window.location.href = data.redirect || `/verify-email?email=${encodeURIComponent(body.email || "")}`;
       return;

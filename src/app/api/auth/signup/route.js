@@ -13,6 +13,32 @@ function skipEmailVerify(email) {
   return false;
 }
 
+// Create a fresh verify token, email it, and return the verify-email redirect payload.
+async function verificationResponse(userId, normalizedEmail) {
+  const rawToken = createAuthToken(userId, "verify_email", 60 * 24);
+  const sent = await sendVerificationEmail(normalizedEmail, rawToken);
+  const emailFailed =
+    !sent.ok || (sent.mocked && process.env.NODE_ENV === "production");
+  const payload = {
+    ok: true,
+    needsVerification: true,
+    code: "EMAIL_NOT_VERIFIED",
+    redirect: `/verify-email?email=${encodeURIComponent(normalizedEmail)}${
+      emailFailed ? "&mailError=1" : ""
+    }`,
+  };
+  if (emailFailed) {
+    payload.emailError =
+      sent.error ||
+      "Verification email could not be sent. Email delivery is not configured yet.";
+    payload.code = sent.mocked ? "EMAIL_NOT_CONFIGURED" : "EMAIL_SEND_FAILED";
+  }
+  if (sent.mocked && process.env.NODE_ENV !== "production") {
+    payload.devVerifyLink = sent.link;
+  }
+  return NextResponse.json(payload);
+}
+
 export async function POST(req) {
   const {
     name,
@@ -38,12 +64,24 @@ export async function POST(req) {
   const db = getDb();
   const normalizedEmail = normalizeEmail(email);
 
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(normalizedEmail);
-  if (existing)
+  // If this email already signed up but never verified, send them to verify (and resend the email)
+  // instead of blocking with "account already exists."
+  const existing = db
+    .prepare("SELECT id, email_verified FROM users WHERE email = ?")
+    .get(normalizedEmail);
+  if (existing) {
+    if (Number(existing.email_verified) === 0) {
+      console.info("[auth-signup] existing unverified user — resending verification", {
+        userId: existing.id,
+        email: normalizedEmail,
+      });
+      return verificationResponse(existing.id, normalizedEmail);
+    }
     return NextResponse.json(
       { error: "An account with that email already exists. Sign in instead.", code: "EMAIL_EXISTS" },
       { status: 409 }
     );
+  }
 
   const pref = normalizeSportPreference(sport_preference || sport, "volleyball");
   const signupRole = role === "coach" ? "coach" : role === "parent" ? "parent" : "player";
@@ -122,17 +160,11 @@ export async function POST(req) {
   }
 
   if (!verified) {
-    const rawToken = createAuthToken(userId, "verify_email", 60 * 24);
-    const sent = await sendVerificationEmail(normalizedEmail, rawToken);
-    const payload = {
-      ok: true,
-      needsVerification: true,
-      redirect: `/verify-email?email=${encodeURIComponent(normalizedEmail)}`,
-    };
-    if (sent.mocked && process.env.NODE_ENV !== "production") {
-      payload.devVerifyLink = sent.link;
-    }
-    return NextResponse.json(payload);
+    console.info("[auth-signup] new user needs email verification", {
+      userId,
+      email: normalizedEmail,
+    });
+    return verificationResponse(userId, normalizedEmail);
   }
 
   await createSession(userId);

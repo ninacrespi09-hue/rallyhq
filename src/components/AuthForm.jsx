@@ -54,6 +54,18 @@ export default function AuthForm({ mode, prefilledCode, teamName, coachOnly = fa
         if (email) localStorage.setItem(SAVED_EMAIL_KEY, email);
         return setError("You already have an account with that email. Sign in with your password.");
       }
+      // Unverified accounts are handled as success (needsVerification) from signup;
+      // keep this as a safety net if an API returns EMAIL_NOT_VERIFIED with an error status.
+      if (data.code === "EMAIL_NOT_VERIFIED" || data.code === "EMAIL_NOT_CONFIGURED" || data.code === "EMAIL_SEND_FAILED") {
+        const email = data.email || body.email || "";
+        if (email) localStorage.setItem(SAVED_EMAIL_KEY, email);
+        window.location.href =
+          data.redirect ||
+          `/verify-email?email=${encodeURIComponent(email)}${
+            data.code === "EMAIL_NOT_CONFIGURED" || data.code === "EMAIL_SEND_FAILED" ? "&mailError=1" : ""
+          }`;
+        return;
+      }
       if (data.code === "NO_ACCOUNT") {
         return setError(
           "No account with that email. Sign up at /signup (coaches) or use your coach's invite link (players or parents)."

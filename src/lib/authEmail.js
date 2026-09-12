@@ -5,34 +5,77 @@ import { getAppUrl } from "./appUrl";
  * Without RESEND_API_KEY, logs the link (dev) so flows still work locally.
  */
 export async function sendAuthEmail({ to, subject, html, text }) {
+  // Read the Resend key and "from" address from the server environment (Render).
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || "RallyHQ <onboarding@resend.dev>";
+  const appUrl = getAppUrl();
 
+  // Log config shape only — never log the raw API key.
+  console.info("[auth-email] prepare send", {
+    to,
+    from,
+    subject,
+    appUrl,
+    hasResendKey: Boolean(apiKey),
+    keyPrefix: apiKey ? `${apiKey.slice(0, 6)}…` : null,
+  });
+
+  // No API key → we cannot talk to Resend. Locally we pretend it worked and log the link.
   if (!apiKey) {
     console.warn(`[auth-email] RESEND_API_KEY not set — email not sent to ${to}`);
     console.warn(`[auth-email] ${subject}\n${text || html}`);
     return { ok: true, mocked: true };
   }
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from, to: [to], subject, html, text }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    console.error("[auth-email] Resend error:", res.status, body);
-    return { ok: false, error: "Failed to send email." };
+  let res;
+  try {
+    res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from, to: [to], subject, html, text }),
+    });
+  } catch (err) {
+    console.error("[auth-email] Resend network error:", err?.message || err);
+    return { ok: false, error: "Failed to reach the email provider. Try again in a moment." };
   }
 
-  return { ok: true };
+  const bodyText = await res.text();
+  let bodyJson = null;
+  try {
+    bodyJson = bodyText ? JSON.parse(bodyText) : null;
+  } catch {
+    bodyJson = null;
+  }
+
+  if (!res.ok) {
+    console.error("[auth-email] Resend rejected send", {
+      status: res.status,
+      to,
+      from,
+      body: bodyText,
+    });
+    return {
+      ok: false,
+      error:
+        "Failed to send email. Check RESEND_API_KEY, EMAIL_FROM, and that rallycentralhq.com is verified in Resend.",
+    };
+  }
+
+  console.info("[auth-email] Resend accepted send", {
+    status: res.status,
+    to,
+    from,
+    id: bodyJson?.id || null,
+  });
+
+  return { ok: true, id: bodyJson?.id || null };
 }
 
 export async function sendVerificationEmail(email, rawToken) {
+  // Build the clickable verify link for this app's public URL.
   const link = `${getAppUrl()}/verify-email?token=${encodeURIComponent(rawToken)}`;
   const subject = "Verify your RallyHQ email";
   const text = `Welcome to RallyHQ!\n\nConfirm your email by opening this link:\n${link}\n\nThis link expires in 24 hours.`;
