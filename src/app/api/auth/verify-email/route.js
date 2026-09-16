@@ -1,19 +1,31 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { consumeAuthToken } from "@/lib/authTokens";
-import { createSession } from "@/lib/auth";
+import { createSession, normalizeEmail } from "@/lib/auth";
 import { homePathForUser } from "@/lib/userSportPreference";
 
 export async function POST(req) {
-  const { token } = await req.json();
+  const body = await req.json();
+  // Always treat the code/token as a string (JSON may send digits as a number).
+  const token = String(body.token ?? "").trim();
+  const email = body.email ? normalizeEmail(body.email) : "";
+
   if (!token) {
-    return NextResponse.json({ error: "Missing verification token." }, { status: 400 });
+    return NextResponse.json({ error: "Missing verification code." }, { status: 400 });
   }
 
-  const result = consumeAuthToken(token, "verify_email");
+  console.info("[auth-verify] attempt", {
+    tokenLength: token.length,
+    hasEmail: Boolean(email),
+  });
+
+  const result = consumeAuthToken(token, "verify_email", email || undefined);
   if (!result) {
     return NextResponse.json(
-      { error: "This verification link is invalid or has expired. Request a new one.", code: "INVALID_TOKEN" },
+      {
+        error: "That verification code is invalid or has expired. Request a new one.",
+        code: "INVALID_TOKEN",
+      },
       { status: 400 }
     );
   }
@@ -29,6 +41,11 @@ export async function POST(req) {
        FROM users u LEFT JOIN teams t ON t.id = u.team_id WHERE u.id = ?`
     )
     .get(result.userId);
+
+  console.info("[auth-verify] success", {
+    userId: result.userId,
+    alreadyVerified: Boolean(result.alreadyVerified),
+  });
 
   return NextResponse.json({ ok: true, redirect: homePathForUser(profile) });
 }

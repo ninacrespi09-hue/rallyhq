@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { LayoutGrid } from "lucide-react";
@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label";
 
 export default function VerifyEmailClient() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
+  // Email only in the URL — never auto-submit a one-time code from query params
+  // (mail scanners / prefetch would burn the code before the player types it).
   const emailParam = searchParams.get("email") || "";
   const mailError = searchParams.get("mailError") === "1";
-  const [status, setStatus] = useState(token ? "verifying" : "pending");
+  const [status, setStatus] = useState("pending");
   const [message, setMessage] = useState(
     mailError
       ? "We could not send the verification email yet. Email delivery still needs to be set up on the server (Resend + Render env vars)."
@@ -25,42 +26,17 @@ export default function VerifyEmailClient() {
   const [devLink, setDevLink] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If the email link included a token/code, verify it automatically.
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    (async () => {
-      const res = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ token }),
-      });
-      const data = await res.json();
-      if (cancelled) return;
-      if (!res.ok) {
-        setStatus("error");
-        setMessage(data.error || "Verification failed.");
-        return;
-      }
-      setStatus("done");
-      window.location.href = data.redirect || "/";
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
-
-  // Submit the 6-digit code from the email.
+  // Submit the 6-digit code + email together (required for validation).
   async function submitCode(e) {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setStatus("pending");
     const res = await fetch("/api/auth/verify-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ token: code }),
+      body: JSON.stringify({ token: code, email }),
     });
     const data = await res.json();
     setLoading(false);
@@ -86,9 +62,11 @@ export default function VerifyEmailClient() {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
+      setStatus("error");
       setMessage(data.error || "Could not resend.");
       return;
     }
+    setStatus("pending");
     setMessage("If that email needs verification, we sent a new code.");
     if (data.devVerifyLink) setDevLink(data.devVerifyLink);
   }
@@ -106,18 +84,27 @@ export default function VerifyEmailClient() {
         <CardContent className="p-5">
           <h1 className="text-lg font-semibold text-navy-900">Verify your email</h1>
           <p className="mb-4 mt-1 text-sm text-navy-500">
-            {status === "verifying"
-              ? "Confirming your email…"
-              : "Check your inbox for a 6-digit code from RallyHQ. Enter it below (or tap the link in the email)."}
+            Check your inbox for a 6-digit code from RallyHQ, then enter it below with the same email.
           </p>
 
           {status === "error" && (
             <p className="mb-3 rounded-md bg-blue-100 px-3 py-2 text-sm text-blue-800">{message}</p>
           )}
 
-          {status !== "verifying" && status !== "done" && (
+          {status !== "done" && (
             <div className="space-y-5">
               <form onSubmit={submitCode} className="space-y-3">
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
                 <div>
                   <Label>Verification code</Label>
                   <Input
@@ -130,23 +117,12 @@ export default function VerifyEmailClient() {
                     className="tracking-widest"
                   />
                 </div>
-                <Button disabled={loading || !code.trim()} className="w-full">
+                <Button disabled={loading || !code.trim() || !email.trim()} className="w-full">
                   {loading ? "Checking…" : "Verify code"}
                 </Button>
               </form>
 
               <form onSubmit={resend} className="space-y-3 border-t border-blue-100 pt-4">
-                <div>
-                  <Label>Email</Label>
-                  <Input
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                  />
-                </div>
                 {message && status !== "error" && (
                   <p className="text-sm text-navy-600">{message}</p>
                 )}
@@ -158,7 +134,7 @@ export default function VerifyEmailClient() {
                     </a>
                   </p>
                 )}
-                <Button type="submit" variant="outline" disabled={loading} className="w-full">
+                <Button type="submit" variant="outline" disabled={loading || !email.trim()} className="w-full">
                   {loading ? "Sending…" : "Resend verification email"}
                 </Button>
               </form>
