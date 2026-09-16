@@ -21,9 +21,11 @@ export default function VerifyEmailClient() {
       : ""
   );
   const [email, setEmail] = useState(emailParam);
+  const [code, setCode] = useState("");
   const [devLink, setDevLink] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // If the email link included a token/code, verify it automatically.
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
@@ -49,6 +51,28 @@ export default function VerifyEmailClient() {
     };
   }, [token]);
 
+  // Submit the 6-digit code from the email.
+  async function submitCode(e) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    const res = await fetch("/api/auth/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token: code }),
+    });
+    const data = await res.json();
+    setLoading(false);
+    if (!res.ok) {
+      setStatus("error");
+      setMessage(data.error || "That code is invalid or expired.");
+      return;
+    }
+    setStatus("done");
+    window.location.href = data.redirect || "/";
+  }
+
   async function resend(e) {
     e.preventDefault();
     setLoading(true);
@@ -65,7 +89,7 @@ export default function VerifyEmailClient() {
       setMessage(data.error || "Could not resend.");
       return;
     }
-    setMessage("If that email needs verification, we sent a new link.");
+    setMessage("If that email needs verification, we sent a new code.");
     if (data.devVerifyLink) setDevLink(data.devVerifyLink);
   }
 
@@ -84,7 +108,7 @@ export default function VerifyEmailClient() {
           <p className="mb-4 mt-1 text-sm text-navy-500">
             {status === "verifying"
               ? "Confirming your email…"
-              : "Check your inbox for a verification link from RallyHQ. Your account stays saved — you just need to confirm the address."}
+              : "Check your inbox for a 6-digit code from RallyHQ. Enter it below (or tap the link in the email)."}
           </p>
 
           {status === "error" && (
@@ -92,31 +116,53 @@ export default function VerifyEmailClient() {
           )}
 
           {status !== "verifying" && status !== "done" && (
-            <form onSubmit={resend} className="space-y-3">
-              <div>
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                />
-              </div>
-              {message && <p className="text-sm text-navy-600">{message}</p>}
-              {devLink && (
-                <p className="break-all text-xs text-navy-500">
-                  Dev link:{" "}
-                  <a className="text-blue-600 underline" href={devLink}>
-                    {devLink}
-                  </a>
-                </p>
-              )}
-              <Button disabled={loading} className="w-full">
-                {loading ? "Sending…" : "Resend verification email"}
-              </Button>
-            </form>
+            <div className="space-y-5">
+              <form onSubmit={submitCode} className="space-y-3">
+                <div>
+                  <Label>Verification code</Label>
+                  <Input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="6-digit code"
+                    className="tracking-widest"
+                  />
+                </div>
+                <Button disabled={loading || !code.trim()} className="w-full">
+                  {loading ? "Checking…" : "Verify code"}
+                </Button>
+              </form>
+
+              <form onSubmit={resend} className="space-y-3 border-t border-blue-100 pt-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                {message && status !== "error" && (
+                  <p className="text-sm text-navy-600">{message}</p>
+                )}
+                {devLink && (
+                  <p className="break-all text-xs text-navy-500">
+                    Dev link:{" "}
+                    <a className="text-blue-600 underline" href={devLink}>
+                      {devLink}
+                    </a>
+                  </p>
+                )}
+                <Button type="submit" variant="outline" disabled={loading} className="w-full">
+                  {loading ? "Sending…" : "Resend verification email"}
+                </Button>
+              </form>
+            </div>
           )}
 
           <p className="mt-4 text-center text-sm text-navy-500">

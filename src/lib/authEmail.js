@@ -75,22 +75,35 @@ export async function sendAuthEmail({ to, subject, html, text }) {
 }
 
 export async function sendVerificationEmail(email, rawToken) {
-  // Build the clickable verify link for this app's public URL.
-  const link = `${getAppUrl()}/verify-email?token=${encodeURIComponent(rawToken)}`;
+  // Build the clickable verify link for this app's public URL (must be the custom domain in prod).
+  const appUrl = getAppUrl();
+  const link = `${appUrl}/verify-email?token=${encodeURIComponent(rawToken)}&email=${encodeURIComponent(email)}`;
   const subject = "Verify your RallyHQ email";
-  const text = `Welcome to RallyHQ!\n\nConfirm your email by opening this link:\n${link}\n\nThis link expires in 24 hours.`;
+  const text = `Welcome to RallyHQ!\n\nYour verification code is: ${rawToken}\n\nOr open this link:\n${link}\n\nThis code expires in 24 hours.`;
   const html = `
     <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;color:#0f172a">
       <h1 style="font-size:20px;margin-bottom:8px">Verify your email</h1>
-      <p style="color:#475569;line-height:1.5">Thanks for joining RallyHQ. Confirm this email belongs to you so you can sign in securely.</p>
-      <p style="margin:24px 0">
+      <p style="color:#475569;line-height:1.5">Thanks for joining RallyHQ. Enter this code on the verify page, or tap the button below.</p>
+      <p style="margin:24px 0;text-align:center;font-size:32px;font-weight:700;letter-spacing:0.2em;color:#0f172a">${rawToken}</p>
+      <p style="margin:24px 0;text-align:center">
         <a href="${link}" style="background:#3b82f6;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600">Verify email</a>
       </p>
       <p style="font-size:13px;color:#64748b">Or paste this link into your browser:<br>${link}</p>
-      <p style="font-size:13px;color:#64748b">This link expires in 24 hours.</p>
+      <p style="font-size:13px;color:#64748b">This code expires in 24 hours.</p>
     </div>`;
+  console.info("[auth-email] verification link host", {
+    email,
+    appUrl,
+    linkHost: (() => {
+      try {
+        return new URL(link).host;
+      } catch {
+        return "invalid-url";
+      }
+    })(),
+  });
   const result = await sendAuthEmail({ to: email, subject, html, text });
-  return { ...result, link };
+  return { ...result, link, code: rawToken };
 }
 
 export async function sendPasswordResetEmail(email, rawToken) {
