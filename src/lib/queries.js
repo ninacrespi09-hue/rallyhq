@@ -120,8 +120,19 @@ export function recentMedia(limit = 3, teamId) {
 export function allPlayers(teamId) {
   if (!teamId) return [];
   return getDb()
-    .prepare("SELECT id, name, position, jersey_number FROM users WHERE role='player' AND team_id = ? ORDER BY name")
-    .all(teamId);
+    .prepare(
+      `SELECT id, name, position, jersey_number FROM users u
+       WHERE role = 'player'
+         AND (
+           team_id = ?
+           OR EXISTS (
+             SELECT 1 FROM user_sport_teams ust
+             WHERE ust.user_id = u.id AND ust.team_id = ?
+           )
+         )
+       ORDER BY name`
+    )
+    .all(teamId, teamId);
 }
 
 /** Cross-sport events for teams the user can access. */

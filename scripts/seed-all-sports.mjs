@@ -233,27 +233,34 @@ if (!coachId) {
   coachId = db.prepare("SELECT id FROM users WHERE role = 'coach' ORDER BY id LIMIT 1").get()?.id;
 }
 
-if (coachId) {
-  linkSport.run(coachId, "volleyball", vballTeamId);
-  linkSport.run(coachId, "basketball", bballTeamId);
-  linkSport.run(coachId, "soccer", soccerTeamId);
-  // Coaches linked to demo rosters get all-sports access (sport picker + all teams).
+// Only the demo coach account gets forcibly linked to DEMO teams.
+// Real coaches (including Nina) must keep their own team links — overwriting them
+// made live signups "disappear" from the roster after every deploy.
+const linkSportIfMissing = db.prepare(
+  `INSERT INTO user_sport_teams (user_id, sport, team_id) VALUES (?, ?, ?)
+   ON CONFLICT(user_id, sport) DO NOTHING`
+);
+
+if (coach?.id) {
+  linkSport.run(coach.id, "volleyball", vballTeamId);
+  linkSport.run(coach.id, "basketball", bballTeamId);
+  linkSport.run(coach.id, "soccer", soccerTeamId);
   db.prepare(
     `UPDATE users SET sport_preference = 'all' WHERE id = ? AND role = 'coach'`
-  ).run(coachId);
+  ).run(coach.id);
 }
 
-// Coaches → demo teams per sport so each hub has its own example roster.
-const coaches = db.prepare("SELECT id FROM users WHERE role = 'coach'").all();
-for (const { id } of coaches) {
+// Other coaches: fill missing sport links with demo data, but never replace an existing team.
+const coaches = db.prepare("SELECT id, lower(email) AS email FROM users WHERE role = 'coach'").all();
+for (const { id, email } of coaches) {
+  if (email === "coach@rallyhq.dev") continue;
   for (const [sport, teamId] of [
     ["volleyball", vballTeamId],
     ["basketball", bballTeamId],
     ["soccer", soccerTeamId],
   ]) {
-    linkSport.run(id, sport, teamId);
+    linkSportIfMissing.run(id, sport, teamId);
   }
-  db.prepare(`UPDATE users SET sport_preference = 'all' WHERE id = ?`).run(id);
 }
 
 const vballIds = seedRoster(vballTeamId, "volleyball", volleyballPlayers);

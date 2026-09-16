@@ -63,11 +63,17 @@ export function resolveTeamId(user, sport) {
   if (!user || !isSportId(sport)) return null;
 
   const linked = getTeamIdForSport(user.id, sport);
-  if (linked && playerCountForTeam(linked) > 0) return linked;
+  const demo = getDemoTeamId(sport);
 
-  // All-sports coaches explore demo rosters until they add their own players.
+  // Prefer a real club team over the example DEMO roster — even if the roster is still empty.
+  if (linked && linked !== demo) return linked;
+  if (user.team_id && user.team_sport === sport && user.team_id !== demo) {
+    return user.team_id;
+  }
+
+  // All-sports coaches can still explore demo rosters when they have no real team for this sport.
   if (user.sport_preference === "all" && user.role === "coach") {
-    const demo = getDemoTeamId(sport);
+    if (linked) return linked;
     if (demo && playerCountForTeam(demo) > 0) return demo;
   }
 

@@ -33,6 +33,7 @@ export function statTotals(userId, teamId = null, sport = "volleyball") {
 export function teamLeaderboard(teamId, sport = "volleyball") {
   if (!teamId) return [];
   const sums = sumSelect(sport);
+  // Include anyone whose primary team matches OR who is linked via user_sport_teams.
   return getDb()
     .prepare(
       `SELECT u.id, u.name, u.position, u.jersey_number, u.photo_url,
@@ -40,11 +41,18 @@ export function teamLeaderboard(teamId, sport = "volleyball") {
        FROM users u
        LEFT JOIN player_stats ps ON ps.user_id = u.id
        LEFT JOIN events e ON e.id = ps.event_id AND e.team_id = ?
-       WHERE u.role = 'player' AND u.team_id = ?
+       WHERE u.role = 'player'
+         AND (
+           u.team_id = ?
+           OR EXISTS (
+             SELECT 1 FROM user_sport_teams ust
+             WHERE ust.user_id = u.id AND ust.team_id = ?
+           )
+         )
          AND (ps.id IS NULL OR e.id IS NOT NULL)
        GROUP BY u.id ORDER BY u.name`
     )
-    .all(teamId, teamId);
+    .all(teamId, teamId, teamId);
 }
 
 /** Attendance percentage (present or late counts as attended). */
